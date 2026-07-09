@@ -7,8 +7,8 @@
 
 ## 2. CI del frontend
 
-- [ ] 2.1 Agregar job `frontend` a `.github/workflows/ci.yml` (creado por `a01-fundacion-repo`): `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, en paralelo a los jobs Python existentes. Verificación: workflow en verde en GitHub sobre este PR. `[modelo: sonnet]`
-- [ ] 2.2 Agregar cache de dependencias npm al job (`actions/setup-node` con `cache: npm`). Verificación: la segunda corrida del job muestra cache hit en el log de Actions. `[modelo: haiku]`
+- [x] 2.1 Agregar job `frontend` a `.github/workflows/ci.yml` (creado por `a01-fundacion-repo`): `npm ci`, `npm run lint`, `npm run typecheck`, `npm run build`, en paralelo a los jobs Python existentes. Verificación: workflow en verde en GitHub sobre este PR. `[modelo: sonnet]`
+- [x] 2.2 Agregar cache de dependencias npm al job (`actions/setup-node` con `cache: npm`). Verificación: la segunda corrida del job muestra cache hit en el log de Actions. `[modelo: haiku]`
 
 ## 3. Tokens (design-system)
 
