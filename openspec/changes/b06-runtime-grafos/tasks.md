@@ -33,4 +33,4 @@
 
 ## 5. Cierre
 
-- [ ] 5.1 Revisión final del change: `uv run lint-imports` confirma que `resultarai/adapters/runtime_langgraph` es el único módulo con `import langgraph` y que `resultarai/core/routing` sigue sin frameworks; suite completa (`ruff check`, `mypy`, `pytest`) en verde; los 3 No-objetivos del proposal (sin skills reales, sin tools, sin API HTTP) verificados por inspección del diff. `[modelo: opus]`
+- [x] 5.1 Revisión final del change: `uv run lint-imports` confirma que `resultarai/adapters/runtime_langgraph` es el único módulo con `import langgraph` y que `resultarai/core/routing` sigue sin frameworks; suite completa (`ruff check`, `mypy`, `pytest`) en verde; los 3 No-objetivos del proposal (sin skills reales, sin tools, sin API HTTP) verificados por inspección del diff. `[modelo: opus]`
