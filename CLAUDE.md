@@ -6,7 +6,7 @@ Plataforma interna de IA de Resultar Soluciones (partner TOTVS Bolivia): chat go
 
 ## Estado actual
 
-**Greenfield en fase de diseño.** Documentación y paquete de diseño UX (`design/`) completos; sin código todavía. **Pivote 2026-07-09:** producto completo genérico "de fábrica" primero (Etapas A–E), personalización Protheus después (Etapa P) — ver `docs/07-roadmap.md`. Etapa activa: **A — Fundación** (change `a01-fundacion-repo`). *(Actualizar esta línea al avanzar de etapa.)*
+**Greenfield en construcción.** Documentación y paquete de diseño UX (`design/`) completos; esqueleto de paquetes, tooling y CI creados. **Pivote 2026-07-09:** producto completo genérico "de fábrica" primero (Etapas A–E), personalización Protheus después (Etapa P) — ver `docs/07-roadmap.md`. Etapa activa: **A — Fundación** (change `a01-fundacion-repo`; grupos 1–3 completos). *(Actualizar esta línea al avanzar de etapa.)*
 
 ## Arquitectura en 60 segundos
 
@@ -35,11 +35,24 @@ Detalle: `docs/02-arquitectura.md`. Decisiones con evidencia: `docs/adr/`.
 | `docs/referencias/` | Blueprint v2.4 y contexto de la empresa (solo referencia, se cita, no se copia) |
 | `design/` | Paquete de diseño UX/UI **normativo** del producto: 44 vistas con mockup, flujos E2E, mapa funcional, design system, anexo de attachments (con los ajustes de la tabla de pivote en `docs/07-roadmap.md`) |
 | `openspec/` | Flujo spec-driven: specs (lo construido) y changes (lo propuesto) |
-| `resultarai/` | `[placeholder — lo crea el change scaffolding-esqueleto: core/, adapters/, app/, manifests/, tests/]` |
+| `resultarai/core/` | Núcleo hexagonal: manifiestos Pydantic, registries, Policy Gate, Skill Router, ports |
+| `resultarai/adapters/` | 6 adapters (vacíos aún): llm_litellm, runtime_langgraph, tools_mcp, tools_openapi, tracing_langfuse, persistence_postgres |
+| `resultarai/app/` | Casos de uso y API FastAPI (transporte, sin lógica) |
+| `manifests/` | Manifiestos YAML declarativos versionados: agents, skills, tools, policies, routing, evals — aún vacíos |
+| `tests/` | `core/` (unit puros del núcleo) y `contracts/` (un contract test por adapter) |
+| `frontend/` | `[llega en d10-design-system-shell: Next.js + assistant-ui, ADR-0007]` |
 
 ## Comandos
 
-`[placeholder — los define el change scaffolding-esqueleto: uv sync, pytest, ruff check, mypy, lint-imports]`
+```bash
+uv sync                       # instalar/sincronizar dependencias
+uv run pytest                 # ejecutar tests
+uv run ruff check .           # lint (calidad de código)
+uv run ruff format --check .  # verificar formato
+uv run mypy resultarai tests  # tipado estricto
+uv run lint-imports           # verificar fronteras arquitectónicas (import-linter)
+uv run pre-commit install     # instalar hooks pre-commit (una sola vez)
+```
 
 ## Flujo de trabajo
 
@@ -49,11 +62,11 @@ Detalle: `docs/02-arquitectura.md`. Decisiones con evidencia: `docs/adr/`.
 
 | Doc | Contenido |
 |---|---|
-| `docs/01-vision.md` | Qué es, usuarios, alcance MVP, no-objetivos, jerarquía docs/blueprint |
+| `docs/01-vision.md` | Qué es, usuarios, alcance (producto completo de fábrica + Etapa P), no-objetivos, jerarquía docs/design/blueprint |
 | `docs/02-arquitectura.md` | Estilo adoptado, bounded contexts, regla de dependencia, deployables, flujo de petición |
 | `docs/03-glosario-dominio.md` | Lenguaje ubicuo: scaffolding, conectividad, Protheus |
 | `docs/04-manifiestos.md` | Los 6 contratos declarativos con ejemplos YAML y ciclo de vida |
 | `docs/05-estructura-y-convenciones.md` | Árbol de paquetes, convenciones Python, testing, import-linter |
 | `docs/06-seguridad-gobernanza.md` | Policy Gate, riesgo/HITL, audit log, data boundaries, plan-then-execute, evals |
 | `docs/07-roadmap.md` | Fases → changes OpenSpec sugeridos |
-| `docs/adr/0001…0006` | Decisiones: estilo, DDD, stack, manifiestos, deployables, OpenSpec |
+| `docs/adr/0001…0009` | Decisiones: estilo, DDD, stack, manifiestos, deployables, OpenSpec, frontend, auth, specs oficiales |
