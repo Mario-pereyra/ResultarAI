@@ -1,0 +1,38 @@
+# Tasks — e23-memoria-usuario
+
+## 1. Persistencia y contrato de snapshot
+
+- [ ] 1.1 Definir el contrato del snapshot cache-safe: modelo de `user_memory_versions` (versiones append-only, `origin`, versión monótona por usuario), referencia inmutable `memory_version_id` en la sesión, y posición del bloque `<memoria_usuario id="…">` post-prefijo estático / pre-historial (decisiones 1–3 del design). Verificación: documento de contrato en docstrings + test que fija el orden de segmentos del contexto y su estabilidad byte-idéntica entre turnos de una misma sesión. `[modelo: opus]`
+- [ ] 1.2 Migración Alembic aditiva: tabla `user_memory_versions` y columna `memory_version_id` (nullable) en sesiones, con constraint de versión monótona por usuario. Verificación: `alembic upgrade head` y `downgrade` en verde sobre BD limpia y sobre BD con sesiones previas (que quedan sin snapshot). `[modelo: sonnet]`
+- [ ] 1.3 Repositorio de memoria en `app/` (crear versión, leer vigente, historial paginado) sin UPDATE ni DELETE físicos; "borrar todo" = versión vacía. Verificación: test que intenta modificar una versión existente y falla; el historial conserva todas las versiones tras un borrado. `[modelo: sonnet]`
+
+## 2. Guardado, validador y concurrencia
+
+- [ ] 2.1 Caso de uso único de guardado (edición manual y propuesta aceptada convergen aquí): valida contenido prohibido, límite ~1.000 tokens (heurística ~4 car./token, autoridad backend), `base_version` para concurrencia optimista, crea versión y emite `AuditEvent`. Verificación: tests de tabla — guardado válido crea versión; exceso de tokens rechaza con el motivo; `base_version` divergente responde 409 sin merge. `[modelo: opus]`
+- [ ] 2.2 Validador fail-closed de contenido prohibido: patrones de credenciales + PII estructurada (reutilizando las familias de detectores de `d14`), sin checkbox de excepción; detector caído = guardado bloqueado. Verificación: escenarios de la spec — `clave=Andina2026!` bloquea con ubicación; CI/teléfono/correo bloquea sin opción de continuar; detector no disponible bloquea con error accionable. `[modelo: opus]`
+- [ ] 2.3 Endpoints REST `GET /me/memory`, `PUT /me/memory`, `DELETE /me/memory`, `GET /me/memory/history` con ownership estricto (`user_id` solo de la sesión autenticada; intento ajeno denegado + auditado). Verificación: tests de API — flujo feliz de cada endpoint y acceso con `user_id` ajeno denegado con su `AuditEvent`. `[modelo: sonnet]`
+
+## 3. Propuesta del agente (chat)
+
+- [ ] 3.1 Detección de la propuesta en `app/` sobre el texto final del turno: extracción del delimitador `<<<MEMORY_PROPOSAL>>>`, exclusión de todo contenido dentro de `<adjunto>` y `<memoria_usuario>` (anti-injection, mismo principio que `escalation-marker` de `b05`), propuesta malformada o a mitad de streaming ignorada y marcada en traza. Verificación: tests de tabla — propuesta válida extraída y excluida del render; marcador dentro de adjunto/memoria no dispara; delimitador incompleto ignorado sin romper el mensaje. `[modelo: opus]`
+- [ ] 3.2 Instrucción del system prompt estático para que el agente emita propuestas con el delimitador (texto fijo, cache-safe) y declare `<memoria_usuario>` como dato-no-instrucción. Verificación: el prompt estático no varía por usuario (diff vacío entre dos usuarios distintos); una conversación de prueba produce una propuesta bien formada. `[modelo: sonnet]`
+- [ ] 3.3 Endpoints de resolución de propuesta (aceptar → caso de uso de guardado con `origin = agent_proposal_accepted`; rechazar → sin efecto persistente). Verificación: escenarios de la spec — aceptación válida crea versión con su origen; rechazo no crea versión, ni fila de historial, ni `AuditEvent` de alta; aceptación con contenido prohibido rechaza sin perder el texto propuesto. `[modelo: sonnet]`
+- [ ] 3.4 UI de propuesta inline en el chat (`d13`): tarjeta con texto propuesto + "Guardar"/"Descartar", estado de error si la validación rechaza (motivo + link a Mi memoria, texto no se pierde). Verificación: flujo manual documentado — proponer, descartar (nada cambia), proponer, guardar (aparece en Mi memoria editable). `[modelo: sonnet]`
+
+## 4. Snapshot en sesión e indicador
+
+- [ ] 4.1 Enganche en la creación de sesión (`b06`): congelar `memory_version_id` vigente, materializar el bloque `<memoria_usuario>` en la posición del contrato 1.1, memoria vacía = sin bloque; emitir `AuditEvent` de uso + traza para `b07` cuando el snapshot no está vacío. Verificación: escenarios de la spec — sesión creada con versión 8 usa la 8 aunque el usuario guarde la 9 a mitad de sesión; memoria vacía no adjunta bloque ni emite evento de uso. `[modelo: opus]`
+- [ ] 4.2 Exclusión del contenido de memoria de los marcadores de control: `<<<NEEDS_PRO>>>` dentro de `<memoria_usuario>` no dispara escalación (configuración/extensión del punto de exclusión existente, sin modificar la spec de `b05`). Verificación: test — memoria con el marcador literal no produce evento de escalación; el mismo marcador fuera del bloque sí. `[modelo: opus]`
+- [ ] 4.3 Indicador de memoria usada calculado server-side (snapshot no vacío) como dato del mensaje + chip discreto en la UI del chat con link a `/espacio/memoria`. Verificación: respuesta en sesión con memoria muestra el indicador; en sesión sin memoria no aparece nada. `[modelo: sonnet]`
+
+## 5. Vista Mi memoria (24)
+
+- [ ] 5.1 Página `/espacio/memoria` como tab de "Mi espacio" (`d18`): editor con contador en vivo (warn ≥90%, over >100% deshabilita Guardar con motivo), versión y fecha actual, panel derivado "Qué sabe la plataforma de vos" client-side, según `design/VISTAS/06-mi-espacio.md` vista 24 y `design/mockups/24-mi-memoria.html`. Verificación: comparación visual contra el mockup en desktop y móvil (columnas apiladas). `[modelo: sonnet]`
+- [ ] 5.2 Flujos de guardado y borrado en la UI: modal de confirmación con resumen del diff y aviso "se aplica desde tu próxima conversación"; "Borrar todo" con escribir-para-confirmar (palabra por glosario cerrado, nunca hardcodeada); manejo del 409 de concurrencia (ver diferencia / recargar); aviso de cambios sin guardar al navegar. Verificación: los cuatro flujos manuales documentados con captura; Esc jamás confirma el borrado. `[modelo: sonnet]`
+- [ ] 5.3 Historial de cambios de solo lectura (versión, fecha, origen, cambio, tamaño) + estados de carga/vacío/error de la vista según el mockup. Verificación: tras guardar/aceptar propuesta/borrar, el historial muestra la fila correcta con su origen; empty-state con memoria nunca escrita. `[modelo: sonnet]`
+- [ ] 5.4 Textos i18n externalizados de la vista y de la propuesta inline (claves `espacio.memoria.*`, clave única reutilizada para el aviso de próxima conversación, plurales ICU del diff, palabra de confirmación por glosario). Verificación: cero strings hardcodeados en los componentes (grep en CI); las claves nuevas existen en el catálogo ES. `[modelo: haiku]`
+
+## 6. Cierre
+
+- [ ] 6.1 Test end-to-end del criterio de salida del roadmap: una propuesta aceptada aparece editable en Mi memoria y entra como snapshot en la sesión siguiente (no en la abierta), con sus cuatro `AuditEvent` (alta, edición, borrado, uso) verificados. Verificación: test E2E en verde reproduciendo la fila `e23` de `docs/07-roadmap.md`. `[modelo: sonnet]`
+- [ ] 6.2 Review final del change: contrato snapshot/cache-safe respetado (prefijo estático sin variación por usuario), ninguna ruta de escritura evita el validador, append-only sin UPDATE/DELETE, consistencia docs↔specs↔código y cero cambios en `core/`. Verificación: checklist del reviewer en el PR. `[modelo: opus]`
