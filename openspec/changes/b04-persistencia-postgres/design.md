@@ -30,7 +30,7 @@
 
 5. **Stickiness estructural: `model_profile` es atributo de la sesión.** Todos los mensajes de una sesión comparten su `model_profile`; un intento de insertar un mensaje con perfil divergente lo rechaza un trigger/CHECK. **Editar/regenerar = rama dentro de la misma sesión** (mismo perfil); **cambiar de modelo = sesión nueva** con `forked_from` opcional al origen. Mantiene la invariante "una sesión, un perfil" trivial de verificar. Alternativa descartada: `model_profile` por mensaje sin ligar a la sesión — permitiría mezclar perfiles en una rama, violando el principio de transparencia de modelo.
 
-6. **Dedup por `(tenant, sha256)`, no por `sha256` global.** El ANEXO §5 dice "misma instancia"; lo estrechamos a **por tenant** para respetar el aislamiento por tenant de [docs/06](../../../docs/06-seguridad-gobernanza.md) (la reutilización de `full_text` entre tenants filtraría la existencia de un archivo). Es superset-compatible con el ANEXO. 
+6. **Dedup por `(tenant, sha256)`, no por `sha256` global.** El ANEXO §5 dice "misma instancia"; lo estrechamos a **por tenant** para respetar el aislamiento por tenant de [docs/06](../../../docs/06-seguridad-gobernanza.md) (la reutilización de `full_text` entre tenants filtraría la existencia de un archivo). Es superset-compatible con el ANEXO.
 
 7. **Binario fuera de la base.** Postgres guarda metadatos + texto extraído; el binario vive en el volumen de archivos de la VM referenciado por `storage_path` (uuid, sin extensión, fuera del webroot). Sin S3 externo (ANEXO §5: los documentos del cliente no salen de la instancia).
 

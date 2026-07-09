@@ -1,0 +1,26 @@
+# Los directorios de referencia y de tooling de asistentes no son código del
+# producto: los hooks de higiene no deben reescribirlos (a01: docs/referencias/
+# y design/ no se tocan).
+exclude: '^(\.claude/|\.agents/|\.pi/|\.commandcode/|\.reasonix/|\.vscode/|docs/referencias/|design/)'
+
+repos:
+  # Ruff: fast Python linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.20
+    hooks:
+      - id: ruff
+        name: ruff lint
+        args: [--fix]
+      - id: ruff-format
+        name: ruff format
+
+  # Pre-commit hooks: general repository hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+      - id: check-merge-conflict
