@@ -171,7 +171,21 @@ def test_loads_valid_manifests_and_queries_by_id(tmp_path: Path) -> None:
     _write_manifest(tmp_path / "tools", "example_echo.yaml", _tool_payload())
     _write_manifest(tmp_path / "policies", "example_read_only_policy.yaml", _policy_payload())
     _write_manifest(tmp_path / "routing", "default_chat_routing.yaml", _routing_payload())
+    # Tres Eval Templates (no solo `skill_eval_template`): la tarea 2.2 anadio validacion de
+    # referencias cruzadas y el Agent y el Tool de este fixture referencian, cada uno, su
+    # propio `evals.template` (`agent_eval_template`, `tool_eval_template`); sin estos dos
+    # manifiestos adicionales, la carga fallaria con `DanglingReferenceError`.
+    _write_manifest(
+        tmp_path / "evals",
+        "agent_eval_template.yaml",
+        _eval_payload(id="agent_eval_template", target_kind="agent"),
+    )
     _write_manifest(tmp_path / "evals", "skill_eval_template.yaml", _eval_payload())
+    _write_manifest(
+        tmp_path / "evals",
+        "tool_eval_template.yaml",
+        _eval_payload(id="tool_eval_template", target_kind="tool"),
+    )
 
     registries = load_registries(tmp_path)
 
@@ -200,13 +214,25 @@ def test_loads_valid_manifests_and_queries_by_id(tmp_path: Path) -> None:
 
 
 def test_missing_subdirectory_yields_empty_registry(tmp_path: Path) -> None:
-    # Un `manifests/` parcial (sin `evals/`, p. ej.) es valido: registry vacio, no error.
-    _write_manifest(tmp_path / "agents", "default_chat.yaml", _agent_payload())
+    # Un `manifests/` parcial es valido: registry vacio, no error -- siempre que nada lo
+    # referencie por id (tarea 2.2, validacion de referencias cruzadas). `policies/` y
+    # `routing/` no son referenciados por ningun otro Manifest (solo Policy y Routing
+    # referencian *hacia* Skills/Agents, nunca al reves), asi que pueden faltar sin disparar
+    # una referencia colgante. `enabled_skills=[]` evita que el Agent necesite un `skills/`
+    # poblado; su `evals.template` si se valida, por eso se incluye `evals/`.
+    _write_manifest(tmp_path / "agents", "default_chat.yaml", _agent_payload(enabled_skills=[]))
+    _write_manifest(
+        tmp_path / "evals",
+        "agent_eval_template.yaml",
+        _eval_payload(id="agent_eval_template", target_kind="agent"),
+    )
 
     registries = load_registries(tmp_path)
 
-    assert len(registries.evals) == 0
-    assert list(registries.evals) == []
+    assert len(registries.policies) == 0
+    assert list(registries.policies) == []
+    assert len(registries.routing) == 0
+    assert list(registries.routing) == []
 
 
 # 2. Dos manifiestos del mismo tipo con el mismo id -> falla senalando el duplicado.

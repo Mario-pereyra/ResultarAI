@@ -12,8 +12,14 @@ defecto la resuelve `app/`, nunca `core/`, ver regla dura 1):
         evals/*.yaml       -> EvalTemplateManifest
 
 Cada subdirectorio ausente se trata como vacio (Registry sin manifiestos de ese tipo), no
-como error: un `manifests/` parcial (p. ej. en un test) es valido. Solo carga, valida y
-cataloga: cero ejecucion, cero red, cero imports de adapters (LiteLLM, MCP, LangGraph).
+como error: un `manifests/` parcial (p. ej. en un test) es valido, siempre que nada lo
+referencie por id (ver `cross_references.py`). Solo carga, valida y cataloga: cero
+ejecucion, cero red, cero imports de adapters (LiteLLM, MCP, LangGraph).
+
+Tras construir los 6 Registries, `load_registries` valida sus referencias cruzadas
+(`cross_references.validate_cross_references`) antes de devolverlos: la tarea 2.2 exige que
+"la construccion del Registry falla" ante una referencia colgante, asi que el camino por
+defecto (no uno alternativo tipo `load_and_validate_registries`) es el que valida.
 """
 
 from __future__ import annotations
@@ -34,6 +40,7 @@ from resultarai.core.manifests import (
     SkillManifest,
     ToolManifest,
 )
+from resultarai.core.registries.cross_references import validate_cross_references
 from resultarai.core.registries.registry import ManifestRegistry
 
 __all__ = [
@@ -123,8 +130,13 @@ def load_registries(manifests_dir: Path) -> Registries:
     `evals/`. `manifests_dir` es un parametro explicito (nunca una ruta absoluta harcodeada en
     `core/`): los tests lo apuntan a `tmp_path`; la resolucion del default de produccion es
     responsabilidad de `app/`.
+
+    Antes de devolver los Registries, valida sus referencias cruzadas (tarea 2.2): una
+    referencia colgante (Manifest inexistente o no `active`) hace fallar la carga con
+    `DanglingReferenceError`, igual que un `id` duplicado o un YAML invalido hacen fallar
+    con sus propios errores.
     """
-    return Registries(
+    registries = Registries(
         agents=_load_registry(manifests_dir / "agents", AgentManifest),
         skills=_load_registry(manifests_dir / "skills", SkillManifest),
         tools=_load_registry(manifests_dir / "tools", ToolManifest),
@@ -132,3 +144,5 @@ def load_registries(manifests_dir: Path) -> Registries:
         routing=_load_registry(manifests_dir / "routing", RoutingManifest),
         evals=_load_registry(manifests_dir / "evals", EvalTemplateManifest),
     )
+    validate_cross_references(registries)
+    return registries
