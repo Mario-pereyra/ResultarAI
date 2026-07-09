@@ -21,9 +21,9 @@
 
 ## 4. Marcador de escalación (anti prompt-injection)
 
-- [ ] 4.1 Implementar la función de "texto elegible para escaneo": remueve todo bloque delimitado por `<adjunto id="...">...</adjunto>` (emparejado por `id`) del texto antes de buscar el marcador; ante un delimitador sin cerrar, excluye fail-closed todo lo que sigue. Verificación: tests con adjunto bien formado con el marcador embebido, delimitador sin cerrar, e intento de cierre falsificado (`</adjunto>` propio dentro del contenido). `[modelo: opus]`
-- [ ] 4.2 Implementar la detección de `<<<NEEDS_PRO>>>` sobre el texto elegible resultante de 4.1 y la emisión del evento de escalación en el contrato de salida. Verificación: tests con el marcador presente fuera de adjuntos, ausente, y presente solo dentro de un adjunto (no debe disparar). `[modelo: opus]`
-- [ ] 4.3 Conectar la detección con `escalation.enabled` del Agent Manifest (2.2): si está deshabilitado, la detección no se ejecuta para ese agente. Verificación: test con agente configurado deshabilitado (marcador presente pero sin evento) y agente habilitado (evento emitido). `[modelo: sonnet]`
+- [x] 4.1 Implementar la función de "texto elegible para escaneo": remueve todo bloque delimitado por `<adjunto id="...">...</adjunto>` (emparejado por `id`) del texto antes de buscar el marcador; ante un delimitador sin cerrar, excluye fail-closed todo lo que sigue. Verificación: tests con adjunto bien formado con el marcador embebido, delimitador sin cerrar, e intento de cierre falsificado (`</adjunto>` propio dentro del contenido). `[modelo: opus]`
+- [x] 4.2 Implementar la detección de `<<<NEEDS_PRO>>>` sobre el texto elegible resultante de 4.1 y la emisión del evento de escalación en el contrato de salida. Verificación: tests con el marcador presente fuera de adjuntos, ausente, y presente solo dentro de un adjunto (no debe disparar). `[modelo: opus]`
+- [x] 4.3 Conectar la detección con `escalation.enabled` del Agent Manifest (2.2): si está deshabilitado, la detección no se ejecuta para ese agente. Verificación: test con agente configurado deshabilitado (marcador presente pero sin evento) y agente habilitado (evento emitido). `[modelo: sonnet]`
 
 ## 5. Tests de contrato con proveedor simulado
 
