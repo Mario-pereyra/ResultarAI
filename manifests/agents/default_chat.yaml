@@ -36,3 +36,9 @@ observability:
 evals:
   status: placeholder
   template: default_chat_eval
+
+fallback_cascade:
+  - openai_gpt_4o
+  - anthropic_claude_haiku
+escalation:
+  enabled: true

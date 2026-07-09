@@ -1,0 +1,19 @@
+- id: openai_gpt_4o
+  provider: openai
+  model: gpt-4o
+  parameters:
+    temperature: 0.0
+    max_tokens: 4096
+  cache_hit_rate: 0.0000025
+  cache_miss_rate: 0.000005
+  active: true
+
+- id: anthropic_claude_haiku
+  provider: anthropic
+  model: claude-3-5-haiku-20241022
+  parameters:
+    temperature: 0.0
+    max_tokens: 4096
+  cache_hit_rate: 0.0000001
+  cache_miss_rate: 0.0000005
+  active: true
