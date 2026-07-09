@@ -1,0 +1,356 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>21 · Detalle de aprobación — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+  .stack-2 { display: grid; gap: var(--sp-6); grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); align-items: start; }
+  .card-col { max-width: 880px; }
+
+  /* Extensiones locales de .hitl-card (anatomía en DESIGN-SYSTEM §8.14) */
+  .hitl-card__head .mono { margin-left: auto; }
+  .hitl-claim { font-size: var(--fs-lead); margin: 0; }
+  .risk-why { margin: 0; padding-left: var(--sp-5); font-size: var(--fs-small); color: var(--ink-dim); display: grid; gap: 3px; }
+  .hitl-sub { font-family: var(--font-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 var(--sp-1); }
+  .diff-new { color: var(--money); font-weight: 700; }
+  .diff-old { color: var(--ink-faint); }
+  details.raw summary { cursor: pointer; font-size: var(--fs-caption); color: var(--info); }
+  details.raw[open] summary { margin-bottom: var(--sp-2); }
+  .audit-note { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-caption); color: var(--ink-dim); border-top: 1px dashed var(--line); padding-top: var(--sp-3); }
+  .audit-note svg { width: 14px; height: 14px; color: var(--accent); flex: none; }
+  .sig-band { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); background: color-mix(in srgb, var(--accent-alt) 9%, transparent); border: 1px solid color-mix(in srgb, var(--accent-alt) 40%, transparent); border-radius: var(--r-md); padding: var(--sp-3); font-size: var(--fs-small); }
+  .sig-band svg { width: 16px; height: 16px; color: var(--accent-alt); flex: none; }
+  .resolved-band { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; background: color-mix(in srgb, var(--money) 8%, transparent); border: 1px solid color-mix(in srgb, var(--money) 35%, transparent); border-radius: var(--r-md); padding: var(--sp-3); font-size: var(--fs-small); }
+  .hitl-card.is-expired { opacity: .7; }
+  .disable-why { font-size: var(--fs-caption); color: var(--ink-faint); align-self: center; margin-right: auto; }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .hitl-card__foot { flex-direction: column; }
+    .hitl-card__foot .btn { width: 100%; }
+    .hitl-card__foot .btn--primary, .hitl-card__foot .btn--danger { order: 2; } /* primario abajo: zona del pulgar */
+    .disable-why { margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.17 2.06 16 7.24l.76.76 5.18-5.18a.54.54 0 0 0-.77-.76Z"/><path d="m14 8 -8.5 8.5a2.12 2.12 0 1 0 3 3L17 11"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+</defs></svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 21 · Módulo aprobaciones HITL</span>
+    <h1>Detalle de aprobación — la tarjeta HITL</h1>
+    <p class="muted">El componente más crítico del producto (DESIGN-SYSTEM §8.14). Autosuficiente: el aprobador decide sin navegar. Spec: <code>docs/design/VISTAS/05-hitl-validacion.md §2</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Foco inicial en el cuerpo, jamás en «Aprobar».</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — pendiente, riesgo alto ════════════════ -->
+  <section class="doc-section card-col" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Pendiente — riesgo alto (flujo estándar)</h2>
+
+    <section class="hitl-card" aria-labelledby="apr147-t">
+      <div class="hitl-card__head">
+        <svg aria-hidden="true"><use href="#i-shield"/></svg>
+        <span id="apr147-t">Aprobación requerida</span>
+        <span class="mono faint">APR-0147</span>
+        <span class="tag tag--alt">Riesgo alto</span>
+      </div>
+      <div class="hitl-card__body">
+        <p class="hitl-claim">El agente va a actualizar <strong>3 parámetros de localización (SX6)</strong> en el ambiente productivo de Comercial Andina S.A., vía API REST oficial.</p>
+
+        <dl class="hitl-card__meta">
+          <div><dt>Cliente final</dt><dd>Comercial Andina S.A.</dd></div>
+          <div><dt>Ambiente</dt><dd><span class="tag tag--danger">PROD</span></dd></div>
+          <div><dt>Agente</dt><dd class="mono">validationagent@7</dd></div>
+          <div><dt>Solicitante</dt><dd>valeria · Funcional</dd></div>
+          <div><dt>Sesión de origen</dt><dd><a href="#">Validación SIGAFIN · 11/06</a></dd></div>
+          <div><dt>Método</dt><dd>API REST oficial — nunca SQL</dd></div>
+          <div><dt>Creada</dt><dd class="mono">11/06/2026 14:32</dd></div>
+          <div><dt>Reversibilidad</dt><dd>Reversible — se conservan los valores anteriores</dd></div>
+        </dl>
+
+        <div>
+          <p class="hitl-sub">Clasificación de riesgo — por qué</p>
+          <ul class="risk-why">
+            <li>Escribe en ambiente productivo (PROD).</li>
+            <li>Afecta parámetros de localización <code>MV_*</code> usados por contabilidad.</li>
+            <li>Reversible mediante restauración de valores anteriores.</li>
+          </ul>
+        </div>
+
+        <div>
+          <p class="hitl-sub">Cambio propuesto</p>
+          <div class="table-wrap"><table class="table table--dense">
+            <caption class="sr-only">Diff: valor actual contra valor propuesto</caption>
+            <thead><tr><th scope="col">Parámetro</th><th scope="col">Valor actual</th><th scope="col">Valor propuesto</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">MV_SIMB1</td><td class="mono diff-old">"$b"</td><td class="mono diff-new">"Bs"</td></tr>
+              <tr><td class="mono">MV_PAISLOC</td><td class="mono diff-old">"PAR"</td><td class="mono diff-new">"BOL"</td></tr>
+              <tr><td class="mono">MV_MOEDA2</td><td class="mono diff-old">"DOLAR"</td><td class="mono diff-new">"USD"</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+
+        <div>
+          <p class="hitl-sub">Payload</p>
+          <pre class="hitl-card__payload">PUT /api/framework/v1/parameters  (ambiente: COMANDINA-PROD)
+  MV_SIMB1   → "Bs"
+  MV_PAISLOC → "BOL"
+  MV_MOEDA2  → "USD"</pre>
+          <details class="raw">
+            <summary>Ver payload crudo (JSON)</summary>
+            <pre class="hitl-card__payload">{
+  "environment": "COMANDINA-PROD",
+  "items": [
+    { "param": "MV_SIMB1",   "value": "Bs"  },
+    { "param": "MV_PAISLOC", "value": "BOL" },
+    { "param": "MV_MOEDA2",  "value": "USD" }
+  ],
+  "requestId": "APR-0147"
+}</pre>
+          </details>
+        </div>
+
+        <div class="field" style="margin-bottom:0">
+          <label class="field-label" for="com-a">Comentario</label>
+          <textarea class="textarea" id="com-a" placeholder="Opcional en riesgo alto; obligatorio si rechazás."></textarea>
+          <span class="field-hint">Obligatorio al rechazar. Queda en el registro de auditoría.</span>
+        </div>
+
+        <span class="hitl-card__expire"><svg width="13" height="13" aria-hidden="true"><use href="#i-clock"/></svg>expira en 23 h 12 min · 12/06/2026 13:44</span>
+
+        <p class="audit-note"><svg aria-hidden="true"><use href="#i-lock"/></svg>Esta decisión queda auditada con tu identidad: <strong>lucia (Admin)</strong> · 11/06/2026 15:31.</p>
+      </div>
+      <div class="hitl-card__foot">
+        <button class="btn btn--secondary">Rechazar</button>
+        <button class="btn btn--primary">Aprobar escritura</button>
+      </div>
+    </section>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — crítica + confirmación reforzada ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Crítica — comentario obligatorio + confirmación reforzada</h2>
+    <p class="doc-caption">El botón «Aprobar» queda deshabilitado hasta que haya comentario; al click abre modal escribir-para-confirmar (§9.2b). Esc jamás confirma.</p>
+
+    <div class="stack-2">
+      <section class="hitl-card card-col" aria-labelledby="apr149-t">
+        <div class="hitl-card__head">
+          <svg aria-hidden="true"><use href="#i-shield"/></svg>
+          <span id="apr149-t">Aprobación requerida</span>
+          <span class="mono faint">APR-0149</span>
+          <span class="tag tag--danger">Riesgo crítico</span>
+        </div>
+        <div class="hitl-card__body">
+          <p class="hitl-claim">El agente va a <strong>anular 2 títulos a cobrar (SE1)</strong> en el ambiente productivo de Comercial Andina S.A.</p>
+          <dl class="hitl-card__meta">
+            <div><dt>Cliente final</dt><dd>Comercial Andina S.A.</dd></div>
+            <div><dt>Ambiente</dt><dd><span class="tag tag--danger">PROD</span></dd></div>
+            <div><dt>Solicitante</dt><dd>valeria · Funcional</dd></div>
+            <div><dt>Reversibilidad</dt><dd><strong class="mono" style="color:var(--danger)">IRREVERSIBLE</strong></dd></div>
+          </dl>
+          <div>
+            <p class="hitl-sub">Clasificación de riesgo — por qué</p>
+            <ul class="risk-why">
+              <li>Escribe en ambiente productivo (PROD).</li>
+              <li>Afecta documentos contables/fiscales (títulos SE1).</li>
+              <li>La anulación es irreversible: exige segunda aprobación.</li>
+            </ul>
+          </div>
+          <div>
+            <p class="hitl-sub">Registros afectados</p>
+            <pre class="hitl-card__payload">SE1 · E1_NUM 000412-001 · Bs 1.240,00 · vence 20/06/2026
+SE1 · E1_NUM 000413-001 · Bs   860,50 · vence 25/06/2026</pre>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="com-b">Comentario <span class="req" aria-hidden="true">*</span></label>
+            <textarea class="textarea is-invalid" id="com-b" aria-invalid="true" aria-describedby="com-b-err com-b-hint"></textarea>
+            <span class="field-error" id="com-b-err">El comentario es obligatorio para aprobar una solicitud crítica.</span>
+            <span class="field-hint" id="com-b-hint">Explicá por qué corresponde anular estos títulos.</span>
+          </div>
+          <span class="hitl-card__expire"><svg width="13" height="13" aria-hidden="true"><use href="#i-clock"/></svg>expira en <strong style="color:var(--warn)">1 h 58 min</strong> · 11/06/2026 16:44</span>
+          <p class="audit-note"><svg aria-hidden="true"><use href="#i-lock"/></svg>Esta decisión queda auditada con tu identidad: <strong>lucia (Admin)</strong>.</p>
+        </div>
+        <div class="hitl-card__foot">
+          <span class="disable-why">Escribí un comentario para habilitar la aprobación</span>
+          <button class="btn btn--secondary">Rechazar</button>
+          <button class="btn btn--primary" disabled>Aprobar escritura</button>
+        </div>
+      </section>
+
+      <!-- Modal de confirmación reforzada (mostrado estáticamente) -->
+      <div class="panel--raised panel" style="padding:0;max-width:540px">
+        <div class="modal" style="box-shadow:none;border:0;width:100%" role="dialog" aria-modal="true" aria-labelledby="conf-t">
+          <div class="modal__head">
+            <h3 class="modal__title" id="conf-t" style="display:flex;align-items:center;gap:8px"><svg width="18" height="18" style="color:var(--danger)" aria-hidden="true"><use href="#i-alert"/></svg>Confirmar aprobación crítica</h3>
+            <button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button>
+          </div>
+          <div class="modal__body">
+            <p>Vas a aprobar la anulación <strong>irreversible</strong> de 2 títulos a cobrar en <strong>Comercial Andina S.A. · PROD</strong>.</p>
+            <div class="field" style="margin-bottom:0">
+              <label class="field-label" for="conf-in">Escribí <code>APROBAR</code> para confirmar <span class="req" aria-hidden="true">*</span></label>
+              <input class="input input--mono" id="conf-in" autocomplete="off" placeholder="APROBAR">
+              <span class="field-hint">El botón se habilita solo con coincidencia exacta. Esc no confirma.</span>
+            </div>
+          </div>
+          <div class="modal__foot">
+            <button class="btn btn--ghost">Cancelar</button>
+            <button class="btn btn--danger" disabled id="conf-go">Aprobar definitivamente</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Micro-demo: habilitar el botón solo con coincidencia exacta
+      (function () {
+        var inp = document.getElementById('conf-in'), go = document.getElementById('conf-go');
+        inp.addEventListener('input', function () { go.disabled = inp.value !== 'APROBAR'; });
+      })();
+    </script>
+  </section>
+
+  <!-- ════════════════ VARIANTE C — irreversible 1/2 + resuelta + expirada ════════════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Esperando segunda aprobación · resuelta · expirada · error de envío</h2>
+
+    <div class="stack-2">
+      <section class="hitl-card" aria-labelledby="c1-t">
+        <div class="hitl-card__head">
+          <svg aria-hidden="true"><use href="#i-shield"/></svg>
+          <span id="c1-t">Aprobación requerida</span>
+          <span class="mono faint">APR-0149</span>
+          <span class="tag tag--danger">Riesgo crítico</span>
+        </div>
+        <div class="hitl-card__body">
+          <div class="sig-band" role="status">
+            <svg aria-hidden="true"><use href="#i-pen"/></svg>
+            <strong>Esperando segunda aprobación (1/2)</strong>
+            <span class="muted">— 1ª firma: rodrigo (Técnico) · 11/06/2026 15:10 · «Verificado con el cliente por teléfono.»</span>
+          </div>
+          <p class="hitl-claim">Anular 2 títulos a cobrar (SE1) — Comercial Andina S.A. <span class="tag tag--danger">PROD</span></p>
+          <p class="muted" style="margin:0">Vista del primer firmante: <em>«Ya firmaste esta solicitud. La segunda aprobación debe darla otra persona.»</em> Sus botones se ocultan.</p>
+          <span class="hitl-card__expire"><svg width="13" height="13" aria-hidden="true"><use href="#i-clock"/></svg>expira en 1 h 12 min · 11/06/2026 16:44</span>
+        </div>
+        <div class="hitl-card__foot">
+          <button class="btn btn--secondary">Rechazar</button>
+          <button class="btn btn--primary">Dar segunda firma</button>
+        </div>
+      </section>
+
+      <section class="hitl-card" aria-labelledby="c2-t">
+        <div class="hitl-card__head">
+          <svg aria-hidden="true"><use href="#i-shield"/></svg>
+          <span id="c2-t">Aprobación resuelta</span>
+          <span class="mono faint">APR-0140</span>
+          <span class="tag tag--money">Aprobada</span>
+        </div>
+        <div class="hitl-card__body">
+          <div class="resolved-band">
+            <svg width="16" height="16" style="color:var(--money)" aria-hidden="true"><use href="#i-check"/></svg>
+            Aprobada por <strong>lucia (Admin)</strong> · 10/06/2026 18:05 · «OK, validado contra el checklist fiscal v3.»
+          </div>
+          <p class="hitl-claim" style="font-size:var(--fs-body)">Actualizar descripción de campo (SX3) en Distribuidora Altiplano SRL <span class="tag tag--info">VAL</span></p>
+          <p style="margin:0">Resultado de ejecución: <span class="tag tag--money">Éxito</span> <span class="faint mono">10/06/2026 18:06 · HTTP 200</span></p>
+          <p class="audit-note" style="margin:0"><svg aria-hidden="true"><use href="#i-lock"/></svg>Solo lectura — las decisiones no se editan ni se borran.</p>
+        </div>
+      </section>
+
+      <section class="hitl-card is-expired" aria-labelledby="c3-t">
+        <div class="hitl-card__head">
+          <svg aria-hidden="true"><use href="#i-shield"/></svg>
+          <span id="c3-t">Solicitud expirada</span>
+          <span class="mono faint">APR-0133</span>
+          <span class="tag tag--warn">Expirada</span>
+        </div>
+        <div class="hitl-card__body">
+          <p class="hitl-claim" style="font-size:var(--fs-body)">Crear parámetro MV_RESAGTE — Distribuidora Altiplano SRL <span class="tag tag--info">VAL</span></p>
+          <p class="muted" style="margin:0">Venció el 09/06/2026 13:00 sin decisión. No es aprobable: el solicitante puede reabrirla (crea una solicitud nueva enlazada, payload re-validado por el agente).</p>
+        </div>
+        <div class="hitl-card__foot">
+          <button class="btn btn--secondary">Reabrir solicitud</button>
+          <span class="disable-why" style="margin:0 0 0 var(--sp-2)">visible solo para el solicitante</span>
+        </div>
+      </section>
+
+      <section class="hitl-card" aria-labelledby="c4-t">
+        <div class="hitl-card__head">
+          <svg aria-hidden="true"><use href="#i-shield"/></svg>
+          <span id="c4-t">Aprobación requerida</span>
+          <span class="mono faint">APR-0147</span>
+          <span class="tag tag--alt">Riesgo alto</span>
+        </div>
+        <div class="hitl-card__body">
+          <p class="hitl-claim" style="font-size:var(--fs-body)">Error de envío — la decisión y el comentario <strong>no se pierden</strong>.</p>
+          <div class="error-card" role="alert">
+            <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+            <div>
+              <p class="error-card__code">DECISION_SUBMIT_FAILED</p>
+              <p class="error-card__title">No se pudo registrar tu decisión</p>
+              <p class="error-card__why">El servicio de aprobaciones no respondió. Tu comentario quedó en el campo.</p>
+              <div class="error-card__actions"><button class="btn btn--secondary btn--sm btn--loading" aria-busy="true" aria-label="Reintentando">Reintentar</button></div>
+            </div>
+          </div>
+          <div class="error-card error-card--warn">
+            <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+            <div>
+              <p class="error-card__code">BRIDGE_OFFLINE</p>
+              <p class="error-card__title">Aprobación registrada — ejecución en cola</p>
+              <p class="error-card__why">El conector del ambiente no responde; la escritura se ejecutará al reconectar. La decisión no se bloquea.</p>
+              <div class="error-card__actions"><button class="btn btn--ghost btn--sm">Estado del bridge</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE D — modo lectura del solicitante ════════════════ -->
+  <section class="doc-section card-col" aria-labelledby="vd-t">
+    <span class="kicker kicker--dim">Variante D</span>
+    <h2 id="vd-t">Modo lectura del solicitante (embebida en su chat — sin botones)</h2>
+    <p class="doc-caption">El solicitante Funcional ve estado y resultado; sin versión de agente ni jerga adicional. Concurrencia: si otro aprobador resuelve, la tarjeta se actualiza y lo anuncia (aria-live).</p>
+
+    <section class="hitl-card" aria-labelledby="d1-t" aria-live="polite">
+      <div class="hitl-card__head">
+        <svg aria-hidden="true"><use href="#i-shield"/></svg>
+        <span id="d1-t">Esperando aprobación</span>
+        <span class="tag tag--warn">Pendiente</span>
+      </div>
+      <div class="hitl-card__body">
+        <p class="hitl-claim" style="font-size:var(--fs-body)">Tu solicitud de actualizar 3 parámetros en Comercial Andina S.A. <span class="tag tag--danger">PROD</span> está esperando aprobación.</p>
+        <span class="hitl-card__expire"><svg width="13" height="13" aria-hidden="true"><use href="#i-clock"/></svg>expira en 23 h 12 min · 12/06/2026 13:44</span>
+      </div>
+    </section>
+  </section>
+
+</main>
+</body>
+</html>

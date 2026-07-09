@@ -1,0 +1,301 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>30 · Tablero de operación — Consola admin</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 520px; }
+  .sidebar { background: var(--bg-raised); border-right: 1px solid var(--line); padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .sidebar__brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2); }
+  .sidebar__brand .accent { color: var(--accent); }
+  .nav-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .nav-link.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+  .nav-sep { height: 1px; background: var(--line); margin: var(--sp-2) var(--sp-4); border: 0; }
+  .nav-cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-1) var(--sp-4); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .topbar__ctx { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .topbar__user { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  .page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+  .range-sel { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--bg-raised); padding: 2px; gap: 2px; }
+  .range-sel button { border: 0; background: none; color: var(--ink-dim); font-family: var(--font-body); font-size: var(--fs-caption); font-weight: 600; padding: 4px 12px; border-radius: var(--r-xs); cursor: pointer; }
+  .range-sel button.is-active { background: var(--accent-soft); color: var(--accent); }
+  .range-sel button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-4); margin-bottom: var(--sp-4); }
+  .kpi__label { font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 var(--sp-2); }
+  .kpi__value { font-family: var(--font-mono); font-size: var(--fs-display); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; margin: 0; }
+  .kpi__delta { font-family: var(--font-mono); font-size: var(--fs-caption); margin-top: var(--sp-1); }
+  .kpi__delta.up { color: var(--danger); }   /* costo subiendo = malo */
+  .kpi__delta.down { color: var(--money); }
+  .kpi__sub { font-size: var(--fs-caption); color: var(--ink-faint); margin-top: var(--sp-1); }
+
+  .spark { display: flex; align-items: flex-end; gap: 3px; height: 34px; margin-top: var(--sp-2); }
+  .spark i { flex: 1; background: color-mix(in srgb, var(--money) 65%, transparent); border-radius: 2px 2px 0 0; min-width: 6px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+  .bar-row { display: grid; grid-template-columns: 110px 1fr auto auto; gap: var(--sp-3); align-items: center; padding: var(--sp-2) 0; border-bottom: 1px solid var(--line); font-size: var(--fs-small); }
+  .bar-row:last-child { border-bottom: 0; }
+  .bar-row .bar { height: 10px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+  .bar-row .bar i { display: block; height: 100%; background: var(--accent); border-radius: var(--r-pill); }
+  .bar-row .pct { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); width: 4ch; text-align: right; }
+
+  .health-row { display: grid; grid-template-columns: 14px 1fr auto auto; gap: var(--sp-2); align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-small); }
+  .health-row:last-child { border-bottom: 0; }
+  .health-row .ms, .health-row .ago { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .slo-row { display: grid; grid-template-columns: 1fr auto auto; gap: var(--sp-2); align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-small); }
+  .slo-row:last-child { border-bottom: 0; }
+  .slo-row .val { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+  .shortcuts { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+  .shortcut { display: inline-flex; align-items: center; gap: var(--sp-2); height: 36px; padding: 0 var(--sp-4); border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--bg-raised); color: var(--ink); font-size: var(--fs-small); font-weight: 600; }
+  .shortcut:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+  .shortcut .count { min-width: 18px; height: 18px; padding: 0 5px; border-radius: var(--r-pill); background: var(--danger); color: var(--danger-ink); font-family: var(--font-mono); font-size: 10px; font-weight: 700; line-height: 18px; text-align: center; }
+  html[data-theme="light"] .shortcut .count { color: #fff; }
+  .ext::after { content: "↗"; font-size: 11px; color: var(--ink-faint); margin-left: 2px; }
+
+  .panel h4 { display: flex; align-items: baseline; gap: var(--sp-2); }
+  .panel h4 .per { font-family: var(--font-mono); font-size: 10px; font-weight: 500; color: var(--ink-faint); letter-spacing: .05em; }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) { .kpi-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<div class="doc">
+  <span class="kicker">Mockup 30 · Consola admin</span>
+  <h1>Tablero de operación</h1>
+  <p class="muted">Vista solo-Admin. Spec: <code>docs/design/VISTAS/07-admin-operacion.md §1</code>. Datos ficticios.</p>
+
+  <!-- ════════ ESTADO NORMAL ════════ -->
+  <section class="doc-section">
+    <h2>Estado normal (datos en vivo)</h2>
+    <p class="doc-caption">Refresco cada 60 s. SLOs siempre 30 d, hit-rate siempre 7 d — etiquetado por panel.</p>
+
+    <div class="frame">
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <div class="sidebar__brand">Resultar <span class="accent">Agents</span></div>
+          <a class="nav-link" href="#">Chat</a>
+          <a class="nav-link" href="#">Catálogo</a>
+          <a class="nav-link" href="#">Workflows</a>
+          <hr class="nav-sep">
+          <span class="nav-cap">Consola admin</span>
+          <a class="nav-link is-active" href="#" aria-current="page">Tablero</a>
+          <a class="nav-link" href="#">Usuarios</a>
+          <a class="nav-link" href="#">Grupos</a>
+          <a class="nav-link" href="#">Cuotas</a>
+          <a class="nav-link" href="#">Registro de prompts</a>
+          <a class="nav-link" href="#">Audit</a>
+          <a class="nav-link" href="#">Salud</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Consola admin / Tablero</span>
+            <div class="topbar__right">
+              <span class="badge-rol badge-rol--admin">Admin</span>
+              <span class="topbar__user">mterceros</span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="page-head">
+              <div>
+                <span class="kicker">Consola admin</span>
+                <h2 style="margin:0" data-tip="Costo de proveedor LLM estimado por el gateway; fuente: Langfuse" tabindex="0">Tablero de operación</h2>
+              </div>
+              <div class="range-sel" role="group" aria-label="Rango de tiempo">
+                <button type="button" class="is-active" aria-pressed="true">Hoy</button>
+                <button type="button" aria-pressed="false">7 días</button>
+              </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="kpi-grid">
+              <div class="panel">
+                <p class="kpi__label">Costo hoy</p>
+                <p class="kpi__value money">USD 4,86</p>
+                <p class="kpi__delta down">▼ −8% vs ayer</p>
+                <p class="kpi__sub">desde 00:00, hora de la instancia</p>
+              </div>
+              <div class="panel">
+                <p class="kpi__label">Costo semana</p>
+                <p class="kpi__value money">USD 23,40</p>
+                <p class="kpi__sub mono">proy. USD 96,40 fin de mes</p>
+                <p class="kpi__sub">16% del presupuesto global mensual</p>
+              </div>
+              <div class="panel">
+                <p class="kpi__label">Cache hit-rate <span class="per">7 d</span></p>
+                <p class="kpi__value" style="color:var(--money)">82%</p>
+                <p class="kpi__delta down">▲ +3 pts vs semana anterior</p>
+                <div class="spark" role="img" aria-label="Tendencia diaria de hit-rate, 7 días">
+                  <i style="height:62%" data-tip="jue 76%"></i><i style="height:70%" data-tip="vie 79%"></i><i style="height:58%" data-tip="sáb 74%"></i><i style="height:64%" data-tip="dom 77%"></i><i style="height:80%" data-tip="lun 83%"></i><i style="height:88%" data-tip="mar 85%"></i><i style="height:84%" data-tip="mié 82%"></i>
+                </div>
+                <table class="sr-only"><caption>Hit-rate por día</caption><tr><th>jue</th><th>vie</th><th>sáb</th><th>dom</th><th>lun</th><th>mar</th><th>mié</th></tr><tr><td>76%</td><td>79%</td><td>74%</td><td>77%</td><td>83%</td><td>85%</td><td>82%</td></tr></table>
+                <p class="kpi__sub">ahorro estimado: <span class="money">USD 11,20</span> esta semana</p>
+              </div>
+              <div class="panel">
+                <p class="kpi__label">Escalaciones a Pro <span class="per">7 d</span></p>
+                <p class="kpi__value">6</p>
+                <p class="kpi__sub mono">1,8% de sesiones</p>
+                <p class="kpi__sub"><a href="#">ver sesiones escaladas</a></p>
+              </div>
+            </div>
+
+            <div class="two-col">
+              <!-- Costo por agente -->
+              <div class="panel">
+                <h4>Costo por agente <span class="per">7 d</span></h4>
+                <div class="bar-row"><a href="#">DocAgent</a><span class="bar"><i style="width:64%"></i></span><span class="money">USD 14,90</span><span class="pct">64%</span></div>
+                <div class="bar-row"><a href="#">ValidationAgent</a><span class="bar"><i style="width:22%"></i></span><span class="money">USD 5,20</span><span class="pct">22%</span></div>
+                <div class="bar-row"><a href="#">DevAgent</a><span class="bar"><i style="width:9%"></i></span><span class="money">USD 2,10</span><span class="pct">9%</span></div>
+                <div class="bar-row"><span class="muted">Workflows</span><span class="bar"><i style="width:5%;background:var(--info)"></i></span><span class="money">USD 1,20</span><span class="pct">5%</span></div>
+              </div>
+              <!-- Top usuarios -->
+              <div class="panel panel--flush">
+                <h4 style="padding:var(--sp-5) var(--sp-5) 0">Top usuarios por costo <span class="per">7 d</span></h4>
+                <table class="table">
+                  <thead><tr><th>Usuario</th><th>Nombre</th><th class="num">Sesiones</th><th class="num">Costo USD</th><th class="num">% total</th></tr></thead>
+                  <tbody>
+                    <tr><td class="mono">lucia</td><td>Lucía Fernández</td><td class="num">14</td><td class="num money">5,84</td><td class="num">25%</td></tr>
+                    <tr><td class="mono">jmendez</td><td>Jorge Méndez</td><td class="num">11</td><td class="num money">4,12</td><td class="num">18%</td></tr>
+                    <tr><td class="mono">cquiroga</td><td>Carla Quiroga</td><td class="num">9</td><td class="num money">3,60</td><td class="num">15%</td></tr>
+                    <tr><td class="mono">rvaca</td><td>Rodrigo Vaca</td><td class="num">7</td><td class="num money">2,95</td><td class="num">13%</td></tr>
+                    <tr><td class="mono">asoliz</td><td>Andrea Soliz</td><td class="num">6</td><td class="num money">2,10</td><td class="num">9%</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="two-col">
+              <!-- Top sesiones caras -->
+              <div class="panel panel--flush">
+                <h4 style="padding:var(--sp-5) var(--sp-5) 0">Top sesiones caras <span class="per">7 d</span></h4>
+                <div style="overflow-x:auto">
+                <table class="table table--dense">
+                  <thead><tr><th>Sesión</th><th>Usuario</th><th>Agente</th><th>Modelo</th><th class="num">Turnos</th><th class="num">Costo</th><th></th></tr></thead>
+                  <tbody>
+                    <tr><td class="mono">ses_9f2c</td><td class="mono">lucia</td><td>DocAgent</td><td><span class="tag">v4-flash</span></td><td class="num">42</td><td class="num money">1,12</td><td><a href="#">Abrir</a></td></tr>
+                    <tr><td class="mono">ses_71ab</td><td class="mono">jmendez</td><td>ValidationAgent</td><td><span class="tag tag--warn" data-tip="Fallback a Kimi K2.6 por error del proveedor" tabindex="0">modelo alterno</span></td><td class="num">35</td><td class="num money">0,94</td><td><a href="#">Abrir</a></td></tr>
+                    <tr><td class="mono">ses_c310</td><td class="mono">cquiroga</td><td>DocAgent</td><td><span class="tag tag--alt">v4-pro</span></td><td class="num">18</td><td class="num money">0,88</td><td><a href="#">Abrir</a></td></tr>
+                    <tr><td class="mono">ses_5e77</td><td class="mono">rvaca</td><td>DevAgent</td><td><span class="tag">v4-flash</span></td><td class="num">29</td><td class="num money">0,61</td><td><a href="#">Abrir</a></td></tr>
+                    <tr><td class="mono">ses_b042</td><td class="mono">lucia</td><td>DocAgent</td><td><span class="tag">v4-flash</span></td><td class="num">24</td><td class="num money">0,53</td><td><a href="#">Abrir</a></td></tr>
+                  </tbody>
+                </table>
+                </div>
+              </div>
+              <!-- Salud + SLOs -->
+              <div style="display:grid;gap:var(--sp-4);align-content:start">
+                <div class="panel">
+                  <h4>Salud resumida</h4>
+                  <div class="health-row"><span class="live-dot" aria-label="OK"></span><span>Gateway LLM</span><span class="ms">38 ms</span><span class="ago">hace 30 s</span></div>
+                  <div class="health-row"><span class="live-dot" aria-label="OK"></span><span>PostgreSQL</span><span class="ms">4 ms</span><span class="ago">hace 30 s</span></div>
+                  <div class="health-row"><span class="live-dot live-dot--warn" aria-label="Degradado"></span><span>Langfuse</span><span class="ms">1.240 ms</span><span class="ago">hace 30 s</span></div>
+                  <div class="health-row"><span class="live-dot" aria-label="OK"></span><span>Uptime Kuma</span><span class="ms">12 ms</span><span class="ago">hace 30 s</span></div>
+                  <div class="health-row"><span class="live-dot live-dot--warn" aria-label="Parcial"></span><span>Bridges</span><span class="ms">2/3 conectados</span><span class="ago">hace 12 s</span></div>
+                  <p style="margin:var(--sp-3) 0 0"><a href="#">Ver salud completa →</a></p>
+                </div>
+                <div class="panel">
+                  <h4>SLOs <span class="per">30 d</span></h4>
+                  <div class="slo-row"><span>Disponibilidad</span><span class="val">99,7% <span class="faint">/ ≥ 99,5%</span></span><span class="tag tag--money">OK</span></div>
+                  <div class="slo-row"><span>Latencia p95</span><span class="val">3,8 s <span class="faint">/ ≤ 4,0 s</span></span><span class="tag tag--warn">EN RIESGO</span></div>
+                  <div class="slo-row"><span>Tasa de error</span><span class="val">0,9% <span class="faint">/ ≤ 2,0%</span></span><span class="tag tag--money">OK</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Accesos directos -->
+            <div class="panel">
+              <h4>Accesos directos</h4>
+              <div class="shortcuts">
+                <a class="shortcut" href="#">Usuarios</a>
+                <a class="shortcut" href="#">Grupos</a>
+                <a class="shortcut" href="#">Cuotas <span class="count" aria-label="2 solicitudes pendientes">2</span></a>
+                <a class="shortcut" href="#">Audit</a>
+                <a class="shortcut" href="#">Salud</a>
+                <a class="shortcut" href="#">Registro de prompts</a>
+                <a class="shortcut ext" href="#" target="_blank" rel="noopener">Langfuse</a>
+                <a class="shortcut ext" href="#" target="_blank" rel="noopener">Uptime Kuma</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ ESTADO DEGRADADO ════════ -->
+  <section class="doc-section">
+    <h2>Estado degradado — telemetría diferida</h2>
+    <p class="doc-caption">Langfuse no responde: montos con prefijo <code>~</code>, error-card --warn global, el resto del tablero sigue operativo.</p>
+    <div class="panel" style="display:grid;gap:var(--sp-4)">
+      <div class="error-card error-card--warn">
+        <span class="error-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+        <div>
+          <p class="error-card__code">TELEMETRY_DEFERRED</p>
+          <p class="error-card__title">Telemetría diferida — los costos son estimados desde el gateway</p>
+          <p class="error-card__why">Langfuse no responde desde hace 4 min. Los montos llevan prefijo ~ hasta que la ingesta se normalice.</p>
+          <div class="error-card__actions"><button type="button" class="btn btn--secondary btn--sm">Reintentar</button><a class="btn btn--ghost btn--sm" href="#">Ver salud →</a></div>
+        </div>
+      </div>
+      <div class="kpi-grid" style="margin:0">
+        <div class="panel"><p class="kpi__label">Costo hoy</p><p class="kpi__value money">~USD 4,80</p><p class="kpi__sub">estimado por el gateway</p></div>
+        <div class="panel"><p class="kpi__label">Costo semana</p><p class="kpi__value money">~USD 23,10</p><p class="kpi__sub">estimado por el gateway</p></div>
+        <div class="panel"><p class="kpi__label">Cache hit-rate</p><p class="kpi__value faint">—</p><p class="kpi__sub">sin datos de Langfuse</p></div>
+        <div class="panel"><p class="kpi__label">Escalaciones a Pro</p><p class="kpi__value">6</p><p class="kpi__sub mono">1,8% de sesiones</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ CARGA Y VACÍO ════════ -->
+  <section class="doc-section">
+    <h2>Carga y vacío</h2>
+    <p class="doc-caption">Izquierda: skeleton por zona (nunca pantalla en blanco). Derecha: instancia recién instalada — no es error.</p>
+    <div class="two-col">
+      <div class="panel" aria-busy="true" aria-label="Cargando tablero">
+        <span class="skeleton skeleton--title" style="margin-bottom:var(--sp-3)">.</span>
+        <span class="skeleton skeleton--text" style="margin-bottom:var(--sp-2)">.</span>
+        <span class="skeleton skeleton--block" style="margin-bottom:var(--sp-2)">.</span>
+        <span class="skeleton skeleton--text" style="width:70%;margin-bottom:var(--sp-2)">.</span>
+        <span class="skeleton skeleton--text" style="width:55%">.</span>
+      </div>
+      <div class="panel">
+        <p class="kpi__label">Costo hoy</p>
+        <p class="kpi__value money">USD 0,00</p>
+        <p class="kpi__delta faint">— vs ayer</p>
+        <div class="empty-state" style="margin-top:var(--sp-4);padding:var(--sp-6)">
+          <p class="empty-state__title">Todavía no hay sesiones esta semana</p>
+          <p class="empty-state__hint">Cuando los consultores empiecen a usar los agentes, el costo y el hit-rate aparecen acá.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

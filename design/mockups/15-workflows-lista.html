@@ -1,0 +1,270 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>15 · Workflows — lista — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 520px; }
+  .sidebar { background: var(--bg-raised); border-right: 1px solid var(--line); padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .sidebar__brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2); }
+  .sidebar__brand .accent { color: var(--accent); }
+  .nav-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .nav-link.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+  .nav-link svg { width: 16px; height: 16px; flex: none; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .topbar__ctx { font-family: var(--font-display); font-size: var(--fs-small); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-dim); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .topbar__user { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  .page-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+  .page-head p { margin: 0; color: var(--ink-dim); font-size: var(--fs-small); max-width: 60ch; }
+
+  /* Cards de workflow */
+  .wfl-grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  .wfl-card { display: flex; flex-direction: column; gap: var(--sp-3); }
+  .wfl-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
+  .wfl-card__icon { display: inline-flex; color: var(--accent); }
+  .wfl-card__icon svg { width: 20px; height: 20px; }
+  .wfl-card__title { display: flex; align-items: center; gap: var(--sp-2); }
+  .wfl-card h3 { margin: 0; }
+  .wfl-card h3 a { color: var(--ink); }
+  .wfl-card__ver { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .wfl-card__produces { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-small); color: var(--ink-dim); margin: 0; }
+  .wfl-card__produces svg { width: 14px; height: 14px; flex: none; margin-top: 3px; color: var(--ink-faint); }
+  .wfl-card__beta-hint { font-size: var(--fs-caption); color: var(--warn); margin: 0; }
+  .wfl-card__meta { display: flex; flex-wrap: wrap; gap: var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .wfl-card__meta span { display: inline-flex; align-items: center; gap: 5px; }
+  .wfl-card__meta svg { width: 13px; height: 13px; color: var(--ink-faint); }
+  .wfl-card__reqs { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+  .wfl-hist { border-top: 1px dashed var(--line); padding-top: var(--sp-3); margin-top: auto; display: grid; gap: var(--sp-1); }
+  .wfl-hist__cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); }
+  .wfl-hist__row { display: flex; align-items: center; gap: var(--sp-2); font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); padding: var(--sp-1) 0; }
+  .wfl-hist__row svg { width: 13px; height: 13px; flex: none; }
+  .wfl-hist__row .ok { color: var(--money); }
+  .wfl-hist__row .err { color: var(--danger); }
+  .wfl-hist__row .run { color: var(--accent); }
+  .wfl-hist__empty { font-size: var(--fs-caption); color: var(--ink-faint); }
+  .wfl-card__foot { display: flex; justify-content: flex-end; border-top: 1px solid var(--line); padding-top: var(--sp-3); }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; } /* en producto: drawer accesible vía botón ≡ del topbar */
+    .content { padding: var(--sp-4); }
+    .wfl-grid { grid-template-columns: 1fr; }
+    .wfl-hist__row { min-height: 44px; } /* objetivo táctil */
+    .wfl-card__foot .btn { flex: 1 1 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<!-- Sprite de íconos lucide (inline, sin librerías) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></symbol>
+    <symbol id="i-listchecks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-arrowright" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="m12 8 4 4-4 4"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-dollar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></symbol>
+    <symbol id="i-cable" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1v2"/><path d="M19 15V6.5a1 1 0 0 0-7 0v11a1 1 0 0 1-7 0V9"/><path d="M21 21v-2h-4"/><path d="M3 5h4V3"/><path d="M7 5a1 1 0 0 1 1 1v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1V3"/></symbol>
+    <symbol id="i-sheet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 20 12 6 21 6 3"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 15 · Módulo workflows</span>
+    <h1>Workflows — lista</h1>
+    <p class="muted">Sección de primer nivel (decisión D6), separada del catálogo. Spec: <code>docs/design/VISTAS/04-workflows.md</code> §1.</p>
+    <p class="doc-caption">Datos 100% ficticios. Vista renderizada como rol <strong>Técnico</strong> (ve costo estimado y versión); las diferencias por rol están anotadas.</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — éxito (Técnico) ════════════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Lista con workflows habilitados — rol Técnico</h2>
+    <p class="doc-caption">Tres cards: estable con historial · beta sin corridas · estable con bridge sin conexión. Funcional no ve costo ni versión; Admin agrega «Gestionar workflows» arriba a la derecha.</p>
+
+    <div class="frame">
+      <div class="ai-banner"><svg aria-hidden="true"><use href="#i-alert"/></svg>Respuestas generadas por IA — verificá antes de aplicar en cliente</div>
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <div class="sidebar__brand">Resultar <span class="accent">Agents</span></div>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-msg"/></svg>Chat</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-grid"/></svg>Catálogo</a>
+          <a class="nav-link is-active" href="#" aria-current="page"><svg aria-hidden="true"><use href="#i-listchecks"/></svg>Workflows</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-shield"/></svg>Aprobaciones</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Workflows</span>
+            <div class="topbar__right">
+              <div class="taximeter"><span class="taximeter__label">Sesión</span><span class="taximeter__value">USD 0,0000</span></div>
+              <button class="notif-bell" aria-label="Notificaciones, 1 sin leer"><svg aria-hidden="true"><use href="#i-bell"/></svg><span class="notif-bell__count">1</span></button>
+              <span class="topbar__user">tomas · <span class="badge-rol badge-rol--tecnico">Técnico</span></span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="page-head">
+              <div>
+                <h2 style="margin-bottom:var(--sp-1)">Workflows</h2>
+                <p>Procesos deterministas con formulario: los configurás, los ejecutás y recibís un resultado verificable.</p>
+              </div>
+              <!-- Admin vería acá: <button class="btn btn--ghost">Gestionar workflows</button> -->
+            </div>
+
+            <div class="wfl-grid">
+
+              <!-- Card 1: estable con historial -->
+              <article class="panel wfl-card" aria-labelledby="wf1-t">
+                <div class="wfl-card__head">
+                  <div class="wfl-card__title">
+                    <span class="wfl-card__icon"><svg aria-hidden="true"><use href="#i-listchecks"/></svg></span>
+                    <div>
+                      <h3 id="wf1-t"><a href="#">Validación de módulo Facturación</a></h3>
+                      <span class="wfl-card__ver">validacion-facturacion@1.4</span>
+                    </div>
+                  </div>
+                  <span class="tag">Estable</span>
+                </div>
+                <p class="wfl-card__produces"><svg aria-hidden="true"><use href="#i-arrowright"/></svg>Produce: informe GAP exportable (PDF/CSV) contra checklist de parametrización.</p>
+                <div class="wfl-card__meta">
+                  <span><svg aria-hidden="true"><use href="#i-clock"/></svg>≈ 10 min</span>
+                  <span class="money"><svg aria-hidden="true"><use href="#i-dollar"/></svg>≈ USD 0,18</span>
+                </div>
+                <div class="wfl-card__reqs">
+                  <span class="chip"><svg aria-hidden="true"><use href="#i-cable"/></svg><span class="chip__name">bridge</span><span class="chip__meta"><span class="live-dot" aria-hidden="true"></span> conectado</span></span>
+                  <span class="chip"><svg aria-hidden="true"><use href="#i-sheet"/></svg><span class="chip__name">checklist XLSX</span></span>
+                </div>
+                <div class="wfl-hist">
+                  <span class="wfl-hist__cap">Tus corridas recientes</span>
+                  <a class="wfl-hist__row" href="#"><svg class="ok" aria-hidden="true"><use href="#i-check"/></svg>WF-2026-0347 · hace 1 día · completada</a>
+                  <a class="wfl-hist__row" href="#"><svg class="ok" aria-hidden="true"><use href="#i-check"/></svg>WF-2026-0341 · hace 5 días · completada</a>
+                </div>
+                <div class="wfl-card__foot"><a class="btn btn--secondary" href="#"><svg aria-hidden="true"><use href="#i-play"/></svg>Configurar</a></div>
+              </article>
+
+              <!-- Card 2: beta, sin corridas -->
+              <article class="panel wfl-card" aria-labelledby="wf2-t">
+                <div class="wfl-card__head">
+                  <div class="wfl-card__title">
+                    <span class="wfl-card__icon"><svg aria-hidden="true"><use href="#i-listchecks"/></svg></span>
+                    <div>
+                      <h3 id="wf2-t"><a href="#">Validación de módulo Compras</a></h3>
+                      <span class="wfl-card__ver">validacion-compras@0.3</span>
+                    </div>
+                  </div>
+                  <span class="tag tag--warn">Beta</span>
+                </div>
+                <p class="wfl-card__beta-hint">Resultados en validación — revisalos con más cuidado.</p>
+                <p class="wfl-card__produces"><svg aria-hidden="true"><use href="#i-arrowright"/></svg>Produce: informe GAP de parametrización de SIGACOM.</p>
+                <div class="wfl-card__meta">
+                  <span><svg aria-hidden="true"><use href="#i-clock"/></svg>≈ 6 min</span>
+                  <span class="money"><svg aria-hidden="true"><use href="#i-dollar"/></svg>≈ USD 0,11</span>
+                </div>
+                <div class="wfl-card__reqs">
+                  <span class="chip"><svg aria-hidden="true"><use href="#i-cable"/></svg><span class="chip__name">bridge</span><span class="chip__meta"><span class="live-dot" aria-hidden="true"></span> conectado</span></span>
+                  <span class="chip"><svg aria-hidden="true"><use href="#i-sheet"/></svg><span class="chip__name">checklist XLSX</span></span>
+                </div>
+                <div class="wfl-hist">
+                  <span class="wfl-hist__cap">Tus corridas recientes</span>
+                  <span class="wfl-hist__empty">Sin corridas tuyas todavía.</span>
+                </div>
+                <div class="wfl-card__foot"><a class="btn btn--secondary" href="#"><svg aria-hidden="true"><use href="#i-play"/></svg>Configurar</a></div>
+              </article>
+
+              <!-- Card 3: estable, bridge sin conexión + corrida en ejecución -->
+              <article class="panel wfl-card" aria-labelledby="wf3-t">
+                <div class="wfl-card__head">
+                  <div class="wfl-card__title">
+                    <span class="wfl-card__icon"><svg aria-hidden="true"><use href="#i-listchecks"/></svg></span>
+                    <div>
+                      <h3 id="wf3-t"><a href="#">Generación de YAML de ambiente</a></h3>
+                      <span class="wfl-card__ver">yaml-ambiente@2.0</span>
+                    </div>
+                  </div>
+                  <span class="tag">Estable</span>
+                </div>
+                <p class="wfl-card__produces"><svg aria-hidden="true"><use href="#i-arrowright"/></svg>Produce: YAML de configuración del ambiente, validado contra esquema.</p>
+                <div class="wfl-card__meta">
+                  <span><svg aria-hidden="true"><use href="#i-clock"/></svg>≈ 3 min</span>
+                  <span class="money"><svg aria-hidden="true"><use href="#i-dollar"/></svg>≈ USD 0,06</span>
+                </div>
+                <div class="wfl-card__reqs">
+                  <span class="chip" data-tip="El bloqueo real se valida en el formulario"><svg aria-hidden="true"><use href="#i-cable"/></svg><span class="chip__name">bridge</span><span class="chip__meta"><span class="live-dot live-dot--off" aria-hidden="true"></span> sin conexión</span></span>
+                </div>
+                <div class="wfl-hist">
+                  <span class="wfl-hist__cap">Tus corridas recientes</span>
+                  <a class="wfl-hist__row" href="#"><svg class="run" aria-hidden="true"><use href="#i-play"/></svg>WF-2026-0348 · hace 3 min · EN EJECUCIÓN</a>
+                  <a class="wfl-hist__row" href="#"><svg class="err" aria-hidden="true"><use href="#i-x"/></svg>WF-2026-0338 · hace 8 días · error</a>
+                </div>
+                <div class="wfl-card__foot"><a class="btn btn--secondary" href="#"><svg aria-hidden="true"><use href="#i-play"/></svg>Configurar</a></div>
+              </article>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — carga ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Estado de carga</h2>
+    <p class="doc-caption">Tres cards skeleton (silueta real: título 50% + líneas + botón). Solo si la carga estimada supera 300 ms.</p>
+    <div class="frame" style="padding: var(--sp-6);" aria-busy="true">
+      <div class="wfl-grid">
+        <div class="panel wfl-card"><span class="skeleton skeleton--title"></span><span class="skeleton skeleton--text"></span><span class="skeleton skeleton--text" style="width:80%"></span><span class="skeleton skeleton--text" style="width:60%"></span><span class="skeleton" style="height:36px;width:120px;margin-top:var(--sp-3)"></span></div>
+        <div class="panel wfl-card"><span class="skeleton skeleton--title"></span><span class="skeleton skeleton--text"></span><span class="skeleton skeleton--text" style="width:80%"></span><span class="skeleton skeleton--text" style="width:60%"></span><span class="skeleton" style="height:36px;width:120px;margin-top:var(--sp-3)"></span></div>
+        <div class="panel wfl-card"><span class="skeleton skeleton--title"></span><span class="skeleton skeleton--text"></span><span class="skeleton skeleton--text" style="width:80%"></span><span class="skeleton skeleton--text" style="width:60%"></span><span class="skeleton" style="height:36px;width:120px;margin-top:var(--sp-3)"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE C — vacío ════════════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Estado vacío (rol sin workflows habilitados)</h2>
+    <p class="doc-caption">En producto, si el rol no tiene NINGÚN workflow, la entrada del sidebar directamente no aparece (§9.7). Este vacío cubre el caso transitorio. Admin vería el CTA «Gestionar workflows».</p>
+    <div class="frame" style="padding: var(--sp-6);">
+      <div class="empty-state">
+        <span class="empty-state__icon"><svg aria-hidden="true" style="width:32px;height:32px"><use href="#i-listchecks"/></svg></span>
+        <p class="empty-state__title">Todavía no hay workflows habilitados para tu rol</p>
+        <p class="empty-state__hint">Pedile al administrador que habilite los que necesités para tu trabajo.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

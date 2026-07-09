@@ -1,0 +1,332 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>29 · Revisión de checklist — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  /* Header de revisión */
+  .rev-head { display: grid; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+  .rev-head__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+  .rev-progress { display: grid; gap: var(--sp-1); max-width: 560px; }
+  .rev-breakdown { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .rev-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+
+  /* Card de regla */
+  .rule { margin-bottom: var(--sp-5); }
+  .rule__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+  .rule__id { font-family: var(--font-display); font-size: var(--fs-small); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+  .rule__trace { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .rule__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+  .rule__col-t { font-family: var(--font-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 var(--sp-2); }
+  .rule__foot { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-2); border-top: 1px solid var(--line); margin-top: var(--sp-4); padding-top: var(--sp-3); }
+  .rule.is-approved { border-left: 3px solid var(--money); }
+  .rule.is-corrected { border-left: 3px solid var(--info); }
+  .rule.is-discarded { opacity: .6; border-left: 3px solid var(--line-strong); }
+
+  /* YAML interpretado como definición */
+  .yaml { display: grid; grid-template-columns: 130px 1fr; gap: 4px var(--sp-3); font-size: var(--fs-small); margin: 0; }
+  .yaml dt { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .yaml dd { margin: 0; font-family: var(--font-mono); font-size: var(--fs-caption); }
+  .diff-old { color: var(--ink-faint); text-decoration: line-through; }
+  .diff-new { color: var(--money); font-weight: 700; }
+  .discard-reason { font-size: var(--fs-small); color: var(--ink-dim); font-style: italic; border-left: 2px solid var(--line-strong); padding-left: var(--sp-3); margin: var(--sp-2) 0 0; }
+  .stage { background: var(--scrim); border-radius: var(--r-lg); padding: var(--sp-7) var(--sp-4); display: grid; place-items: center; }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .rule__grid { grid-template-columns: 1fr; } /* original arriba, interpretación abajo */
+    .rule__foot .btn { flex: 1 1 auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+</defs></svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 29 · Módulo validación</span>
+    <h1>Revisión de checklist convertido</h1>
+    <p class="muted">Revisión humana regla por regla: XLSX original vs YAML interpretado, lado a lado. Técnico + Admin. Spec: <code>docs/design/VISTAS/05-hitl-validacion.md §6</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. «Corregir» edita solo la interpretación; el XLSX original es evidencia inmutable.</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — revisión en curso ════════════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Revisión en curso — Parametrización fiscal BOL · v4 (borrador)</h2>
+
+    <div class="rev-head panel">
+      <div class="rev-head__row">
+        <div>
+          <span class="kicker">Checklists · Revisión</span>
+          <h3 style="margin:0">Parametrización fiscal · <span class="mono">SIGAFIN · BOL · v4</span> <span class="tag">Borrador</span></h3>
+          <p class="doc-caption" style="margin-bottom:0">Convertido de <span class="mono">plan-fiscal-bol-v4.xlsx</span> · 11/06/2026 09:15 · owner: rodrigo</p>
+        </div>
+        <div class="rev-actions">
+          <label class="sr-only" for="rev-f">Filtrar reglas por estado</label>
+          <select class="select" id="rev-f" style="width:170px"><option>Pendientes (22)</option><option>Todas (34)</option><option>Aprobadas (9)</option><option>Corregidas (2)</option><option>Descartadas (1)</option></select>
+          <button class="btn btn--secondary">Aprobar todo lo restante</button>
+          <button class="btn btn--primary" disabled data-tip="Quedan 22 reglas pendientes">Finalizar revisión</button>
+        </div>
+      </div>
+      <div class="rev-progress">
+        <div class="quota-row"><span>12 de 34 reglas revisadas</span><span class="num">35%</span></div>
+        <div class="quota-bar" role="progressbar" aria-valuenow="12" aria-valuemin="0" aria-valuemax="34" aria-label="Progreso de revisión: 12 de 34 reglas">
+          <span class="quota-bar__fill" style="width:35%"></span>
+        </div>
+        <span class="rev-breakdown">9 aprobadas · 2 corregidas · 1 descartada · 22 pendientes</span>
+      </div>
+    </div>
+
+    <!-- Regla pendiente -->
+    <section class="panel rule" aria-labelledby="r13-t">
+      <div class="rule__head">
+        <span class="rule__id" id="r13-t">Regla 13</span>
+        <span class="rule__trace">fila XLSX 14</span>
+        <span class="tag">Pendiente</span>
+      </div>
+      <div class="rule__grid">
+        <div>
+          <p class="rule__col-t">XLSX original (inmutable)</p>
+          <div class="table-wrap"><table class="table table--dense">
+            <caption class="sr-only">Celdas originales de la fila 14</caption>
+            <tbody>
+              <tr><th scope="row">Tabla</th><td class="mono">SX6</td></tr>
+              <tr><th scope="row">Parámetro</th><td class="mono">MV_SIMB1</td></tr>
+              <tr><th scope="row">Valor esperado</th><td class="mono">Bs</td></tr>
+              <tr><th scope="row">Criticidad</th><td>ERROR si difiere</td></tr>
+              <tr><th scope="row">Observación</th><td>Símbolo de moneda 1 — Bolivia</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div>
+          <p class="rule__col-t">Regla interpretada (YAML)</p>
+          <dl class="yaml">
+            <dt>id</dt><dd>fin-bol-013</dd>
+            <dt>tabla</dt><dd>SX6</dd>
+            <dt>parámetro</dt><dd>MV_SIMB1</dd>
+            <dt>condición</dt><dd>igual a</dd>
+            <dt>valor esperado</dt><dd>"Bs"</dd>
+            <dt>severidad</dt><dd>error</dd>
+            <dt>mensaje</dt><dd style="font-family:var(--font-body)">El símbolo de la moneda 1 debe ser «Bs» en localización BOL.</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="rule__foot">
+        <button class="btn btn--ghost">Descartar</button>
+        <button class="btn btn--secondary">Corregir</button>
+        <button class="btn btn--primary btn--sm" style="height:36px">Aprobar regla</button>
+      </div>
+    </section>
+
+    <!-- Regla en edición inline (corregir) -->
+    <section class="panel rule" aria-labelledby="r14-t">
+      <div class="rule__head">
+        <span class="rule__id" id="r14-t">Regla 14</span>
+        <span class="rule__trace">fila XLSX 15</span>
+        <span class="tag tag--warn">Baja confianza</span>
+        <span class="tag tag--info">En edición</span>
+      </div>
+      <div class="rule__grid">
+        <div>
+          <p class="rule__col-t">XLSX original (inmutable)</p>
+          <div class="table-wrap"><table class="table table--dense">
+            <caption class="sr-only">Celdas originales de la fila 15</caption>
+            <tbody>
+              <tr><th scope="row">Tabla</th><td class="mono">SX6</td></tr>
+              <tr><th scope="row">Parámetro</th><td class="mono">MV_TX2</td></tr>
+              <tr><th scope="row">Valor esperado</th><td class="mono">ver hoja anexa (*)</td></tr>
+              <tr><th scope="row">Criticidad</th><td>aviso</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <div>
+          <p class="rule__col-t">Regla interpretada — edición inline</p>
+          <div class="field"><label class="field-label" for="e-cond">Condición</label>
+            <select class="select" id="e-cond"><option>igual a</option><option selected>no vacío</option><option>contiene</option></select>
+          </div>
+          <div class="field"><label class="field-label" for="e-val">Valor esperado <span class="req" aria-hidden="true">*</span></label>
+            <input class="input input--mono is-invalid" id="e-val" value="" aria-invalid="true" aria-describedby="e-val-err">
+            <span class="field-error" id="e-val-err">El valor esperado no puede quedar vacío.</span>
+          </div>
+          <div class="field"><label class="field-label" for="e-sev">Severidad <span class="req" aria-hidden="true">*</span></label>
+            <select class="select" id="e-sev"><option>error</option><option selected>advertencia</option></select>
+          </div>
+          <div class="field" style="margin-bottom:0"><label class="field-label" for="e-msg">Mensaje al consultor</label>
+            <textarea class="textarea" id="e-msg">Verificá la tasa MV_TX2 contra la hoja anexa del plan fiscal.</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="rule__foot">
+        <button class="btn btn--ghost">Cancelar</button>
+        <button class="btn btn--primary">Guardar corrección</button>
+      </div>
+    </section>
+
+    <!-- Regla aprobada -->
+    <section class="panel rule is-approved" aria-labelledby="r12-t">
+      <div class="rule__head">
+        <span class="rule__id" id="r12-t">Regla 12</span>
+        <span class="rule__trace">fila XLSX 13</span>
+        <span class="tag tag--money">Aprobada</span>
+        <span class="faint" style="font-size:var(--fs-caption);margin-left:auto">rodrigo · 11/06 10:02</span>
+      </div>
+      <dl class="yaml">
+        <dt>id</dt><dd>fin-bol-012</dd>
+        <dt>parámetro</dt><dd>MV_PAISLOC</dd>
+        <dt>condición</dt><dd>igual a</dd>
+        <dt>valor esperado</dt><dd>"BOL"</dd>
+        <dt>severidad</dt><dd>error</dd>
+      </dl>
+    </section>
+
+    <!-- Regla corregida (diff visible) -->
+    <section class="panel rule is-corrected" aria-labelledby="r9-t">
+      <div class="rule__head">
+        <span class="rule__id" id="r9-t">Regla 9</span>
+        <span class="rule__trace">fila XLSX 10</span>
+        <span class="tag tag--info">Corregida</span>
+        <span class="faint" style="font-size:var(--fs-caption);margin-left:auto">rodrigo · 11/06 09:48</span>
+      </div>
+      <dl class="yaml">
+        <dt>parámetro</dt><dd>MV_MOEDA2</dd>
+        <dt>valor esperado</dt><dd><span class="diff-old">"DOLAR"</span> → <span class="diff-new">"USD"</span></dd>
+        <dt>severidad</dt><dd><span class="diff-old">advertencia</span> → <span class="diff-new">error</span></dd>
+      </dl>
+      <p class="doc-caption" style="margin:var(--sp-2) 0 0">El diff interpretado→corregido queda en la card y en el audit de la versión.</p>
+    </section>
+
+    <!-- Regla descartada -->
+    <section class="panel rule is-discarded" aria-labelledby="r5-t">
+      <div class="rule__head">
+        <span class="rule__id" id="r5-t">Regla 5</span>
+        <span class="rule__trace">fila XLSX 6</span>
+        <span class="tag">Descartada</span>
+        <span class="faint" style="font-size:var(--fs-caption);margin-left:auto">rodrigo · 11/06 09:30</span>
+      </div>
+      <dl class="yaml"><dt>parámetro</dt><dd>MV_OBSOLET</dd></dl>
+      <p class="discard-reason">Razón: «Fila de título de sección en el XLSX, no es una regla. ValidationAgent no la usará; queda auditada en la versión.»</p>
+    </section>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — modales de cierre ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Modales: «Aprobar todo lo restante» y «Finalizar revisión»</h2>
+
+    <div style="display:grid;gap:var(--sp-5);grid-template-columns:repeat(auto-fit,minmax(360px,1fr))">
+      <div class="stage">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mb1-t">
+          <div class="modal__head"><h3 class="modal__title" id="mb1-t">Aprobar todo lo restante</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+          <div class="modal__body">
+            <p>Vas a aprobar las <strong>22 reglas pendientes</strong> sin revisarlas una por una.</p>
+            <div class="error-card error-card--warn">
+              <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+              <div>
+                <p class="error-card__title" style="font-size:var(--fs-small)">3 reglas de baja confianza quedan fuera</p>
+                <p class="error-card__why" style="margin:0">El convertidor dudó en las reglas 14, 21 y 29: revisalas individualmente.</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal__foot">
+            <button class="btn btn--ghost">Cancelar</button>
+            <button class="btn btn--primary">Aprobar 19 reglas</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mb2-t">
+          <div class="modal__head"><h3 class="modal__title" id="mb2-t">Finalizar revisión — v4</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+          <div class="modal__body">
+            <p>Resumen de la revisión:</p>
+            <dl class="yaml" style="grid-template-columns:140px 1fr">
+              <dt>aprobadas</dt><dd>30</dd>
+              <dt>corregidas</dt><dd>3</dd>
+              <dt>descartadas</dt><dd>1</dd>
+              <dt>pendientes</dt><dd>0</dd>
+            </dl>
+            <p style="margin-top:var(--sp-3)"><strong>v4 queda aprobada e inmutable</strong> y pasa a ser la versión activa que usa ValidationAgent para SIGAFIN · BOL.</p>
+          </div>
+          <div class="modal__foot">
+            <button class="btn btn--ghost">Cancelar</button>
+            <button class="btn btn--primary">Aprobar versión v4</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE C — estados ════════════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Estados: carga · error de guardado · conflicto · degradado · solo lectura</h2>
+    <div style="display:grid;gap:var(--sp-5);grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <div class="panel" aria-busy="true">
+        <h3>Carga</h3>
+        <span class="skeleton skeleton--title" style="margin-bottom:8px"></span>
+        <span class="skeleton skeleton--block" style="margin-bottom:8px"></span>
+        <span class="skeleton skeleton--block"></span>
+      </div>
+      <div class="panel">
+        <h3>Error de guardado (por regla)</h3>
+        <div class="error-card" role="alert">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">RULE_SAVE_FAILED</p>
+            <p class="error-card__title">No se pudo guardar la decisión de la regla 13</p>
+            <p class="error-card__why">Tu edición no se pierde: reintentá.</p>
+            <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Conflicto (lock optimista por regla)</h3>
+        <div class="toast toast--warn" style="animation:none">
+          <span class="toast__icon"><svg width="16" height="16" aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div><p class="toast__title">Regla 13 ya decidida</p><p class="toast__msg">marco la aprobó hace un momento — la card se recargó con su decisión.</p></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Degradado — autosave sin conexión</h3>
+        <p><span class="tag tag--warn">Cambios pendientes de sincronizar</span></p>
+        <p class="muted" style="font-size:var(--fs-small)">Las decisiones se guardan regla por regla (autosave); al volver la conexión no se pierde nada. Se puede abandonar y retomar: el progreso persiste.</p>
+      </div>
+      <div class="panel" style="grid-column:1/-1">
+        <h3>Versión aprobada — solo lectura permanente</h3>
+        <p class="doc-caption">El mismo layout sirve como «Ver» desde la vista 28; sin botones de decisión.</p>
+        <div class="rule__head" style="margin:0">
+          <span class="rule__id">Parametrización fiscal · v3</span>
+          <span class="tag tag--money">Aprobado</span>
+          <span class="tag tag--outline">activa</span>
+          <span class="faint" style="font-size:var(--fs-caption);margin-left:auto"><svg width="13" height="13" style="vertical-align:-2px;color:var(--money)" aria-hidden="true"><use href="#i-check"/></svg> aprobada por rodrigo · 10/06/2026 18:20 · 34 reglas (31 aprobadas · 2 corregidas · 1 descartada)</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

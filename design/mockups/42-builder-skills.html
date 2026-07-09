@@ -1,0 +1,486 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>42 · Builder de skills — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  /* Andamiaje del documento de mockup (usa solo tokens) */
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  /* Frame = ventana de la app simulada */
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 480px; }
+  .sidebar { background: var(--bg-raised); border-right: 1px solid var(--line); padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .sidebar__brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2); }
+  .sidebar__brand .accent { color: var(--accent); }
+  .nav-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .nav-link.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+  .nav-link svg { width: 16px; height: 16px; flex: none; }
+  .nav-cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-1) var(--sp-4); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .topbar__ctx { font-family: var(--font-display); font-size: var(--fs-small); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-dim); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  /* ── Andamiaje del builder de skills (prefijo bx-) ────────────────────── */
+  .bx-pagehead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .bx-bake { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-small); color: var(--ink-dim); background: color-mix(in srgb, var(--warn) 8%, var(--panel)); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); margin-bottom: var(--sp-5); }
+  .bx-bake svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--warn); }
+
+  .bx-cols { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3) var(--sp-6); }
+  .bx-note { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-caption); color: var(--ink-dim); background: color-mix(in srgb, var(--ink) 4%, transparent); border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); margin-top: var(--sp-3); }
+  .bx-note svg { width: 14px; height: 14px; flex: none; margin-top: 2px; color: var(--ink-faint); }
+
+  /* Banda de gate de publicación */
+  .bx-gate { border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-4); background: var(--bg-raised); }
+  .bx-gate__row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+  .bx-gate__count { font-family: var(--font-mono); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .bx-gate.is-blocked { border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+  .bx-gate.is-blocked .bx-gate__count { color: var(--warn); }
+  .bx-gate.is-ok { border-color: color-mix(in srgb, var(--money) 40%, transparent); }
+  .bx-gate.is-ok .bx-gate__count { color: var(--money); }
+  .bx-gate__msg { font-size: var(--fs-small); margin: var(--sp-2) 0 0; }
+  .bx-gate.is-blocked .bx-gate__msg { color: var(--warn); font-weight: 600; }
+  .bx-gate.is-ok .bx-gate__msg { color: var(--money); font-weight: 600; }
+
+  .bx-codehead { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-2); font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); margin-bottom: var(--sp-1); }
+  .bx-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; justify-content: flex-end; border-top: 1px solid var(--line); margin-top: var(--sp-5); padding-top: var(--sp-4); }
+  .bx-reason { font-size: var(--fs-caption); color: var(--warn); margin-right: auto; }
+
+  .bx-dests { display: grid; gap: var(--sp-2); }
+  .bx-dest-hint { font-size: var(--fs-caption); color: var(--ink-faint); margin-left: 24px; }
+
+  .bx-mobilegate { max-width: 380px; }
+  td .checkbox { vertical-align: middle; }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; } /* en producto: drawer accesible vía botón ≡ del topbar */
+    .content { padding: var(--sp-4); }
+    .bx-cols { grid-template-columns: 1fr; }
+    .bx-actions { flex-direction: column; align-items: stretch; }
+    .bx-reason { margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<!-- Sprite de íconos lucide (inline, sin librerías) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></symbol>
+    <symbol id="i-listchecks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-hammer" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"/></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></symbol>
+    <symbol id="i-package" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 8.7 5 8.7-5"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 42 · Construcción (solo Admin)</span>
+    <h1>Builder de skills — registro, editor y gate de publicación</h1>
+    <p class="muted">Skills versionadas que se hornean en versiones de agente. Spec: <code>docs/design/VISTAS/09-builders.md</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios (skills <code>bol-localizacion</code>, <code>cst-etiquetado</code>; usuarios «lucia», «mgarcia», «jperez»). En producto el editor abre al seleccionar/crear; acá registro + editor + changelog van apilados para documentar estados.</p>
+  </header>
+
+  <!-- ════════════════ FRAME PRINCIPAL ════════════════ -->
+  <section class="doc-section" aria-labelledby="f1-t">
+    <span class="kicker kicker--dim">Frame principal</span>
+    <h2 id="f1-t">Registro de skills + editor con gate bloqueado (2/3)</h2>
+    <p class="doc-caption">Micro-demo: el checkbox del tercer caso de eval pone el gate en verde y habilita «Publicar skill».</p>
+
+    <div class="frame">
+      <div class="ai-banner"><svg aria-hidden="true"><use href="#i-alert"/></svg>Respuestas generadas por IA — verificá antes de aplicar en cliente</div>
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <div class="sidebar__brand">Resultar<span class="accent">·</span>Agents</div>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-msg"/></svg>Chat</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-grid"/></svg>Catálogo</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-listchecks"/></svg>Workflows</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-shield"/></svg>Aprobaciones</a>
+          <hr class="nav-sep">
+          <span class="nav-cap">Consola admin</span>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-db"/></svg>Telemetría</a>
+          <a class="nav-link is-active" href="#" aria-current="page"><svg aria-hidden="true"><use href="#i-hammer"/></svg>Construcción</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Consola admin › Construcción › Skills</span>
+            <div class="topbar__right">
+              <span class="badge-rol badge-rol--admin">Admin</span>
+              <span class="mono faint">mgarcia</span>
+              <button class="notif-bell" aria-label="Notificaciones, 2 sin leer"><svg aria-hidden="true"><use href="#i-bell"/></svg><span class="notif-bell__count">2</span></button>
+            </div>
+          </div>
+          <div class="content">
+
+            <div class="bx-pagehead">
+              <div>
+                <span class="kicker">Consola admin · Construcción</span>
+                <h2 style="margin-bottom:0">Builder de skills</h2>
+              </div>
+              <button class="btn btn--primary">+ Crear skill</button>
+            </div>
+
+            <!-- Recordatorio permanente de horneado -->
+            <div class="bx-bake" role="note">
+              <svg aria-hidden="true"><use href="#i-alert"/></svg>
+              <span><strong>Las skills se hornean en la versión del agente — nunca se cargan a mitad de sesión.</strong> Publicar una skill no cambia ningún agente: hay que crear y activar una versión nueva del agente que la incluya.</span>
+            </div>
+
+            <!-- Registro -->
+            <div class="table-wrap" style="margin-bottom:var(--sp-6)">
+              <table class="table">
+                <caption class="sr-only">Registro de skills: versión, owner, agentes que la usan, estado y evals</caption>
+                <thead><tr><th scope="col">Skill</th><th scope="col">Versión</th><th scope="col">Owner</th><th scope="col">Agentes que la usan</th><th scope="col">Estado</th><th scope="col">Evals</th><th scope="col">Acciones</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">bol-localizacion</td><td class="mono">@4</td><td>lucia</td>
+                    <td><span class="tag">DocAgent</span> <span class="tag">ValidationAgent</span></td>
+                    <td><span class="tag tag--money">Activa</span></td>
+                    <td class="mono">5/5 <span class="tag tag--money">OK</span></td>
+                    <td><a href="#">Editar</a> · <a href="#chg">Changelog</a></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">mit-formato</td><td class="mono">@2</td><td>mgarcia</td>
+                    <td><span class="tag">DocAgent</span></td>
+                    <td><span class="tag tag--money">Activa</span></td>
+                    <td class="mono">4/4 <span class="tag tag--money">OK</span></td>
+                    <td><a href="#">Editar</a> · <a href="#">Changelog</a></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">sx-diccionario</td><td class="mono">@1</td><td>jperez</td>
+                    <td><span class="tag">ValidationAgent</span></td>
+                    <td><span class="tag tag--money">Activa</span></td>
+                    <td class="mono">3/3 <span class="tag tag--money">OK</span></td>
+                    <td><a href="#">Editar</a> · <a href="#">Changelog</a></td>
+                  </tr>
+                  <tr class="is-selected">
+                    <td class="mono">cst-etiquetado</td><td class="mono">@1</td><td>lucia</td>
+                    <td class="faint">—</td>
+                    <td><span class="tag tag--warn">Borrador</span></td>
+                    <td class="mono">2/3 <span class="tag tag--danger">Gate</span></td>
+                    <td><a href="#ed">Editar</a> · <span class="faint">Changelog</span></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">adv-snippets</td><td class="mono">@3</td><td>mgarcia</td>
+                    <td><span class="tag">DevAgent</span></td>
+                    <td><span class="tag tag--outline">Archivada</span></td>
+                    <td class="mono">3/3 <span class="tag tag--money">OK</span></td>
+                    <td><a href="#">Ver</a> · <a href="#">Changelog</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- ─── EDITOR — cst-etiquetado@1 (borrador, gate 2/3) ─────── -->
+            <section class="panel" id="ed" aria-labelledby="ed-t">
+              <span class="kicker kicker--dim">Editor de skill</span>
+              <h3 id="ed-t">Editar skill — <span class="mono">cst-etiquetado@1</span> <span class="tag tag--warn">Borrador</span></h3>
+
+              <div class="bx-cols">
+                <div class="field">
+                  <label class="field-label" for="sk-slug">Nombre (slug) <span class="req" aria-hidden="true">*</span></label>
+                  <input class="input input--mono" id="sk-slug" value="cst-etiquetado">
+                  <span class="field-hint">Inmutable tras publicar la primera versión (es la clave del registro).</span>
+                </div>
+                <div class="field">
+                  <label class="field-label" for="sk-owner">Owner</label>
+                  <select class="select" id="sk-owner"><option selected>lucia</option><option>mgarcia</option><option>jperez</option></select>
+                  <span class="field-hint">Informativo (quién la mantiene). No otorga permisos: la edición siempre es de Admin.</span>
+                </div>
+              </div>
+              <div class="field">
+                <label class="field-label" for="sk-desc">Descripción corta <span class="req" aria-hidden="true">*</span></label>
+                <input class="input" id="sk-desc" maxlength="140" value="Cómo etiquetar y priorizar tickets CST según la taxonomía interna de Resultar.">
+              </div>
+
+              <div class="field">
+                <div class="bx-codehead"><label class="field-label" for="sk-body" style="margin:0">Contenido versionado <span class="req" aria-hidden="true">*</span></label><span>cst-etiquetado@1 · BORRADOR · ≈640 tok</span></div>
+                <textarea class="textarea textarea--mono input--mono" id="sk-body" rows="8" style="font-family:var(--font-mono); font-size:var(--fs-caption); min-height:150px"># Etiquetado de tickets CST
+
+## Taxonomía
+- `loc-bol`: localización Bolivia (MV_PAISLOC=BOL)
+- `fiscal`: impuestos, libros, facturación
+- `dict`: diccionario SX* (campos, parámetros MV_*)
+
+## Reglas
+1. Un ticket recibe 1 etiqueta primaria y hasta 2 secundarias.
+2. Si menciona un parámetro MV_*, va `dict` como secundaria siempre.</textarea>
+                <span class="field-hint">Markdown. Publicar congela esta versión: editar una skill publicada crea <code>@2</code>.</span>
+              </div>
+
+              <h4>Agentes destino</h4>
+              <div class="bx-dests">
+                <div>
+                  <label class="check-row" for="sk-d1"><input class="checkbox" type="checkbox" id="sk-d1" checked><span>DocAgent</span></label>
+                  <p class="bx-dest-hint">Se incluirá al hornear la próxima versión de DocAgent. <a href="41-builder-agentes.html">Crear borrador de DocAgent</a></p>
+                </div>
+                <label class="check-row" for="sk-d2"><input class="checkbox" type="checkbox" id="sk-d2"><span>ValidationAgent</span></label>
+                <label class="check-row" for="sk-d3"><input class="checkbox" type="checkbox" id="sk-d3"><span>DevAgent</span></label>
+              </div>
+              <p class="bx-note"><svg aria-hidden="true"><use href="#i-info"/></svg><span>Marcar un agente destino solo declara la intención de horneado. <strong>Publicar ≠ desplegar:</strong> la publicación no toca agentes.</span></p>
+
+              <hr class="divider">
+
+              <!-- GATE de publicación (micro-demo) -->
+              <h4>Gate de publicación — mínimo 3 casos de eval</h4>
+              <div class="bx-gate is-blocked" id="gate">
+                <div class="bx-gate__row">
+                  <span class="bx-gate__count" id="gate-count">2/3 casos</span>
+                  <span class="faint" style="font-size:var(--fs-caption)">el gate es del sistema: sin 3 casos en verde no existe ruta de publicación</span>
+                </div>
+                <div class="quota-bar is-warn" id="gate-bar" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="3" aria-label="Casos de eval: 2 de 3 requeridos">
+                  <span class="quota-bar__fill" id="gate-fill" style="width:66%"></span>
+                </div>
+                <p class="bx-gate__msg" id="gate-msg" aria-live="polite">2/3 casos — agregá uno más para poder publicar</p>
+              </div>
+
+              <div class="table-wrap" style="margin-top:var(--sp-3)">
+                <table class="table table--dense">
+                  <caption class="sr-only">Casos de eval de la skill</caption>
+                  <thead><tr><th scope="col">Caso</th><th scope="col">Descripción</th><th scope="col">Estado</th></tr></thead>
+                  <tbody>
+                    <tr><td class="mono">cst-tag-001</td><td class="muted">Ticket fiscal con MV_* → etiquetas `fiscal` + `dict`</td><td><span class="tag tag--money">OK</span></td></tr>
+                    <tr><td class="mono">cst-tag-002</td><td class="muted">Ticket sin taxonomía clara → pide datos, no inventa</td><td><span class="tag tag--money">OK</span></td></tr>
+                    <tr>
+                      <td class="mono">cst-tag-003</td>
+                      <td class="muted">(demo) marcá el checkbox para simular el tercer caso en verde</td>
+                      <td><label class="check-row" style="font-size:var(--fs-caption)"><input class="checkbox" type="checkbox" id="gate-demo"><span>caso agregado</span></label></td>
+                    </tr>
+                    <tr><td colspan="3"><button class="btn btn--ghost btn--sm" type="button">+ Agregar caso de eval</button></td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="bx-actions">
+                <span class="bx-reason" id="gate-reason">No se puede publicar: faltan casos de eval (2/3).</span>
+                <button class="btn btn--ghost">Eliminar borrador</button>
+                <button class="btn btn--secondary">Guardar borrador</button>
+                <button class="btn btn--primary" id="gate-pub" disabled aria-disabled="true">Publicar skill</button>
+              </div>
+            </section>
+
+            <!-- ─── CHANGELOG ──────────────────────────────────────────── -->
+            <section class="panel" id="chg" aria-labelledby="chg-t" style="margin-top:var(--sp-6)">
+              <span class="kicker kicker--dim">Changelog · inmutable, solo crece</span>
+              <h3 id="chg-t">Changelog — <span class="mono">bol-localizacion</span></h3>
+              <ol class="wf" style="list-style:none; padding:0; margin:0">
+                <li class="wf-step is-done">
+                  <span class="wf-step__dot" aria-hidden="true"><svg><use href="#i-check"/></svg></span>
+                  <div>
+                    <p class="wf-step__title">@4 <span class="tag tag--money">Activa</span></p>
+                    <p class="wf-step__meta">02/06/2026 · lucia · 5 casos de eval</p>
+                    <p class="muted" style="font-size:var(--fs-small); margin:var(--sp-1) 0 0">Agrega feriados 2026 y aclara MV_PAISLOC.</p>
+                  </div>
+                </li>
+                <li class="wf-step is-done">
+                  <span class="wf-step__dot" aria-hidden="true">3</span>
+                  <div>
+                    <p class="wf-step__title">@3 <span class="tag tag--outline">Archivada</span></p>
+                    <p class="wf-step__meta">12/05/2026 · lucia · 4 casos de eval</p>
+                    <p class="muted" style="font-size:var(--fs-small); margin:var(--sp-1) 0 0">Corrige formato de fechas en libros fiscales.</p>
+                  </div>
+                </li>
+                <li class="wf-step is-done">
+                  <span class="wf-step__dot" aria-hidden="true">2</span>
+                  <div>
+                    <p class="wf-step__title">@2 <span class="tag tag--outline">Archivada</span></p>
+                    <p class="wf-step__meta">28/04/2026 · mgarcia · 3 casos de eval</p>
+                    <p class="muted" style="font-size:var(--fs-small); margin:var(--sp-1) 0 0">Suma reglas de redondeo Bs/USD.</p>
+                  </div>
+                </li>
+                <li class="wf-step is-done">
+                  <span class="wf-step__dot" aria-hidden="true">1</span>
+                  <div>
+                    <p class="wf-step__title">@1 <span class="tag tag--outline">Archivada</span></p>
+                    <p class="wf-step__meta">03/04/2026 · lucia · 3 casos de eval</p>
+                    <p class="muted" style="font-size:var(--fs-small); margin:var(--sp-1) 0 0">Versión inicial: parámetros base de localización BOL.</p>
+                  </div>
+                </li>
+              </ol>
+              <p class="bx-note"><svg aria-hidden="true"><use href="#i-history"/></svg><span>Cada entrada registra autor y fecha del sistema — no son editables. Eliminar una skill con historial no existe: se archiva.</span></p>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTES DE ESTADO ════════════════ -->
+  <section class="doc-section" aria-labelledby="st-t">
+    <span class="kicker kicker--dim">Variantes de estado</span>
+    <h2 id="st-t">Estados: gate verde · vacío · carga · errores · éxito · degradado</h2>
+
+    <h3 style="margin-top:var(--sp-6)">Gate en verde (3/3) — listo para publicar</h3>
+    <div class="bx-gate is-ok" style="max-width:680px">
+      <div class="bx-gate__row"><span class="bx-gate__count">3/3 casos</span></div>
+      <div class="quota-bar" role="progressbar" aria-valuenow="3" aria-valuemin="0" aria-valuemax="3" aria-label="Casos de eval: 3 de 3 requeridos"><span class="quota-bar__fill" style="width:100%"></span></div>
+      <p class="bx-gate__msg">3/3 casos — listo para publicar</p>
+      <div style="display:flex; gap:var(--sp-2); margin-top:var(--sp-3)"><button class="btn btn--primary">Publicar skill</button></div>
+    </div>
+
+    <h3 style="margin-top:var(--sp-7)">Gate bloqueado por caso fallido (aunque haya ≥3)</h3>
+    <div class="bx-gate is-blocked" style="max-width:680px">
+      <div class="bx-gate__row"><span class="bx-gate__count" style="color:var(--danger)">3/3 casos · 1 fallido</span><span class="tag tag--danger">cst-tag-002 falló</span></div>
+      <div class="quota-bar is-over" role="progressbar" aria-valuenow="2" aria-valuemin="0" aria-valuemax="3" aria-label="Casos de eval: 2 en verde de 3, uno fallido"><span class="quota-bar__fill" style="width:100%"></span></div>
+      <p class="bx-gate__msg" style="color:var(--danger)">Hay un caso fallido — el gate exige 3 casos en verde, no solo 3 casos.</p>
+    </div>
+
+    <h3 style="margin-top:var(--sp-7)">Registro vacío</h3>
+    <div class="empty-state" style="max-width:680px">
+      <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-package"/></svg></span>
+      <p class="empty-state__title">Todavía no hay skills</p>
+      <p class="empty-state__hint">Una skill empaqueta conocimiento reutilizable que se hornea en versiones de agentes.</p>
+      <button class="btn btn--primary">Crear skill</button>
+    </div>
+
+    <h3 style="margin-top:var(--sp-7)">Carga del registro</h3>
+    <div class="table-wrap" style="max-width:680px" aria-busy="true">
+      <table class="table">
+        <caption class="sr-only">Cargando registro de skills</caption>
+        <thead><tr><th scope="col">Skill</th><th scope="col">Versión</th><th scope="col">Estado</th><th scope="col">Evals</th></tr></thead>
+        <tbody>
+          <tr><td><span class="skeleton skeleton--text" style="width:120px"></span></td><td><span class="skeleton skeleton--text" style="width:28px"></span></td><td><span class="skeleton skeleton--text" style="width:60px"></span></td><td><span class="skeleton skeleton--text" style="width:48px"></span></td></tr>
+          <tr><td><span class="skeleton skeleton--text" style="width:96px"></span></td><td><span class="skeleton skeleton--text" style="width:28px"></span></td><td><span class="skeleton skeleton--text" style="width:60px"></span></td><td><span class="skeleton skeleton--text" style="width:48px"></span></td></tr>
+          <tr><td><span class="skeleton skeleton--text" style="width:132px"></span></td><td><span class="skeleton skeleton--text" style="width:28px"></span></td><td><span class="skeleton skeleton--text" style="width:60px"></span></td><td><span class="skeleton skeleton--text" style="width:48px"></span></td></tr>
+          <tr><td><span class="skeleton skeleton--text" style="width:104px"></span></td><td><span class="skeleton skeleton--text" style="width:28px"></span></td><td><span class="skeleton skeleton--text" style="width:60px"></span></td><td><span class="skeleton skeleton--text" style="width:48px"></span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:var(--sp-7)">Errores y degradado</h3>
+    <div style="display:grid; gap:var(--sp-3); max-width:680px">
+      <div class="error-card" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <div>
+          <div class="error-card__code">REGISTRY_OFFLINE</div>
+          <p class="error-card__title">No se pudo cargar el registro de skills</p>
+          <p class="error-card__why">Error de conexión con el servidor de la plataforma.</p>
+          <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button></div>
+        </div>
+      </div>
+      <div class="error-card" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <div>
+          <div class="error-card__code">PUBLISH_FAILED</div>
+          <p class="error-card__title">La publicación falló</p>
+          <p class="error-card__why">El contenido de la skill no se pierde: seguí editando y reintenta cuando quieras.</p>
+          <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar publicación</button></div>
+        </div>
+      </div>
+      <div class="error-card error-card--warn" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <div>
+          <div class="error-card__code">EVALS_RUNNER_OFFLINE</div>
+          <p class="error-card__title">El runner de evals no está disponible</p>
+          <p class="error-card__why">Los casos se listan, pero «correr» queda deshabilitado. El gate no puede ponerse verde sin corrida — no se puentea.</p>
+          <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button></div>
+        </div>
+      </div>
+      <div class="error-card error-card--warn" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <div>
+          <div class="error-card__code">EDIT_LOCKED</div>
+          <p class="error-card__title">Borrador en edición por otra persona</p>
+          <p class="error-card__why">lucia está editando este borrador desde hace 4 min. Estás en modo solo lectura.</p>
+          <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Solicitar control</button></div>
+        </div>
+      </div>
+      <div class="error-card error-card--warn" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <div>
+          <div class="error-card__code">SKILL_IN_USE</div>
+          <p class="error-card__title">Vas a archivar una skill usada por versiones activas</p>
+          <p class="error-card__why"><code>bol-localizacion@4</code> está horneada en docagent@12 y validationagent@5. Esas versiones no cambian (la skill vive dentro de ellas); archivar solo impide hornearla en versiones nuevas.</p>
+          <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Archivar igualmente</button><button class="btn btn--ghost btn--sm">Cancelar</button></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:var(--sp-7)">Éxito — toast con recordatorio accionable</h3>
+    <div style="display:grid; gap:var(--sp-2); max-width:360px">
+      <div class="toast toast--ok" role="status">
+        <span class="toast__icon"><svg aria-hidden="true"><use href="#i-check"/></svg></span>
+        <div>
+          <p class="toast__title">Skill publicada</p>
+          <p class="toast__msg">cst-etiquetado@1 quedó activa. Para que un agente la use, horneá una versión nueva.</p>
+          <div style="margin-top:var(--sp-2)"><button class="btn btn--secondary btn--sm">Crear borrador de DocAgent</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ GATE MÓVIL ════════════════ -->
+  <section class="doc-section" aria-labelledby="mg-t">
+    <span class="kicker kicker--dim">Móvil &lt;768 px</span>
+    <h2 id="mg-t">Gate desktop-only</h2>
+    <p class="doc-caption">Mismo gate que la vista 41 (DESIGN-SYSTEM §11). La entrada de navegación sigue visible para Admin en móvil.</p>
+    <div class="frame bx-mobilegate">
+      <div class="content">
+        <div class="empty-state">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-monitor"/></svg></span>
+          <p class="empty-state__title">El builder es solo escritorio</p>
+          <p class="empty-state__hint">Abrí esta vista en tu computadora para crear o editar skills.</p>
+          <button class="btn btn--secondary">Copiar enlace</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  /* Micro-demo del gate de publicación (solo mockup) */
+  (function () {
+    var demo = document.getElementById('gate-demo');
+    if (!demo) return;
+    demo.addEventListener('change', function () {
+      var ok = demo.checked;
+      var gate = document.getElementById('gate');
+      var bar = document.getElementById('gate-bar');
+      gate.classList.toggle('is-ok', ok);
+      gate.classList.toggle('is-blocked', !ok);
+      bar.classList.toggle('is-warn', !ok);
+      bar.setAttribute('aria-valuenow', ok ? '3' : '2');
+      document.getElementById('gate-fill').style.width = ok ? '100%' : '66%';
+      document.getElementById('gate-count').textContent = ok ? '3/3 casos' : '2/3 casos';
+      document.getElementById('gate-msg').textContent = ok ? '3/3 casos — listo para publicar' : '2/3 casos — agregá uno más para poder publicar';
+      var pub = document.getElementById('gate-pub');
+      pub.disabled = !ok;
+      pub.setAttribute('aria-disabled', String(!ok));
+      document.getElementById('gate-reason').textContent = ok ? '' : 'No se puede publicar: faltan casos de eval (2/3).';
+    });
+  })();
+</script>
+</body>
+</html>

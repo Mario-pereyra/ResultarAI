@@ -1,0 +1,241 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>36 · Conexiones a clientes finales — Consola admin — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .note-info { display: flex; gap: var(--sp-3); align-items: flex-start; background: color-mix(in srgb, var(--info) 7%, var(--panel)); border: 1px solid color-mix(in srgb, var(--info) 40%, transparent); border-radius: var(--r-md); padding: var(--sp-4); margin-bottom: var(--sp-5); }
+  .note-info svg { width: 18px; height: 18px; color: var(--info); flex: none; margin-top: 2px; }
+  .sec-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); margin: var(--sp-6) 0 var(--sp-3); }
+  .token-box { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); background: var(--bg); border: 1px dashed var(--line-strong); border-radius: var(--r-md); padding: var(--sp-4); }
+  .token-val { font-family: var(--font-mono); font-size: var(--fs-h3); font-weight: 700; letter-spacing: .12em; color: var(--accent); }
+  .token-meta { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  tr.is-revoked td { opacity: .5; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--sp-4); align-items: start; }
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .grid-3 { grid-template-columns: 1fr; }
+    .table .btn { min-height: 44px; } /* objetivo táctil: revocar desde el celular es caso real */
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-laptop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 36 · Consola admin · Gobernanza</span>
+    <h1>Conexiones a clientes finales</h1>
+    <p class="muted">Connection profiles, bridges emparejados y token de emparejamiento. Spec: <code>docs/design/VISTAS/08-admin-gobernanza.md §8.3</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Solo Admin.</p>
+  </header>
+
+  <!-- ════════ VARIANTE A — Vista completa ════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Flota completa — perfiles, bridges, emparejamiento</h2>
+
+    <div class="note-info" role="note">
+      <svg aria-hidden="true"><use href="#i-info"/></svg>
+      <p style="margin:0;font-size:var(--fs-small);">Las credenciales viven en la laptop del consultor (bridge local). El servidor solo registra el perfil: <strong>nunca almacena usuarios ni contraseñas de clientes finales</strong>.</p>
+    </div>
+
+    <div class="sec-head">
+      <h3 style="margin:0;">Perfiles de conexión</h3>
+      <button class="btn btn--primary">Nuevo perfil</button>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <caption class="sr-only">Perfiles de conexión a clientes finales</caption>
+        <thead><tr><th scope="col">Cliente final</th><th scope="col">Ambiente</th><th scope="col">Descripción</th><th scope="col">Nivel de datos</th><th scope="col" class="num">Bridges</th><th scope="col">Estado</th><th scope="col">Acciones</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Comercial Andina S.A.</strong><br><span class="faint" style="font-size:11px;">creado por mperez · 12/05/2026</span></td>
+            <td><span class="tag tag--info">TEST</span></td>
+            <td class="muted">Ambiente de pruebas para validación de localización BOL</td>
+            <td><span class="tag tag--info">N1 · operativos</span></td>
+            <td class="num">2 <span class="live-dot" aria-hidden="true"></span></td>
+            <td><span class="tag tag--money">ACTIVO</span></td>
+            <td><button class="btn btn--ghost btn--sm">Editar</button> <button class="btn btn--ghost btn--sm">Archivar</button></td>
+          </tr>
+          <tr>
+            <td><strong>Distribuidora El Alto SRL</strong><br><span class="faint" style="font-size:11px;">creado por lucia · 02/06/2026</span></td>
+            <td><span class="tag tag--warn">PROD</span></td>
+            <td class="muted">Producción — solo lectura de parámetros para checklist</td>
+            <td><span class="tag tag--warn">N2 · negocio</span></td>
+            <td class="num">1 <span class="live-dot live-dot--warn" aria-hidden="true"></span></td>
+            <td><span class="tag tag--money">ACTIVO</span></td>
+            <td><button class="btn btn--ghost btn--sm">Editar</button> <button class="btn btn--ghost btn--sm">Archivar</button></td>
+          </tr>
+          <tr>
+            <td><strong>INBOLSA</strong><br><span class="faint" style="font-size:11px;">creado por mperez · 03/04/2026</span></td>
+            <td><span class="tag">DEV</span></td>
+            <td class="muted">Ambiente interno propio — único con SQL SELECT</td>
+            <td><span class="tag">N0 · prueba</span></td>
+            <td class="num">3 <span class="live-dot" aria-hidden="true"></span></td>
+            <td><span class="tag tag--money">ACTIVO</span></td>
+            <td><button class="btn btn--ghost btn--sm">Editar</button> <button class="btn btn--ghost btn--sm">Archivar</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="doc-caption">Leyenda de niveles: N0 prueba · N1 operativos · N2 negocio · N3 personales/credenciales — <strong>N3 jamás viaja al LLM</strong> (la UI lo advierte en sesión). El perfil no tiene campo de credenciales: no existe.</p>
+
+    <div class="sec-head"><h3 style="margin:0;">Bridges / dispositivos vinculados</h3></div>
+    <div class="table-wrap">
+      <table class="table">
+        <caption class="sr-only">Bridges emparejados</caption>
+        <thead><tr><th scope="col">Consultor</th><th scope="col">Dispositivo</th><th scope="col">Versión</th><th scope="col">Último visto</th><th scope="col">Estado</th><th scope="col">Perfiles</th><th scope="col">Acción</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>lucia</td><td class="mono">LT-LUCIA-01</td><td class="mono">0.4.2</td>
+            <td><span data-tip="11/06/2026 09:41">hace 2 min</span></td>
+            <td><span class="live-dot" aria-hidden="true"></span> online</td>
+            <td class="muted">Comercial Andina · INBOLSA</td>
+            <td><button class="btn btn--danger btn--sm">Revocar</button></td>
+          </tr>
+          <tr>
+            <td>jrojas</td><td class="mono">LT-JROJAS-02</td><td class="mono">0.3.9</td>
+            <td><span data-tip="11/06/2026 08:10">hace 1 h</span></td>
+            <td><span class="live-dot live-dot--warn" aria-hidden="true"></span> desactualizado <span class="tag tag--warn tag--outline">v0.3.9 &lt; mín 0.4.0</span></td>
+            <td class="muted">Distribuidora El Alto</td>
+            <td><button class="btn btn--danger btn--sm">Revocar</button></td>
+          </tr>
+          <tr>
+            <td>cflores</td><td class="mono">LT-CFLORES-01</td><td class="mono">0.4.2</td>
+            <td><span data-tip="09/06/2026 17:22">hace 2 días</span></td>
+            <td><span class="live-dot live-dot--off" aria-hidden="true"></span> offline</td>
+            <td class="muted">INBOLSA</td>
+            <td><button class="btn btn--danger btn--sm">Revocar</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="doc-caption">Bridge desactualizado: las tools que exigen 0.4.0 fallarán con <code>BRIDGE_OFFLINE</code> para ese consultor.</p>
+
+    <div class="sec-head"><h3 style="margin:0;">Emparejar bridge nuevo</h3></div>
+    <div class="panel">
+      <div class="token-box">
+        <svg style="width:20px;height:20px;color:var(--ink-faint);" aria-hidden="true"><use href="#i-key"/></svg>
+        <span class="token-val">RSTR-7Q2F-9KDM</span>
+        <span class="token-meta">expira en 14 min 32 s · un solo uso · generado por mperez</span>
+        <button class="btn btn--secondary btn--sm">Copiar</button>
+        <button class="btn btn--ghost btn--sm">Generar nuevo token</button>
+      </div>
+      <p class="doc-caption" style="margin-top:var(--sp-3);">El token se muestra una sola vez; al salir de la vista solo puede regenerarse. Generar uno nuevo invalida el anterior no usado.</p>
+      <h4 style="margin-top:var(--sp-4);">Emparejamientos recientes</h4>
+      <div class="table-wrap">
+        <table class="table table--dense">
+          <caption class="sr-only">Historial de emparejamientos</caption>
+          <thead><tr><th scope="col">Fecha</th><th scope="col">Consultor</th><th scope="col">Dispositivo</th><th scope="col">Resultado</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">10/06/2026 16:02</td><td>lucia</td><td class="mono">LT-LUCIA-01</td><td><span class="tag tag--money">OK</span></td></tr>
+            <tr><td class="mono">10/06/2026 15:48</td><td>lucia</td><td class="mono">LT-LUCIA-01</td><td><span class="tag tag--danger">EXPIRADO</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ VARIANTE B — Modal de revocación ════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Modal de revocación — consecuencia explícita, recuperable re-emparejando</h2>
+    <div class="grid-3">
+      <div class="panel" role="dialog" aria-labelledby="rv-title" style="box-shadow:var(--shadow-3);grid-column:span 2;">
+        <h4 class="modal__title" id="rv-title" style="margin-bottom:var(--sp-3);">Revocar bridge LT-LUCIA-01</h4>
+        <div class="error-card error-card--warn" style="margin-bottom:var(--sp-4);">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div><p class="error-card__title">Consecuencia inmediata</p>
+          <p class="error-card__why" style="margin:0;">El dispositivo pierde acceso al instante; las sesiones de ValidationAgent de <strong>lucia</strong> fallarán con <code>BRIDGE_OFFLINE</code>. Para volver a conectar hay que emparejar de nuevo con un token.</p></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:var(--sp-2);">
+          <button class="btn btn--ghost">Cancelar</button>
+          <button class="btn btn--danger">Revocar bridge</button>
+        </div>
+      </div>
+      <div class="panel">
+        <span class="kicker kicker--dim">Token expirado</span>
+        <div class="token-box" style="border-color:color-mix(in srgb, var(--danger) 40%, transparent);">
+          <span class="token-meta" style="color:var(--danger);">El token expiró sin usarse.</span>
+          <button class="btn btn--primary btn--sm">Generar nuevo token</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ VARIANTE C — Estados ════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Estados — vacío, error y advertencia PROD/N3</h2>
+    <div class="grid-3">
+      <div class="panel">
+        <div class="empty-state" style="padding:var(--sp-6);">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span>
+          <p class="empty-state__title">Ningún bridge emparejado</p>
+          <p class="empty-state__hint">Generá un token abajo y pasáselo al consultor para emparejar su laptop.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="error-card">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">TOKEN_ERROR</p>
+            <p class="error-card__title">No se pudo generar el token</p>
+            <p class="error-card__why">El servicio de emparejamiento no respondió.</p>
+            <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <span class="kicker kicker--dim">Al crear/editar perfil PROD o N3</span>
+        <div class="error-card error-card--warn">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__title">Perfil PROD · nivel N3</p>
+            <p class="error-card__why" style="margin-bottom:0;">Solo datos de prueba hacia los LLM (política §3.3). N3 jamás al LLM — la UI lo advertirá en sesión. Confirmá que entendés el alcance.</p>
+          </div>
+        </div>
+        <label class="check-row" style="margin-top:var(--sp-3);">
+          <input type="checkbox" class="checkbox"><span>Entiendo: los datos N3 de este perfil nunca se envían al LLM.</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast-stack" aria-live="polite">
+    <div class="toast toast--ok">
+      <span class="toast__icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span>
+      <div><p class="toast__title">Bridge de jrojas revocado</p><p class="toast__msg">LT-JROJAS-02 · registrado en auditoría</p></div>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>22 · Historial de aprobaciones — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .content { padding: var(--sp-6); }
+  .h-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+  .h-filters { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-4) 0; align-items: end; }
+  .h-filters .field { margin-bottom: 0; }
+  .h-filters .input, .h-filters .select { width: 160px; }
+  .h-export { display: flex; align-items: center; gap: var(--sp-2); }
+  .h-export .faint { font-size: var(--fs-caption); }
+  .cell-id { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .cell-com { color: var(--ink-dim); font-style: italic; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pager { display: flex; justify-content: center; gap: var(--sp-1); margin-top: var(--sp-4); font-family: var(--font-mono); font-size: var(--fs-caption); }
+  .pager a, .pager span { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 28px; border-radius: var(--r-sm); color: var(--ink-dim); }
+  .pager .is-current { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+  .pager a:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); text-decoration: none; }
+
+  /* Sheet lateral del detalle resuelto */
+  .sheet-demo { display: grid; grid-template-columns: 1fr 420px; min-height: 380px; }
+  .sheet { background: var(--panel); border-left: 1px solid var(--line-strong); box-shadow: var(--shadow-3); padding: var(--sp-5); overflow-y: auto; }
+  .sheet h3 { display: flex; align-items: center; gap: var(--sp-2); }
+  .sheet dl { display: grid; gap: var(--sp-2); margin: var(--sp-3) 0; font-size: var(--fs-small); }
+  .sheet dt { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); margin: 0; }
+  .sheet dd { margin: 0 0 var(--sp-1); }
+  @media (max-width: 900px) { .sheet-demo { grid-template-columns: 1fr; } .sheet { border-left: 0; border-top: 1px solid var(--line-strong); } }
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .h-filters .input, .h-filters .select { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+</defs></svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 22 · Módulo aprobaciones HITL</span>
+    <h1>Historial de decisiones</h1>
+    <p class="muted">Trazabilidad completa: decisión + resultado de la ejecución posterior. Spec: <code>docs/design/VISTAS/05-hitl-validacion.md §3</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Técnico ve solo «Mis decisiones»; Admin agrega «Todas» + export CSV.</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — Admin, tab «Todas», con sheet de detalle ════════════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Admin — tab «Todas» + sheet lateral de detalle resuelto</h2>
+
+    <div class="frame">
+      <div class="ai-banner"><svg aria-hidden="true"><use href="#i-alert"/></svg>Respuestas generadas por IA — verificá antes de aplicar en cliente</div>
+      <div class="sheet-demo">
+        <div class="content">
+          <div class="h-head">
+            <div>
+              <span class="kicker">Aprobaciones · Historial</span>
+              <h2 style="margin:0">Decisiones</h2>
+            </div>
+            <div class="h-export">
+              <span class="faint">exporta 38 filas filtradas</span>
+              <button class="btn btn--secondary"><svg aria-hidden="true"><use href="#i-down"/></svg>Exportar CSV</button>
+            </div>
+          </div>
+
+          <div class="tabs" role="navigation" aria-label="Alcance del historial">
+            <a class="tab" href="#">Mis decisiones <span class="tag">24</span></a>
+            <a class="tab is-active" href="#" aria-current="page">Todas <span class="tag tag--accent">212</span></a>
+          </div>
+
+          <form class="h-filters" role="search" aria-label="Filtrar historial">
+            <div class="field"><label class="field-label" for="h-desde">Desde</label><input class="input" type="date" id="h-desde" value="2026-06-01"></div>
+            <div class="field"><label class="field-label" for="h-hasta">Hasta</label><input class="input" type="date" id="h-hasta" value="2026-06-11"></div>
+            <div class="field"><label class="field-label" for="h-cli">Cliente</label><select class="select" id="h-cli"><option>Todos</option><option>Comercial Andina S.A.</option><option>Distribuidora Altiplano SRL</option></select></div>
+            <div class="field"><label class="field-label" for="h-dec">Decisión</label><select class="select" id="h-dec"><option>Todas</option><option>Aprobada</option><option>Rechazada</option><option>Expirada</option></select></div>
+            <div class="field"><label class="field-label" for="h-eje">Ejecución</label><select class="select" id="h-eje"><option>Todas</option><option>Éxito</option><option>Falló</option><option>En curso</option></select></div>
+            <div class="field"><label class="field-label" for="h-q">Buscar</label><input class="input" type="search" id="h-q" placeholder="ID, parámetro…"></div>
+          </form>
+
+          <div class="table-wrap">
+            <table class="table table--dense">
+              <caption class="sr-only">Historial de decisiones, ordenado por fecha descendente</caption>
+              <thead><tr>
+                <th scope="col" aria-sort="descending">Fecha</th>
+                <th scope="col">ID / acción</th>
+                <th scope="col">Cliente / amb.</th>
+                <th scope="col">Riesgo</th>
+                <th scope="col">Decisión</th>
+                <th scope="col">Decidida por</th>
+                <th scope="col">Ejecución</th>
+                <th scope="col">Comentario</th>
+              </tr></thead>
+              <tbody>
+                <tr class="is-selected">
+                  <td class="mono">11/06 14:32</td>
+                  <td><span class="cell-id">APR-0147</span><br>Actualizar 3 parámetros MV_* (SX6)</td>
+                  <td>C. Andina <span class="tag tag--danger">PROD</span></td>
+                  <td><span class="tag tag--alt">Alto</span></td>
+                  <td><span class="tag tag--money">Aprobada</span></td>
+                  <td>lucia</td>
+                  <td><span class="tag tag--money">Éxito</span></td>
+                  <td class="cell-com">«Validado contra checklist fiscal v3»</td>
+                </tr>
+                <tr>
+                  <td class="mono">11/06 11:05</td>
+                  <td><span class="cell-id">APR-0144</span><br>Anular título a cobrar (SE1)</td>
+                  <td>C. Andina <span class="tag tag--danger">PROD</span></td>
+                  <td><span class="tag tag--danger">Crítico</span></td>
+                  <td><span class="tag tag--money" data-tip="lucia + rodrigo — ambas firmas en el detalle">Aprobada ×2</span></td>
+                  <td>lucia, rodrigo</td>
+                  <td><span class="tag tag--danger">Falló</span> <a href="#" class="mono" style="font-size:11px">ver error</a></td>
+                  <td class="cell-com">«Cliente confirmó por correo»</td>
+                </tr>
+                <tr>
+                  <td class="mono">10/06 16:48</td>
+                  <td><span class="cell-id">APR-0139</span><br>Actualizar descripción de campo (SX3)</td>
+                  <td>D. Altiplano <span class="tag tag--info">VAL</span></td>
+                  <td><span class="tag tag--money">Bajo</span></td>
+                  <td><span class="tag">✕ Rechazada</span></td>
+                  <td>rodrigo</td>
+                  <td class="mono faint">—</td>
+                  <td class="cell-com">«El valor propuesto no coincide con el MIT»</td>
+                </tr>
+                <tr>
+                  <td class="mono">10/06 09:12</td>
+                  <td><span class="cell-id">APR-0136</span><br>Crear parámetro MV_RESAGTE</td>
+                  <td>D. Altiplano <span class="tag tag--info">VAL</span></td>
+                  <td><span class="tag tag--warn">Medio</span></td>
+                  <td><span class="tag tag--money">Aprobada</span></td>
+                  <td>lucia</td>
+                  <td><span class="tag tag--info">En curso</span></td>
+                  <td class="cell-com">—</td>
+                </tr>
+                <tr>
+                  <td class="mono">09/06 13:00</td>
+                  <td><span class="cell-id">APR-0133</span><br>Crear parámetro MV_RESAGTE</td>
+                  <td>D. Altiplano <span class="tag tag--info">VAL</span></td>
+                  <td><span class="tag tag--warn">Medio</span></td>
+                  <td><span class="tag tag--warn">Expirada</span></td>
+                  <td class="faint">—</td>
+                  <td class="mono faint">—</td>
+                  <td class="cell-com">—</td>
+                </tr>
+                <tr>
+                  <td class="mono">08/06 17:40</td>
+                  <td><span class="cell-id">APR-0130</span><br>Actualizar parámetro MV_SIMB1</td>
+                  <td>C. Andina <span class="tag">DEV</span></td>
+                  <td><span class="tag tag--money">Bajo</span></td>
+                  <td><span class="tag tag--money">Aprobada</span></td>
+                  <td>rodrigo</td>
+                  <td><span class="tag">Sin datos</span></td>
+                  <td class="cell-com">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <nav class="pager" aria-label="Paginación del historial">
+            <a href="#" aria-label="Página anterior">‹</a>
+            <span class="is-current" aria-current="page">1</span>
+            <a href="#">2</a><a href="#">3</a><span>…</span><a href="#">9</a>
+            <a href="#" aria-label="Página siguiente">›</a>
+          </nav>
+          <p class="doc-caption" style="text-align:center;margin-top:var(--sp-2)">Paginación clásica, 25 por página (auditabilidad §9.5). «Sin datos» = el ejecutor no reportó todavía (degradado).</p>
+        </div>
+
+        <!-- Sheet lateral: detalle de la fila seleccionada -->
+        <aside class="sheet" role="dialog" aria-modal="false" aria-labelledby="sheet-t">
+          <h3 id="sheet-t"><svg width="18" height="18" style="color:var(--warn)" aria-hidden="true"><use href="#i-shield"/></svg>APR-0147 · resuelta</h3>
+          <span class="tag tag--alt">Riesgo alto</span> <span class="tag tag--money">Aprobada</span> <span class="tag tag--money">Ejecución: éxito</span>
+          <dl>
+            <dt>Acción</dt><dd>Actualizar 3 parámetros de localización (SX6) vía API REST oficial</dd>
+            <dt>Cliente / ambiente</dt><dd>Comercial Andina S.A. · <span class="tag tag--danger">PROD</span></dd>
+            <dt>Solicitante</dt><dd>valeria (Funcional) · <span class="mono">validationagent@7</span></dd>
+            <dt>Decisión</dt><dd>Aprobada por <strong>lucia (Admin)</strong> · <span class="mono">11/06/2026 14:32</span></dd>
+            <dt>Comentario</dt><dd><em>«Validado contra checklist fiscal v3»</em></dd>
+            <dt>Ejecución</dt><dd><span class="tag tag--money">Éxito</span> <span class="mono faint">11/06/2026 14:33 · HTTP 200</span></dd>
+          </dl>
+          <pre class="hitl-card__payload">MV_SIMB1   "$b" → "Bs"
+MV_PAISLOC "PAR" → "BOL"
+MV_MOEDA2  "DOLAR" → "USD"</pre>
+          <p class="doc-caption" style="margin-top:var(--sp-3)">El sheet reutiliza la tarjeta 21 en modo resuelta; al cerrarlo, los filtros de la tabla no se pierden. Una ejecución fallida muestra acá la cadena completa: firmas + error + «reintento: APR-0151» (desde acá no se re-ejecuta nada).</p>
+          <button class="btn btn--ghost btn--sm">Cerrar</button>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — Técnico aprobador (solo «Mis decisiones») ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Técnico aprobador — solo «Mis decisiones», sin export, sin columna «Decidida por»</h2>
+    <p class="doc-caption">La tab «Todas» y el export no se renderizan (ocultar, no deshabilitar — §9.7).</p>
+
+    <div class="frame"><div class="content">
+      <div class="h-head">
+        <div><span class="kicker">Aprobaciones · Historial</span><h2 style="margin:0">Mis decisiones</h2></div>
+        <span class="badge-rol badge-rol--tecnico">Técnico</span>
+      </div>
+      <div class="tabs" role="navigation" aria-label="Alcance del historial">
+        <a class="tab is-active" href="#" aria-current="page">Mis decisiones <span class="tag tag--accent">24</span></a>
+      </div>
+      <div class="table-wrap" style="margin-top:var(--sp-4)">
+        <table class="table table--dense">
+          <caption class="sr-only">Mis decisiones de aprobación</caption>
+          <thead><tr><th scope="col">Fecha</th><th scope="col">ID / acción</th><th scope="col">Cliente / amb.</th><th scope="col">Decisión</th><th scope="col">Ejecución</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">10/06 16:48</td><td><span class="cell-id">APR-0139</span><br>Actualizar descripción de campo (SX3)</td><td>D. Altiplano <span class="tag tag--info">VAL</span></td><td><span class="tag">✕ Rechazada</span></td><td class="mono faint">—</td></tr>
+            <tr><td class="mono">08/06 17:40</td><td><span class="cell-id">APR-0130</span><br>Actualizar parámetro MV_SIMB1</td><td>C. Andina <span class="tag">DEV</span></td><td><span class="tag tag--money">Aprobada</span></td><td><span class="tag tag--money">Éxito</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- ════════════════ VARIANTE C — estados ════════════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Estados: vacío · carga · error · export en curso</h2>
+    <div style="display:grid;gap:var(--sp-5);grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <div class="panel">
+        <h3>Vacío</h3>
+        <div class="empty-state">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-inbox"/></svg></span>
+          <p class="empty-state__title">Todavía no decidiste ninguna aprobación</p>
+          <p class="empty-state__hint">Tus decisiones van a quedar registradas acá, con su resultado de ejecución.</p>
+        </div>
+      </div>
+      <div class="panel" aria-busy="true">
+        <h3>Carga</h3>
+        <span class="skeleton skeleton--text" style="margin-bottom:8px"></span>
+        <span class="skeleton skeleton--text" style="width:85%;margin-bottom:8px"></span>
+        <span class="skeleton skeleton--text" style="width:92%;margin-bottom:8px"></span>
+        <span class="skeleton skeleton--text" style="width:70%"></span>
+      </div>
+      <div class="panel">
+        <h3>Error</h3>
+        <div class="error-card" role="alert">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">HISTORY_FETCH_FAILED</p>
+            <p class="error-card__title">No se pudo cargar el historial</p>
+            <p class="error-card__why">Reintentá en unos segundos.</p>
+            <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Export en curso + éxito</h3>
+        <p><button class="btn btn--secondary btn--loading" aria-busy="true" aria-label="Generando export">Exportar CSV</button></p>
+        <div class="toast toast--ok" style="animation:none">
+          <span class="toast__icon"><svg width="16" height="16" aria-hidden="true"><use href="#i-down"/></svg></span>
+          <div><p class="toast__title">Export listo</p><p class="toast__msg">Descargando aprobaciones-2026-06.csv (38 filas filtradas).</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

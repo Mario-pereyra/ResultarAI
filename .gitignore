@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Node / frontend
+node_modules/
+.next/
+out/
+
+# Secretos y entorno
+.env
+.env.*
+!.env.example
+
+# Artefactos WSL/Windows
+*Zone.Identifier
+Thumbs.db
+.DS_Store
+
+# Archivo histórico pendiente de decisión
+docs_ANTIGUO.zip
+
+# Locales de herramientas
+.claude/settings.local.json

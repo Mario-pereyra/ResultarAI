@@ -1,0 +1,254 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>17 · Workflow — ejecución en vivo — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .frame__pad { padding: var(--sp-6); }
+
+  .run-head { display: grid; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+  .run-head__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+  .run-head__id { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; }
+  .run-head__id code { font-size: var(--fs-body); }
+  .run-head__meta { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; }
+
+  .run-progress { display: grid; gap: var(--sp-1); max-width: 560px; }
+  .run-progress__label { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .run-progress .quota-bar__fill { background: var(--accent); }
+
+  /* extensiones locales de .wf-step */
+  .wf-step__body { display: grid; gap: var(--sp-1); }
+  .wf-step__row { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-2); }
+  .wf-step.is-hitl .wf-step__dot { border-color: var(--warn); color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, var(--panel)); }
+  .wf-step.is-hitl .wf-step__title { color: var(--warn); }
+  .wf-log { margin-top: var(--sp-1); }
+  .wf-log summary { cursor: pointer; font-size: var(--fs-caption); color: var(--ink-dim); }
+  .wf-log summary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; border-radius: var(--r-xs); }
+  .wf-log__lines { margin: var(--sp-2) 0 0; padding: var(--sp-3); background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--r-sm); font-family: var(--font-mono); font-size: var(--fs-caption); line-height: 1.7; color: var(--ink-dim); list-style: none; }
+  .wf-log__lines .t { color: var(--ink-faint); margin-right: var(--sp-2); }
+  .wf-log__lines .tech { color: var(--ink-faint); } /* detalle solo Técnico/Admin */
+
+  .hitl-inline { border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); background: color-mix(in srgb, var(--warn) 7%, var(--panel)); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); display: grid; gap: var(--sp-2); margin-top: var(--sp-2); font-size: var(--fs-small); }
+  .hitl-inline__meta { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); display: flex; gap: var(--sp-3); flex-wrap: wrap; }
+
+  .reconnect { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); background: color-mix(in srgb, var(--warn) 10%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); border-radius: var(--r-md); font-size: var(--fs-small); color: var(--ink-dim); }
+
+  .done-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); background: color-mix(in srgb, var(--money) 9%, var(--panel)); border: 1px solid color-mix(in srgb, var(--money) 40%, transparent); border-radius: var(--r-md); font-size: var(--fs-small); }
+  .done-banner svg { width: 16px; height: 16px; color: var(--money); }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .run-head__top .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-loader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></symbol>
+    <symbol id="i-retry" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 17 · Módulo workflows</span>
+    <h1>Ejecución en vivo</h1>
+    <p class="muted">Timeline vertical determinista de la corrida <code>WF-2026-0348</code>. Spec: <code>docs/design/VISTAS/04-workflows.md</code> §3.</p>
+    <p class="doc-caption">Datos 100% ficticios. Renderizado como rol Técnico (ve costo parcial y detalle técnico del log).</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — corrida en curso ════════════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">En ejecución — pasos 1-3 completados, paso 4 activo</h2>
+    <p class="doc-caption">Log del paso activo abierto (los demás colapsados, &lt;details&gt; nativo). Micro-demo: los logs se pliegan/despliegan de verdad.</p>
+
+    <div class="frame frame__pad">
+      <div class="run-head">
+        <div class="run-head__top">
+          <div class="run-head__id">
+            <span class="tag tag--accent">En ejecución</span>
+            <code>WF-2026-0348</code>
+            <h2 style="margin:0; font-size:var(--fs-h3)">Validación de módulo Facturación</h2>
+            <span class="faint mono">v1.4</span>
+          </div>
+          <button type="button" class="btn btn--secondary">Cancelar ejecución</button>
+        </div>
+        <div class="run-head__meta">
+          <span>Comercial Andina S.A.</span><span class="tag tag--info">VAL</span>
+          <span>iniciada 11/06/2026 14:32</span>
+          <span aria-label="tiempo transcurrido">⏱ 2 min 41 s</span>
+          <span class="money">USD 0,14 · 61,0k tok</span>
+        </div>
+        <div class="run-progress">
+          <div class="run-progress__label"><span>Paso 4 de 5 · Análisis de diferencias</span><span>regla 23 de 42</span></div>
+          <div class="quota-bar" role="progressbar" aria-valuenow="4" aria-valuemin="0" aria-valuemax="5" aria-label="Progreso: paso 4 de 5"><span class="quota-bar__fill" style="width:72%"></span></div>
+        </div>
+      </div>
+
+      <ol class="wf" style="list-style:none; margin:0; padding:0">
+        <li class="wf-step is-done" aria-label="Paso 1 de 5, completado">
+          <span class="wf-step__dot"><svg aria-hidden="true"><use href="#i-check"/></svg></span>
+          <div class="wf-step__body">
+            <div class="wf-step__row"><p class="wf-step__title">Conexión al ambiente</p><span class="wf-step__meta">12 s</span></div>
+            <details class="wf-log"><summary>Ver log</summary>
+              <ul class="wf-log__lines">
+                <li><span class="t">14:32:04</span>conectado al bridge (38 ms) <span class="tech">· tat-mcp v0.9.2 · WSS</span></li>
+                <li><span class="t">14:32:09</span>ambiente VAL verificado · RPO compatible</li>
+              </ul>
+            </details>
+          </div>
+        </li>
+        <li class="wf-step is-done" aria-label="Paso 2 de 5, completado">
+          <span class="wf-step__dot"><svg aria-hidden="true"><use href="#i-check"/></svg></span>
+          <div class="wf-step__body">
+            <div class="wf-step__row"><p class="wf-step__title">Lectura del checklist</p><span class="wf-step__meta">3 s · 42 reglas</span></div>
+            <details class="wf-log"><summary>Ver log</summary>
+              <ul class="wf-log__lines">
+                <li><span class="t">14:32:16</span>42 reglas cargadas de checklist-fact-v3.xlsx</li>
+              </ul>
+            </details>
+          </div>
+        </li>
+        <li class="wf-step is-done" aria-label="Paso 3 de 5, completado">
+          <span class="wf-step__dot"><svg aria-hidden="true"><use href="#i-check"/></svg></span>
+          <div class="wf-step__body">
+            <div class="wf-step__row"><p class="wf-step__title">Consulta de parámetros</p><span class="wf-step__meta">1 min 04 s · 38 consultas</span></div>
+            <details class="wf-log"><summary>Ver log</summary>
+              <ul class="wf-log__lines">
+                <li><span class="t">14:32:20</span>consultando SX6: MV_PAISLOC… <span class="tech">· 41 ms</span></li>
+                <li><span class="t">14:33:18</span>38 consultas completadas <span class="tech">· p95 64 ms</span></li>
+              </ul>
+            </details>
+          </div>
+        </li>
+        <li class="wf-step is-active" aria-label="Paso 4 de 5, en curso">
+          <span class="wf-step__dot"><svg aria-hidden="true" style="animation: dx-spin 1s linear infinite"><use href="#i-loader"/></svg></span>
+          <div class="wf-step__body">
+            <div class="wf-step__row"><p class="wf-step__title">Análisis de diferencias</p><span class="wf-step__meta">en curso · regla 23 de 42</span></div>
+            <details class="wf-log" open><summary>Ocultar log</summary>
+              <ul class="wf-log__lines" aria-live="polite">
+                <li><span class="t">14:34:02</span>comparando bloque de impuestos (reglas 18-26)</li>
+                <li><span class="t">14:34:12</span>comparando MV_SIMB1… <span class="tech">· deepseek-v4-flash</span></li>
+                <li><span class="t">14:34:31</span>hallazgo medio en FAT-019: MV_TPSALDO difiere</li>
+              </ul>
+            </details>
+          </div>
+        </li>
+        <li class="wf-step" aria-label="Paso 5 de 5, pendiente">
+          <span class="wf-step__dot">5</span>
+          <div class="wf-step__body">
+            <div class="wf-step__row"><p class="wf-step__title">Generación del informe GAP</p><span class="wf-step__meta">pendiente</span></div>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — pausado HITL y error ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Paso pausado (HITL) · paso en error con reintento</h2>
+    <p class="doc-caption">La tarjeta HITL completa vive en Aprobaciones; acá solo se enlaza. El error muestra la plantilla qué pasó / por qué / qué hacer.</p>
+
+    <div class="frame frame__pad">
+      <ol class="wf" style="list-style:none; margin:0; padding:0">
+        <li class="wf-step is-hitl" aria-label="Paso 4 de 5, pausado, esperando aprobación">
+          <span class="wf-step__dot"><svg aria-hidden="true"><use href="#i-shield"/></svg></span>
+          <div class="wf-step__body">
+            <div class="wf-step__row"><p class="wf-step__title">Corrección de parámetros propuesta</p><span class="wf-step__meta">pausado · esperando aprobación</span></div>
+            <div class="hitl-inline">
+              <span>El workflow propone corregir 2 parámetros MV_* y necesita aprobación humana antes de continuar.</span>
+              <div class="hitl-inline__meta"><span>HITL-0921</span><span>expira en 23 h 12 min</span><span class="tag tag--warn">Esperando aprobación</span></div>
+              <div><a class="btn btn--secondary btn--sm" href="#"><svg style="width:14px;height:14px" aria-hidden="true"><use href="#i-shield"/></svg>Ver tarjeta de aprobación</a></div>
+            </div>
+          </div>
+        </li>
+        <li class="wf-step is-error" aria-label="Paso 3 de 5, error">
+          <span class="wf-step__dot"><svg aria-hidden="true"><use href="#i-x"/></svg></span>
+          <div class="wf-step__body">
+            <div class="wf-step__row"><p class="wf-step__title">Consulta de parámetros</p><span class="wf-step__meta">error a los 42 s</span></div>
+            <div class="error-card" role="alert" style="margin-top:var(--sp-2)">
+              <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+              <div>
+                <p class="error-card__code">BRIDGE_TIMEOUT</p>
+                <p class="error-card__title">El ambiente dejó de responder</p>
+                <p class="error-card__why">La consulta 22 de 38 superó el tiempo máximo. Lo consultado hasta acá se conserva.</p>
+                <div class="error-card__actions">
+                  <button type="button" class="btn btn--secondary btn--sm"><svg style="width:14px;height:14px" aria-hidden="true"><use href="#i-retry"/></svg>Reintentar paso</button>
+                  <button type="button" class="btn btn--ghost btn--sm">Ver log</button>
+                </div>
+                <p class="faint" style="font-size:var(--fs-caption); margin:var(--sp-2) 0 0">Al reintentar, la corrida continúa desde este paso (intento 1 de 2).</p>
+              </div>
+            </div>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE C — reconexión y fin de corrida ════════════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Stream caído (degradado) · corrida completada</h2>
+    <p class="doc-caption">La corrida continúa en el servidor aunque el stream caiga. Al completar: banner ok + CTA «Ver resultado», sin auto-redirección.</p>
+    <div class="frame frame__pad" style="display:grid; gap:var(--sp-4)">
+      <div class="reconnect" role="status"><span class="live-dot live-dot--warn" aria-hidden="true"></span>Reconectando… la corrida sigue ejecutándose en el servidor.</div>
+      <div class="done-banner" role="status">
+        <span style="display:inline-flex; align-items:center; gap:var(--sp-2)"><svg aria-hidden="true"><use href="#i-check"/></svg>Corrida completada en 9 min 42 s · 11 hallazgos · 31 reglas cumplen</span>
+        <a class="btn btn--primary" href="#">Ver resultado</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE D — modal de cancelación ════════════════ -->
+  <section class="doc-section" aria-labelledby="vd-t">
+    <span class="kicker kicker--dim">Variante D</span>
+    <h2 id="vd-t">Confirmar cancelación (§9.2 nivel a)</h2>
+    <p class="doc-caption">Consecuencia explícita; Esc no confirma. Cancelar con HITL pendiente también retira la solicitud (queda en audit). Modal mostrado estáticamente, sin scrim.</p>
+    <div class="frame frame__pad" style="display:grid; place-items:center; background:var(--bg-raised)">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mc-t" style="box-shadow:var(--shadow-2)">
+        <div class="modal__head">
+          <h3 class="modal__title" id="mc-t">¿Cancelar la ejecución?</h3>
+          <button type="button" class="btn btn--ghost btn--sm" aria-label="Cerrar"><svg style="width:14px;height:14px" aria-hidden="true"><use href="#i-x"/></svg></button>
+        </div>
+        <div class="modal__body">
+          <p>Se detiene el paso en curso de <code>WF-2026-0348</code>. Lo completado queda en el historial; no se genera informe.</p>
+          <p class="muted" style="font-size:var(--fs-small); margin:0">La solicitud de aprobación pendiente (HITL-0921) también se retira.</p>
+        </div>
+        <div class="modal__foot">
+          <button type="button" class="btn btn--ghost">Seguir ejecutando</button>
+          <button type="button" class="btn btn--danger">Cancelar ejecución</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

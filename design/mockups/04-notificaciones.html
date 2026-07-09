@@ -1,0 +1,262 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Notificaciones — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .mock-section { max-width: 1400px; margin: 0 auto; padding: var(--sp-8) var(--sp-6); }
+  .mock-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--sp-6); align-items: start; }
+
+  .notif-panel { width: 100%; max-width: 380px; padding: 0; overflow: hidden; }
+  .np-head {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3);
+    padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--line);
+  }
+  .np-head h3 { font-family: var(--font-display); font-size: var(--fs-body); margin: 0; }
+  .np-group { padding: var(--sp-2) var(--sp-4) var(--sp-1); border-bottom: 1px solid var(--line); }
+  .np-group:last-of-type { border-bottom: 0; }
+  .np-item {
+    display: grid; grid-template-columns: auto auto 1fr auto;
+    gap: var(--sp-2); align-items: start;
+    padding: var(--sp-2) 0; border-bottom: 1px solid color-mix(in srgb, var(--line) 50%, transparent);
+  }
+  .np-item:last-child { border-bottom: 0; }
+  .np-unread { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-top: 6px; }
+  .np-unread.is-read { background: transparent; }
+  .np-icon { display: flex; margin-top: 2px; color: var(--ink-faint); }
+  .np-icon svg { width: 15px; height: 15px; }
+  .np-icon.warn { color: var(--warn); }
+  .np-icon.danger { color: var(--danger); }
+  .np-icon.info { color: var(--info); }
+  .np-icon.ok { color: var(--money); }
+  .np-title { font-size: var(--fs-small); margin: 0; font-weight: 600; }
+  .np-item.is-read .np-title { font-weight: 400; color: var(--ink-dim); }
+  .np-meta { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+  .np-go { align-self: center; }
+  .np-foot { padding: var(--sp-2) var(--sp-4); border-top: 1px solid var(--line); text-align: center; }
+  .np-crit { display: inline-flex; align-items: center; gap: var(--sp-1); }
+  .roles-note { font-size: var(--fs-caption); color: var(--ink-faint); margin-top: var(--sp-2); }
+</style>
+</head>
+<body>
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<main class="mock-section">
+  <header style="margin-bottom:var(--sp-6)">
+    <span class="kicker">Acceso · vista 04</span>
+    <h1>Panel de notificaciones (campana)</h1>
+    <p class="muted" style="max-width:80ch">Dropdown anclado a la campana, 380 px. Grupos: Aprobaciones · Cuotas · Sistema (solo Admin). El badge del sidebar cuenta <em>pendientes reales</em> de HITL; «Marcar leídas» no lo afecta. Datos de ejemplo siempre ficticios.</p>
+  </header>
+
+  <div class="mock-grid">
+
+    <!-- ───────────── Admin: panel completo ───────────── -->
+    <div>
+      <div class="frame-label" style="display:flex; gap:var(--sp-2); align-items:center; margin-bottom:var(--sp-2)">
+        <span class="kicker kicker--dim" style="margin:0">Como</span> <span class="badge-rol badge-rol--admin">Admin</span>
+        <span class="faint" style="font-size:var(--fs-caption)">ve los tres grupos</span>
+      </div>
+      <div class="panel panel--raised notif-panel" role="menu" aria-label="Notificaciones, 4 sin leer">
+        <div class="np-head">
+          <h3>Notificaciones</h3>
+          <button class="btn btn--ghost btn--sm" type="button">Marcar leídas</button>
+        </div>
+
+        <div class="np-group">
+          <span class="kicker kicker--dim" style="font-size:10px">Aprobaciones pendientes</span>
+          <div class="np-item">
+            <span class="np-unread" aria-label="Sin leer"></span>
+            <span class="np-icon warn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span>
+            <div>
+              <p class="np-title np-crit"><span class="live-dot live-dot--warn" aria-hidden="true" style="width:6px;height:6px"></span> ValidationAgent solicita escribir 3 parámetros MV_*</p>
+              <p class="np-meta">Comercial Andina S.A. / TEST <span class="tag tag--danger" style="height:18px; font-size:10px">riesgo crítico</span> expira en 5 h</p>
+            </div>
+            <a class="np-go btn btn--secondary btn--sm" href="#">Ver</a>
+          </div>
+          <div class="np-item is-read">
+            <span class="np-unread is-read"></span>
+            <span class="np-icon ok"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <div>
+              <p class="np-title">dario aprobó la escritura en Ferretería El Tornillo SRL</p>
+              <p class="np-meta">PROD · hace 2 h</p>
+            </div>
+            <a class="np-go btn btn--ghost btn--sm" href="#">Ver</a>
+          </div>
+        </div>
+
+        <div class="np-group">
+          <span class="kicker kicker--dim" style="font-size:10px">Cuotas</span>
+          <div class="np-item">
+            <span class="np-unread" aria-label="Sin leer"></span>
+            <span class="np-icon warn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 11l4-4 4 4 5-5"/></svg></span>
+            <div>
+              <p class="np-title">Cuota del grupo Consultoría Funcional al 82%</p>
+              <p class="np-meta"><span class="mono">USD 410,00 / 500,00</span> · hace 40 min</p>
+            </div>
+            <a class="np-go btn btn--ghost btn--sm" href="#">Ver</a>
+          </div>
+          <div class="np-item">
+            <span class="np-unread" aria-label="Sin leer"></span>
+            <span class="np-icon danger"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></svg></span>
+            <div>
+              <p class="np-title">lucia alcanzó su cuota — solicita liberación</p>
+              <p class="np-meta">100% · hace 12 min</p>
+            </div>
+            <a class="np-go btn btn--secondary btn--sm" href="#">Ver</a>
+          </div>
+        </div>
+
+        <div class="np-group">
+          <span class="kicker kicker--dim" style="font-size:10px">Sistema · solo Admin</span>
+          <div class="np-item">
+            <span class="np-unread" aria-label="Sin leer"></span>
+            <span class="np-icon danger"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a2 2 0 0 1-2-2V5h6v2a2 2 0 0 1-2 2Z"/><path d="M3 5V3"/><path d="M7 5V3"/><path d="M19 15V6.5a3.5 3.5 0 0 0-7 0v11a3.5 3.5 0 0 1-7 0V14"/><path d="M17 21v-2"/><path d="M21 21v-2"/><path d="M22 19h-6v-2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2Z"/></svg></span>
+            <div>
+              <p class="np-title">Bridge de Comercial Andina S.A. offline</p>
+              <p class="np-meta"><code style="font-size:10px">BRIDGE_OFFLINE</code> desde 14:32 · hace 25 min</p>
+            </div>
+            <a class="np-go btn btn--secondary btn--sm" href="#">Ver</a>
+          </div>
+          <div class="np-item is-read">
+            <span class="np-unread is-read"></span>
+            <span class="np-icon danger"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></span>
+            <div>
+              <p class="np-title">Eval de <span class="mono">docagent@13</span>: 76% — deploy bloqueado</p>
+              <p class="np-meta">umbral 80% · hace 3 h</p>
+            </div>
+            <a class="np-go btn btn--ghost btn--sm" href="#">Ver</a>
+          </div>
+          <div class="np-item is-read">
+            <span class="np-unread is-read"></span>
+            <span class="np-icon danger"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg></span>
+            <div>
+              <p class="np-title">Backup nocturno de Postgres falló</p>
+              <p class="np-meta">11/06/2026 03:00 · hace 9 h</p>
+            </div>
+            <a class="np-go btn btn--ghost btn--sm" href="#">Ver</a>
+          </div>
+        </div>
+
+        <div class="np-foot"><a href="#" style="font-size:var(--fs-small)">Ver todas</a></div>
+      </div>
+    </div>
+
+    <!-- ───────────── Funcional: panel filtrado ───────────── -->
+    <div>
+      <div class="frame-label" style="display:flex; gap:var(--sp-2); align-items:center; margin-bottom:var(--sp-2)">
+        <span class="kicker kicker--dim" style="margin:0">Como</span> <span class="badge-rol badge-rol--funcional">Funcional</span>
+        <span class="faint" style="font-size:var(--fs-caption)">sin grupo Sistema, sin jerga ni códigos</span>
+      </div>
+      <div class="panel panel--raised notif-panel" role="menu" aria-label="Notificaciones, 1 sin leer">
+        <div class="np-head">
+          <h3>Notificaciones</h3>
+          <button class="btn btn--ghost btn--sm" type="button">Marcar leídas</button>
+        </div>
+        <div class="np-group">
+          <span class="kicker kicker--dim" style="font-size:10px">Aprobaciones pendientes</span>
+          <div class="np-item">
+            <span class="np-unread" aria-label="Sin leer"></span>
+            <span class="np-icon warn"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span>
+            <div>
+              <p class="np-title">Tenés una aprobación pendiente en Comercial Andina S.A.</p>
+              <p class="np-meta">TEST <span class="tag tag--warn" style="height:18px; font-size:10px">riesgo medio</span> expira mañana 09:00</p>
+            </div>
+            <a class="np-go btn btn--secondary btn--sm" href="#">Ver</a>
+          </div>
+        </div>
+        <div class="np-group">
+          <span class="kicker kicker--dim" style="font-size:10px">Cuotas</span>
+          <div class="np-item is-read">
+            <span class="np-unread is-read"></span>
+            <span class="np-icon ok"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <div>
+              <p class="np-title">Tu solicitud de liberación fue aprobada</p>
+              <p class="np-meta">hace 1 h</p>
+            </div>
+            <a class="np-go btn btn--ghost btn--sm" href="#">Ver</a>
+          </div>
+        </div>
+        <div class="np-foot"><a href="#" style="font-size:var(--fs-small)">Ver todas</a></div>
+      </div>
+      <p class="roles-note">Técnico ve lo mismo que Funcional pero con códigos técnicos visibles en los metadatos.</p>
+    </div>
+
+    <!-- ───────────── Estados: vacío / carga / error ───────────── -->
+    <div style="display:grid; gap:var(--sp-5)">
+      <div>
+        <span class="kicker kicker--dim">Estado vacío</span>
+        <div class="panel panel--raised notif-panel">
+          <div class="np-head"><h3>Notificaciones</h3></div>
+          <div style="padding: var(--sp-4)">
+            <div class="empty-state" style="padding: var(--sp-6)">
+              <span class="empty-state__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M3.3 17H20.7a1 1 0 0 0 .8-1.6 9 9 0 0 1-1.5-5.4V9A6 6 0 0 0 8 9v1a9 9 0 0 1-1.5 5.4 1 1 0 0 0 .8 1.6"/></svg></span>
+              <p class="empty-state__title">Estás al día</p>
+              <p class="empty-state__hint">Acá vas a ver aprobaciones, avisos de cuota y novedades del sistema.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <span class="kicker kicker--dim">Cargando</span>
+        <div class="panel panel--raised notif-panel" aria-busy="true">
+          <div class="np-head"><h3>Notificaciones</h3></div>
+          <div style="padding: var(--sp-4); display:grid; gap: var(--sp-3)">
+            <span class="skeleton skeleton--text"></span>
+            <span class="skeleton skeleton--text" style="width:85%"></span>
+            <span class="skeleton skeleton--text" style="width:70%"></span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <span class="kicker kicker--dim">Error de carga</span>
+        <div class="panel panel--raised notif-panel">
+          <div class="np-head"><h3>Notificaciones</h3></div>
+          <div style="padding: var(--sp-4)">
+            <div class="error-card" role="alert">
+              <span class="error-card__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg></span>
+              <div>
+                <p class="error-card__title">No se pudieron cargar las notificaciones</p>
+                <p class="error-card__why">El servicio no respondió a tiempo.</p>
+                <div class="error-card__actions"><button class="btn btn--secondary btn--sm" type="button">Reintentar</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- ───────────── Matriz por rol ───────────── -->
+  <section>
+    <span class="kicker kicker--dim">Qué tipos ve cada rol</span>
+    <div class="table-wrap" style="max-width:760px; margin-top:var(--sp-3)">
+      <table class="table">
+        <caption class="sr-only">Tipos de notificación visibles por rol</caption>
+        <thead><tr><th scope="col">Tipo</th><th scope="col">Funcional</th><th scope="col">Técnico</th><th scope="col">Admin</th></tr></thead>
+        <tbody>
+          <tr><td>Aprobaciones asignadas / resueltas</td><td>✅</td><td>✅</td><td>✅ (todas)</td></tr>
+          <tr><td>Cuota propia 80% / 100% · liberación</td><td>✅</td><td>✅</td><td>✅</td></tr>
+          <tr><td>Cuota de grupo / global</td><td>—</td><td>—</td><td>✅</td></tr>
+          <tr><td>Sistema: bridge / VPN / gateway</td><td>—</td><td>—</td><td>✅</td></tr>
+          <tr><td>Eval fallida · backup fallido · proveedor caído</td><td>—</td><td>—</td><td>✅</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="roles-note" style="max-width:70ch">Lo que un rol no ve, no se renderiza. Funcional nunca ve códigos (<code>BRIDGE_OFFLINE</code>) ni jerga; las degradaciones que lo afectan las ve en contexto («el asistente no está disponible»), no en la campana.</p>
+  </section>
+</main>
+</body>
+</html>

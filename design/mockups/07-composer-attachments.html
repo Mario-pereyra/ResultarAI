@@ -1,0 +1,220 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>07 · Composer con adjuntos — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1080px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+
+  /* Composer con zona de chips */
+  .composer { padding: var(--sp-4); background: var(--bg); }
+  .composer__box { max-width: 760px; margin: 0 auto; background: var(--bg-raised); border: 1px solid var(--line-strong); border-radius: var(--r-md); padding: var(--sp-2); }
+  .composer__chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); padding: var(--sp-1) var(--sp-1) var(--sp-2); border-bottom: 1px dashed var(--line); margin-bottom: var(--sp-2); }
+  .composer__row { display: grid; grid-template-columns: auto 1fr auto; gap: var(--sp-2); align-items: end; }
+  .composer__input { border: 0; background: none; resize: none; font-family: var(--font-body); font-size: var(--fs-body); color: var(--ink); padding: var(--sp-2) 0; min-height: 22px; }
+  .composer__input:focus { outline: none; }
+  .composer__input::placeholder { color: var(--ink-faint); }
+  .composer__hint { max-width: 760px; margin: var(--sp-1) auto 0; font-size: var(--fs-caption); color: var(--ink-faint); text-align: center; }
+  .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: 0; background: none; color: var(--ink-faint); border-radius: var(--r-xs); cursor: pointer; }
+  .icon-btn:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .icon-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+  .icon-btn svg { width: 15px; height: 15px; }
+
+  /* Spinner dentro de chip */
+  .chip .spin { width: 12px; height: 12px; border: 2px solid var(--accent); border-right-color: transparent; border-radius: 50%; animation: dx-spin .7s linear infinite; flex: none; }
+
+  /* Popover de límites del clip */
+  .limits-pop { background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--r-md); box-shadow: var(--shadow-2); padding: var(--sp-3) var(--sp-4); max-width: 420px; font-size: var(--fs-caption); color: var(--ink-dim); display: grid; gap: var(--sp-1); }
+  .limits-pop strong { color: var(--ink); font-size: var(--fs-small); }
+  .limits-pop code { white-space: normal; }
+
+  /* Vista previa de extracción */
+  .preview { max-width: 760px; margin: var(--sp-3) auto 0; }
+  .preview__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--line); }
+  .preview__title { font-family: var(--font-display); font-size: var(--fs-small); font-weight: 600; margin: 0; }
+  .preview__body { font-family: var(--font-mono); font-size: var(--fs-caption); line-height: 1.6; background: var(--bg); padding: var(--sp-4); overflow-x: auto; max-height: 320px; overflow-y: auto; }
+  .preview__body .marker { color: var(--warn); }
+  .preview__foot { padding: var(--sp-2) var(--sp-4); border-top: 1px solid var(--line); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .preview table { border-collapse: collapse; }
+  .preview td, .preview th { border: 1px solid var(--line); padding: 2px 8px; font-weight: 400; text-align: left; }
+  .preview th { color: var(--ink-dim); }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .icon-btn { width: 44px; height: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M12 13v4"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  <symbol id="i-xcircle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></symbol>
+</defs></svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 07 · Módulo chat</span>
+    <h1>Composer con adjuntos</h1>
+    <p class="muted">Transparencia total del pipeline de adjuntos (ANEXO-ATTACHMENTS): estados del chip, vista previa de QUÉ verá el agente, advertencias N2/N3 y límites visibles. Spec: <code>docs/design/VISTAS/02-chat.md §3</code>.</p>
+    <p class="doc-caption">Datos ficticios. Para Funcional el costo se expresa en «% del espacio»; para Técnico/Admin en tokens.</p>
+  </header>
+
+  <!-- ════════ A — Estados del chip ════════ -->
+  <section class="doc-section" aria-labelledby="a-t">
+    <span class="kicker kicker--dim">A</span>
+    <h2 id="a-t">Composer con chips en todos los estados</h2>
+    <p class="doc-caption">Los chips viven arriba del textarea, dentro del borde del composer. Enviar deshabilitado mientras algún chip no esté listo (tooltip con el motivo).</p>
+
+    <div class="frame">
+      <div class="ai-banner"><svg aria-hidden="true"><use href="#i-alert"/></svg>Respuestas generadas por IA — verificá antes de aplicar en cliente</div>
+      <footer class="composer">
+        <div class="composer__box">
+          <div class="composer__chips" role="list" aria-label="Archivos adjuntos">
+            <span class="chip is-loading" role="listitem"><span class="spin" aria-hidden="true"></span><span class="chip__name">balance_marzo.xlsx</span><span class="chip__meta">Subiendo… 45%</span><button type="button" class="chip__close" aria-label="Quitar adjunto balance_marzo.xlsx"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+            <span class="chip is-loading" role="listitem"><span class="spin" aria-hidden="true"></span><span class="chip__name">MIT-Comercial-Andina.docx</span><span class="chip__meta">Procesando contenido…</span><button type="button" class="chip__close" aria-label="Quitar adjunto MIT-Comercial-Andina.docx"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+            <span class="chip" role="listitem"><svg aria-hidden="true"><use href="#i-sheet"/></svg><span class="chip__name">parametros_mv.csv</span><span class="chip__meta">Listo · el agente verá: tabla 120 filas × 8 col · ≈3,1k tok</span><button type="button" class="chip__close" aria-label="Quitar adjunto parametros_mv.csv"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+            <span class="chip" role="listitem"><svg aria-hidden="true"><use href="#i-file"/></svg><span class="chip__name">manual_cierre.pdf</span><span class="tag tag--warn">truncado</span><span class="chip__meta">incluye el 62% del archivo</span><button type="button" class="chip__close" aria-label="Quitar adjunto manual_cierre.pdf"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+            <span class="chip is-error" role="listitem" data-tip="No podemos procesar archivos .zip. Extraé el archivo que necesitás y subilo directamente."><svg aria-hidden="true"><use href="#i-xcircle"/></svg><span class="chip__name">backup.zip</span><span class="chip__meta">No se pudo procesar</span><button type="button" class="chip__close" aria-label="Quitar adjunto backup.zip"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+            <span class="chip is-error" role="listitem" data-tip="El archivo supera el límite de 20 MB para Excel."><svg aria-hidden="true"><use href="#i-xcircle"/></svg><span class="chip__name">ventas_anual_completo.xlsx</span><span class="chip__meta">Demasiado grande (38 MB)</span><button type="button" class="chip__close" aria-label="Quitar adjunto ventas_anual_completo.xlsx"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+          </div>
+          <div class="composer__row">
+            <button type="button" class="icon-btn" aria-label="Adjuntar archivo"><svg aria-hidden="true"><use href="#i-clip"/></svg></button>
+            <label class="sr-only" for="c1">Escribile a DocAgent</label>
+            <textarea id="c1" class="composer__input" rows="1">Compará estos parámetros con el checklist contable</textarea>
+            <button type="button" class="btn btn--primary btn--sm" disabled data-tip="Esperá a que terminen de procesarse los adjuntos"><svg aria-hidden="true"><use href="#i-send"/></svg>Enviar</button>
+          </div>
+        </div>
+        <p class="composer__hint">2 archivos procesándose · quitá los archivos con error para poder enviar</p>
+      </footer>
+    </div>
+
+    <p class="doc-caption" style="margin-top: var(--sp-3)">Rol Funcional — mismo chip «listo», costo como espacio (sin tokens):</p>
+    <span class="chip"><svg aria-hidden="true"><use href="#i-sheet"/></svg><span class="chip__name">parametros_mv.csv</span><span class="chip__meta">Listo · usa 34% del espacio del mensaje</span><button type="button" class="chip__close" aria-label="Quitar adjunto parametros_mv.csv"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+  </section>
+
+  <!-- ════════ B — Límites visibles (popover del clip) ════════ -->
+  <section class="doc-section" aria-labelledby="b-t">
+    <span class="kicker kicker--dim">B</span>
+    <h2 id="b-t">Límites por agente — popover del botón clip</h2>
+    <div class="limits-pop" role="note">
+      <strong>Adjuntar archivos — DocAgent</strong>
+      <span>Acepta: <code>.pdf .xlsx .xls .csv .tsv .docx .txt .md .log .prw .prx .tlpp .sql .json .xml .yml .ini</code></span>
+      <span>Máximo <span class="mono">5</span> archivos por mensaje · hasta <span class="mono">30 MB</span> según tipo</span>
+      <span>No se aceptan: imágenes (todavía), comprimidos, archivos con macros (.xlsm, .docm)</span>
+    </div>
+  </section>
+
+  <!-- ════════ C — Vista previa de extracción ════════ -->
+  <section class="doc-section" aria-labelledby="c-t">
+    <span class="kicker kicker--dim">C</span>
+    <h2 id="c-t">Vista previa de extracción — «Ver lo que verá el agente»</h2>
+    <p class="doc-caption">Transparencia: la extracción exacta (inserted_text) con sus marcadores de truncado. Diferencial frente a ChatGPT/Claude: nada se trunca en silencio.</p>
+
+    <div class="panel panel--flush preview">
+      <div class="preview__head">
+        <h3 class="preview__title"><svg style="width:14px;height:14px;vertical-align:-2px" aria-hidden="true"><use href="#i-eye"/></svg> Esto es exactamente lo que recibirá el agente</h3>
+        <span class="mono faint" style="font-size:11px">balance_marzo.xlsx · ≈8,2k tok · 62% del archivo</span>
+      </div>
+      <div class="preview__body">
+<strong>Inventario de hojas (3):</strong>
+1. "Resumen"   — 24 filas × 5 col (incluida completa)
+2. "Detalle"   — 1.480 filas × 8 col (incluidas 150 primeras + 20 últimas)
+3. "Personal"  — 32 filas × 6 col <span class="marker">[hoja oculta — marcada]</span>
+
+<strong>Esquema "Detalle":</strong> Cuenta (texto) · Descripción (texto) · Debe (número) · Haber (número) · Saldo (número) · Fecha (fecha) · CC (texto) · Doc (texto)
+
+<table>
+<tr><th>Cuenta</th><th>Descripción</th><th>Debe</th><th>Haber</th><th>Saldo</th></tr>
+<tr><td>1.1.01.001</td><td>Caja moneda nacional</td><td>4.520,00</td><td>0,00</td><td>4.520,00</td></tr>
+<tr><td>1.1.02.001</td><td>Banco Unión Bs</td><td>12.300,00</td><td>1.150,00</td><td>11.150,00</td></tr>
+<tr><td>2.1.01.003</td><td>Proveedores locales</td><td>0,00</td><td>3.890,00</td><td>−3.890,00</td></tr>
+</table>
+<span class="marker">… (1.310 filas omitidas por límite de espacio — pedilas explícitamente si las necesitás) …</span>
+      </div>
+      <div class="preview__foot">Contenido extraído automáticamente — puede diferir del documento original. Atención: las tablas de un PDF pueden perder su estructura al extraer el texto.</div>
+    </div>
+  </section>
+
+  <!-- ════════ D — Advertencia N2 y bloqueo N3 ════════ -->
+  <section class="doc-section" aria-labelledby="d-t">
+    <span class="kicker kicker--dim">D</span>
+    <h2 id="d-t">Niveles de datos — advertencia N2 (confirmable) y bloqueo N3</h2>
+    <p class="doc-caption">N2: el usuario confirma «datos de prueba» (checkbox auditado) o cancela. N3: sin checkbox — no se puede enviar hasta subir un archivo limpio.</p>
+
+    <div style="display:grid; gap: var(--sp-4); max-width: 760px;">
+      <div class="error-card error-card--warn" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <div>
+          <div class="error-card__code">N2 · DATOS PERSONALES</div>
+          <p class="error-card__title">Detectamos posibles datos personales en este archivo</p>
+          <p class="error-card__why">2 emails, 1 número de carnet — fila 14 de la hoja «Personal». Recordá la política: solo datos de prueba hacia la IA.</p>
+          <label class="check-row" style="margin-bottom: var(--sp-3);">
+            <input type="checkbox" class="checkbox">
+            <span>Confirmo que son datos de prueba <span class="faint">(queda registrado en el audit)</span></span>
+          </label>
+          <div class="error-card__actions">
+            <button type="button" class="btn btn--secondary btn--sm" disabled data-tip="Marcá la confirmación primero">Continuar</button>
+            <button type="button" class="btn btn--ghost btn--sm">Cancelar (quitar adjunto)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="error-card" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-lock"/></svg></span>
+        <div>
+          <div class="error-card__code">N3 · CREDENCIALES</div>
+          <p class="error-card__title">Este archivo contiene lo que parece una contraseña o clave de acceso</p>
+          <p class="error-card__why">«Password=» en la línea 23. Por política no puede enviarse a la IA.</p>
+          <div class="error-card__actions">
+            <button type="button" class="btn btn--secondary btn--sm">Quitar adjunto</button>
+            <span class="faint" style="font-size: var(--fs-caption); align-self:center;">Quitá las credenciales del archivo y volvé a subirlo.</span>
+          </div>
+        </div>
+      </div>
+
+      <span class="chip is-error"><svg aria-hidden="true"><use href="#i-lock"/></svg><span class="chip__name">conexiones_prod.txt</span><span class="chip__meta">Bloqueado — contiene credenciales</span><button type="button" class="chip__close" aria-label="Quitar adjunto conexiones_prod.txt"><svg aria-hidden="true"><use href="#i-x"/></svg></button></span>
+    </div>
+  </section>
+
+  <!-- ════════ E — Rechazos accionables ════════ -->
+  <section class="doc-section" aria-labelledby="e-t">
+    <span class="kicker kicker--dim">E</span>
+    <h2 id="e-t">Rechazos con mensaje accionable (textos canónicos ANEXO §10)</h2>
+    <div style="display:grid; gap: var(--sp-3); max-width: 760px;">
+      <div class="error-card error-card--warn"><span class="error-card__icon"><svg aria-hidden="true"><use href="#i-xcircle"/></svg></span><div><p class="error-card__title">Este agente todavía no puede ver imágenes</p><p class="error-card__why" style="margin-bottom:0">Si es una captura de un error, pegá el texto del mensaje directamente en el chat; si es un reporte, exportalo a PDF o Excel.</p></div></div>
+      <div class="error-card error-card--warn"><span class="error-card__icon"><svg aria-hidden="true"><use href="#i-xcircle"/></svg></span><div><p class="error-card__title">Los archivos con macros (.xlsm) no están permitidos</p><p class="error-card__why" style="margin-bottom:0">Guardalo desde Excel como «Libro de Excel (.xlsx)» y volvé a subirlo.</p></div></div>
+      <div class="error-card error-card--warn"><span class="error-card__icon"><svg aria-hidden="true"><use href="#i-xcircle"/></svg></span><div><p class="error-card__title">Este PDF parece escaneado: no tiene texto seleccionable</p><p class="error-card__why">¿Querés que intentemos leerlo con reconocimiento óptico (OCR)? El resultado puede tener errores — vas a poder revisarlo antes de enviar.</p><div class="error-card__actions"><button type="button" class="btn btn--secondary btn--sm">Intentar OCR</button><button type="button" class="btn btn--ghost btn--sm">Cancelar</button></div></div></div>
+      <div class="error-card error-card--warn"><span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span><div><div class="error-card__code">INSTRUCCIÓN EMBEBIDA</div><p class="error-card__title">Este documento contiene texto que parece dirigido a la IA</p><p class="error-card__why" style="margin-bottom:0">(«ignorá las instrucciones…»). El agente lo tratará solo como contenido del documento. Revisalo si no lo esperabas.</p></div></div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

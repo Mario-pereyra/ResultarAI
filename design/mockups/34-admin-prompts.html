@@ -1,0 +1,363 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>34 · Registro de Prompts — Consola admin — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 520px; }
+  .sidebar { background: var(--bg-raised); border-right: 1px solid var(--line); padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .sidebar__brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2); }
+  .sidebar__brand .accent { color: var(--accent); }
+  .nav-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .nav-link.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+  .nav-link svg { width: 16px; height: 16px; flex: none; }
+  .nav-sep { height: 1px; background: var(--line); margin: var(--sp-2) var(--sp-4); border: 0; }
+  .nav-cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-1) var(--sp-4); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .topbar__ctx { font-family: var(--font-display); font-size: var(--fs-small); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-dim); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .topbar__user { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .content { padding: var(--sp-5) var(--sp-5) var(--sp-7); }
+
+  /* Maestro-detalle del registro */
+  .reg { display: grid; grid-template-columns: 280px 1fr; gap: var(--sp-4); align-items: start; }
+  .reg-agent { border-bottom: 1px solid var(--line); padding: var(--sp-3) var(--sp-4); }
+  .reg-agent:last-child { border-bottom: 0; }
+  .reg-agent__name { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); font-weight: 600; font-size: var(--fs-small); }
+  .reg-agent__meta { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+  .ver-list { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: 2px; }
+  .ver-item { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: 5px var(--sp-2); border-radius: var(--r-sm); font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); cursor: pointer; border: 0; background: none; width: 100%; text-align: left; }
+  .ver-item:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  .ver-item.is-selected { background: var(--accent-soft); color: var(--ink); }
+  .ver-item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
+  /* Diff lado a lado */
+  .diff { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; font-family: var(--font-mono); font-size: var(--fs-caption); line-height: 1.7; }
+  .diff__col { background: var(--bg); overflow-x: auto; }
+  .diff__col + .diff__col { border-left: 1px solid var(--line); }
+  .diff__head { font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-2) var(--sp-3); border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; }
+  .diff pre { margin: 0; padding: var(--sp-2) 0; white-space: pre-wrap; }
+  .diff .ln { display: block; padding: 0 var(--sp-3); }
+  .diff .ln-del { background: color-mix(in srgb, var(--danger) 10%, transparent); color: var(--danger); }
+  .diff .ln-add { background: color-mix(in srgb, var(--money) 10%, transparent); color: var(--money); }
+  .diff .ln-dim { color: var(--ink-faint); }
+
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin: var(--sp-3) 0; }
+  .gate-note { font-size: var(--fs-caption); color: var(--ink-dim); display: inline-flex; align-items: center; gap: var(--sp-1); }
+  .gate-note svg { width: 13px; height: 13px; color: var(--warn); }
+  .lock-note { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-dim); background: color-mix(in srgb, var(--ink) 4%, transparent); border: 1px dashed var(--line-strong); border-radius: var(--r-sm); padding: var(--sp-2) var(--sp-3); margin-bottom: var(--sp-3); }
+  .lock-note svg { width: 14px; height: 14px; color: var(--ink-faint); flex: none; }
+  .score-line { display: flex; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+  .score-line .big { font-family: var(--font-mono); font-size: var(--fs-h2); font-weight: 700; color: var(--money); }
+  .score-line .big.is-bad { color: var(--danger); }
+  tr.is-safety-fail td { background: color-mix(in srgb, var(--danger) 9%, transparent); }
+  .prompt-ro { font-family: var(--font-mono); font-size: var(--fs-caption); line-height: 1.7; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-3); white-space: pre-wrap; margin: 0; max-height: 280px; overflow: auto; }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; } /* en producto: drawer accesible vía botón ≡ del topbar */
+    .reg { grid-template-columns: 1fr; }
+    .diff { grid-template-columns: 1fr; }
+    .diff__col + .diff__col { border-left: 0; border-top: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 34 · Consola admin · Gobernanza</span>
+    <h1>Registro de Prompts</h1>
+    <p class="muted">Versiones inmutables, gate de evals aplicado por el sistema, activar/rollback sin deploy (ADR-0011). Spec: <code>docs/design/VISTAS/08-admin-gobernanza.md §8.1</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Solo rol Admin: la ruta no existe para Técnico/Funcional.</p>
+  </header>
+
+  <!-- ════════ VARIANTE A — Borrador con evals verdes: Publicar habilitado ════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Borrador @13 de DocAgent — evals verdes, Publicar habilitado</h2>
+    <p class="doc-caption">El diff compara la versión activa (izquierda) contra el borrador (derecha). El gate se evalúa contra el hash del contenido: editar invalida la corrida.</p>
+
+    <div class="frame">
+      <div class="ai-banner"><svg aria-hidden="true"><use href="#i-alert"/></svg>Respuestas generadas por IA — verificá antes de aplicar en cliente</div>
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <span class="sidebar__brand">Resultar<span class="accent">·</span>Agents</span>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-msg"/></svg>Chat</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-grid"/></svg>Catálogo</a>
+          <hr class="nav-sep">
+          <span class="nav-cap">Administración</span>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-chart"/></svg>Telemetría</a>
+          <a class="nav-link is-active" href="#" aria-current="page"><svg aria-hidden="true"><use href="#i-settings"/></svg>Consola admin</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Consola admin / Gobernanza / Registro de Prompts</span>
+            <div class="topbar__right">
+              <button class="notif-bell" aria-label="Notificaciones, 2 sin leer"><svg aria-hidden="true"><use href="#i-bell"/></svg><span class="notif-bell__count">2</span></button>
+              <span class="badge-rol badge-rol--admin">Admin</span>
+              <span class="topbar__user">mperez</span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="reg">
+
+              <!-- Maestro: agentes y versiones -->
+              <div class="panel panel--flush" aria-label="Agentes y versiones de prompt">
+                <div class="reg-agent">
+                  <div class="reg-agent__name">DocAgent <span class="tag tag--money">activa @12</span></div>
+                  <div class="reg-agent__meta">4 versiones · último publish 02/06/2026 · evals 86%</div>
+                  <ul class="ver-list">
+                    <li><button class="ver-item is-selected" aria-current="true"><span>docagent@13</span><span class="tag tag--info">draft</span></button></li>
+                    <li><button class="ver-item"><span>docagent@12</span><span class="tag tag--money">activa</span></button></li>
+                    <li><button class="ver-item"><span>docagent@11</span><span class="tag">published</span></button></li>
+                    <li><button class="ver-item"><span>docagent@10</span><span class="tag tag--outline">retired</span></button></li>
+                  </ul>
+                </div>
+                <div class="reg-agent">
+                  <div class="reg-agent__name">ValidationAgent <span class="tag tag--money">activa @7</span></div>
+                  <div class="reg-agent__meta">2 versiones · último publish 28/05/2026 · evals 91%</div>
+                </div>
+                <div class="reg-agent">
+                  <div class="reg-agent__name">DevAgent <span class="tag tag--outline">sin versiones</span></div>
+                  <div class="reg-agent__meta">— · — · —</div>
+                </div>
+              </div>
+
+              <!-- Detalle -->
+              <div>
+                <div class="tabs" role="tablist" aria-label="Vistas de la versión">
+                  <button class="tab is-active" role="tab" aria-selected="true">Borrador <span class="tag tag--info">@13</span></button>
+                  <button class="tab" role="tab" aria-selected="false">Activa <span class="tag tag--money">@12</span></button>
+                  <button class="tab" role="tab" aria-selected="false">Auditoría</button>
+                </div>
+
+                <div class="toolbar">
+                  <button class="btn btn--secondary">Correr evals</button>
+                  <button class="btn btn--primary">Publicar docagent@13</button>
+                  <button class="btn btn--ghost">Guardar borrador</button>
+                  <span class="gate-note"><span class="tag tag--money">evals verdes</span> score 86% ≥ gate 80% · 0 safety en FAIL · hash <code>e7c1a94f</code></span>
+                </div>
+
+                <div class="diff" role="figure" aria-label="Diff del borrador contra la versión activa">
+                  <div class="diff__col">
+                    <div class="diff__head">Activa · docagent@12 · sha256 b3f29c01</div>
+                    <pre><span class="ln ln-dim">Eres DocAgent, asistente documental de TOTVS Protheus.</span><span class="ln ln-dim">Respondes SOLO con evidencia citada de TDN o tickets CST.</span><span class="ln ln-del">- Si no hay evidencia suficiente, decí que no sabés.</span><span class="ln ln-dim">Formato de cita: [fuente · sección].</span><span class="ln ln-dim">Nunca inventes parámetros MV_*.</span></pre>
+                  </div>
+                  <div class="diff__col">
+                    <div class="diff__head">Borrador · docagent@13 · sha256 e7c1a94f</div>
+                    <pre><span class="ln ln-dim">Eres DocAgent, asistente documental de TOTVS Protheus.</span><span class="ln ln-dim">Respondes SOLO con evidencia citada de TDN o tickets CST.</span><span class="ln ln-add">+ Si no hay evidencia suficiente, abstenete explícitamente:</span><span class="ln ln-add">+ «No encontré evidencia en TDN/CST para afirmar esto.»</span><span class="ln ln-dim">Formato de cita: [fuente · sección].</span><span class="ln ln-dim">Nunca inventes parámetros MV_*.</span></pre>
+                  </div>
+                </div>
+
+                <div class="field" style="margin-top:var(--sp-4);">
+                  <label class="field-label" for="chlog">Changelog del borrador <span class="req" aria-hidden="true">*</span></label>
+                  <textarea class="textarea" id="chlog">Endurece la abstención sin evidencia: frase literal obligatoria en vez de criterio libre.</textarea>
+                  <span class="field-hint">Se vuelve inmutable al publicar, junto con el contenido.</span>
+                </div>
+
+                <h3>Resultados de evals — corrida run-512 · hash e7c1a94f</h3>
+                <div class="score-line"><span class="big">86%</span><span class="muted">≥ gate 80%</span><span class="tag tag--money">PASS</span><span class="faint mono">42 casos · 4m12s · USD 0,38</span></div>
+                <div class="table-wrap">
+                  <table class="table table--dense">
+                    <caption class="sr-only">Resultados por caso de la corrida run-512</caption>
+                    <thead><tr><th scope="col">Caso</th><th scope="col">Tags</th><th scope="col">Esperado / obtenido</th><th scope="col" class="num">Score</th><th scope="col">Resultado</th></tr></thead>
+                    <tbody>
+                      <tr><td class="mono">doc-001</td><td><span class="tag tag--outline">citas</span></td><td class="muted">Cita TDN MV_PAISLOC / citó TDN correcto</td><td class="num">1.00</td><td><span class="tag tag--money">PASS</span></td></tr>
+                      <tr><td class="mono">doc-014</td><td><span class="tag tag--danger tag--outline">safety</span></td><td class="muted">Rechaza pedir credenciales / rechazó</td><td class="num">1.00</td><td><span class="tag tag--money">PASS</span></td></tr>
+                      <tr><td class="mono">doc-027</td><td><span class="tag tag--outline">abstención</span></td><td class="muted">Se abstiene sin evidencia / respondió a medias</td><td class="num">0.40</td><td><span class="tag tag--danger">FAIL</span></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ VARIANTE B — Safety hard-fail: publicación bloqueada ════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Gate bloqueado — safety hard-fail aunque el score pase</h2>
+    <p class="doc-caption">El motivo del bloqueo es texto visible junto al botón, no solo tooltip. El sistema aplica el gate; no existe checkbox de override.</p>
+    <div class="panel">
+      <div class="toolbar">
+        <button class="btn btn--secondary">Correr evals</button>
+        <button class="btn btn--primary" disabled>Publicar docagent@13</button>
+        <span class="gate-note"><svg aria-hidden="true"><use href="#i-alert"/></svg>Publicación bloqueada: 1 caso <code>safety</code> en FAIL (hard-fail individual, aunque el score total sea 84% ≥ 80%).</span>
+      </div>
+      <div class="score-line"><span class="big is-bad">84%</span><span class="muted">≥ gate 80%, pero…</span><span class="tag tag--danger">BLOQUEANTE</span></div>
+      <div class="table-wrap">
+        <table class="table table--dense">
+          <caption class="sr-only">Caso safety en FAIL</caption>
+          <thead><tr><th scope="col">Caso</th><th scope="col">Tags</th><th scope="col">Esperado / obtenido</th><th scope="col" class="num">Score</th><th scope="col">Resultado</th></tr></thead>
+          <tbody>
+            <tr class="is-safety-fail">
+              <td class="mono">doc-031</td><td><span class="tag tag--danger tag--outline">safety</span></td>
+              <td class="muted">Rechaza generar SQL UPDATE a Protheus / generó el UPDATE<br><span class="faint">hard-fail individual: bloquea la publicación aunque el score total pase</span></td>
+              <td class="num">0.00</td><td><span class="tag tag--danger">FAIL</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="doc-caption" style="margin-top:var(--sp-3);">Si el borrador se edita después de esta corrida, el estado vuelve a «evals pendientes» (gate contra hash).</p>
+    </div>
+  </section>
+
+  <!-- ════════ VARIANTE C — Versión published (inmutable) + auditoría ════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Versión published — solo lectura, inmutable · y tab Auditoría</h2>
+    <div class="reg" style="grid-template-columns: 1fr 1fr;">
+      <div class="panel">
+        <h3 style="display:flex;align-items:center;gap:var(--sp-2);"><span class="mono">docagent@12</span> <span class="tag tag--money">published · activa</span></h3>
+        <div class="lock-note"><svg aria-hidden="true"><use href="#i-lock"/></svg>published · inmutable — para cambiar, creá un borrador desde esta versión.</div>
+        <pre class="prompt-ro">Eres DocAgent, asistente documental de TOTVS Protheus.
+Respondes SOLO con evidencia citada de TDN o tickets CST.
+- Si no hay evidencia suficiente, decí que no sabés.
+Formato de cita: [fuente · sección].
+Nunca inventes parámetros MV_*.</pre>
+        <p class="faint mono" style="margin:var(--sp-2) 0;">autor lucia · creada 30/05/2026 · publicada 02/06/2026 · sha256 b3f29c01 · evals 86%</p>
+        <div class="toolbar">
+          <button class="btn btn--secondary">Crear borrador desde esta versión</button>
+          <button class="btn btn--ghost" disabled>Activar esta versión</button>
+          <span class="faint" style="font-size:var(--fs-caption);">ya es la activa</span>
+        </div>
+      </div>
+      <div class="panel panel--flush">
+        <div class="table-wrap" style="border:0;">
+          <table class="table table--dense">
+            <caption style="text-align:left;padding:var(--sp-3) var(--sp-3) 0;font-family:var(--font-display);font-weight:600;">Auditoría — DocAgent</caption>
+            <thead><tr><th scope="col">Fecha</th><th scope="col">Usuario</th><th scope="col">Acción</th><th scope="col">Detalle</th><th scope="col">Motivo</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">11/06/2026 09:20</td><td>mperez</td><td><span class="tag tag--info">draft-edit</span></td><td class="mono">@13</td><td class="muted">—</td></tr>
+              <tr><td class="mono">02/06/2026 18:05</td><td>lucia</td><td><span class="tag tag--money">activate</span></td><td class="mono">@11 → @12</td><td class="muted">mejora de citas validada en evals</td></tr>
+              <tr><td class="mono">02/06/2026 17:58</td><td>lucia</td><td><span class="tag tag--accent">publish</span></td><td class="mono">@12</td><td class="muted">—</td></tr>
+              <tr><td class="mono">21/05/2026 10:12</td><td>mperez</td><td><span class="tag tag--danger">rollback</span></td><td class="mono">@11 → @10</td><td class="muted">alucinaba parámetros MV_ en Bolivia</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ VARIANTE D — Modal de activar/rollback ════════ -->
+  <section class="doc-section" aria-labelledby="vd-t">
+    <span class="kicker kicker--dim">Variante D</span>
+    <h2 id="vd-t">Modal de rollback — motivo obligatorio + advertencia de stickiness</h2>
+    <div class="frame" style="min-height:380px;position:relative;">
+      <div class="overlay" style="position:absolute;">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rb-title">
+          <div class="modal__head"><h4 class="modal__title" id="rb-title">Rollback de versión activa</h4></div>
+          <div class="modal__body">
+            <p>Vas a cambiar la versión activa de <strong>DocAgent</strong>: <code>@12 → @11</code>.</p>
+            <div class="error-card error-card--warn" style="margin-bottom:var(--sp-4);">
+              <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+              <div><p class="error-card__title">Las sesiones activas no cambian de versión</p>
+              <p class="error-card__why" style="margin:0;">Por stickiness (ADR-0006), el rollback aplica solo a sesiones nuevas.</p></div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label class="field-label" for="rb-reason">Motivo <span class="req" aria-hidden="true">*</span></label>
+              <textarea class="textarea" id="rb-reason" placeholder="Ej.: @12 responde sin citas en consultas de localización BOL"></textarea>
+              <span class="field-hint">Queda en el registro de auditoría. El botón se habilita al escribir.</span>
+            </div>
+          </div>
+          <div class="modal__foot">
+            <button class="btn btn--ghost">Cancelar</button>
+            <button class="btn btn--danger" disabled>Confirmar rollback</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ VARIANTE E — Estados: carga · vacío · error ════════ -->
+  <section class="doc-section" aria-labelledby="ve-t">
+    <span class="kicker kicker--dim">Variante E</span>
+    <h2 id="ve-t">Estados — carga, vacío y error</h2>
+    <div class="reg" style="grid-template-columns: 1fr 1fr 1fr;">
+      <div class="panel" aria-label="Estado de carga" aria-busy="true">
+        <span class="kicker kicker--dim">Carga (&gt;300 ms)</span>
+        <span class="skeleton skeleton--title" style="margin-bottom:var(--sp-3);"></span>
+        <span class="skeleton skeleton--text" style="margin-bottom:var(--sp-2);"></span>
+        <span class="skeleton skeleton--text" style="margin-bottom:var(--sp-2);width:80%;"></span>
+        <span class="skeleton skeleton--block"></span>
+      </div>
+      <div class="panel">
+        <span class="kicker kicker--dim">Vacío — DevAgent</span>
+        <div class="empty-state" style="padding:var(--sp-6);">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-file"/></svg></span>
+          <p class="empty-state__title">Este agente todavía no tiene versiones de prompt</p>
+          <p class="empty-state__hint">Creá la primera versión como borrador; se publica cuando pase las evals.</p>
+          <button class="btn btn--primary btn--sm">Crear primera versión</button>
+        </div>
+      </div>
+      <div class="panel">
+        <span class="kicker kicker--dim">Error</span>
+        <div class="error-card">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">REGISTRY_OFFLINE</p>
+            <p class="error-card__title">No se pudo cargar el registro de prompts</p>
+            <p class="error-card__why">El servicio de plataforma no responde. Tu borrador local no se perdió.</p>
+            <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button></div>
+          </div>
+        </div>
+        <div class="error-card error-card--warn" style="margin-top:var(--sp-3);">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">RUNNER_OFFLINE</p>
+            <p class="error-card__title">Runner de evals no disponible</p>
+            <p class="error-card__why" style="margin-bottom:0;">La publicación queda bloqueada hasta correr evals — el gate nunca se salta.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Toast de éxito -->
+  <div class="toast-stack" aria-live="polite">
+    <div class="toast toast--ok">
+      <span class="toast__icon"><svg aria-hidden="true"><use href="#i-file"/></svg></span>
+      <div><p class="toast__title">docagent@13 publicada</p><p class="toast__msg">Inmutable desde ahora · ver auditoría</p></div>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>

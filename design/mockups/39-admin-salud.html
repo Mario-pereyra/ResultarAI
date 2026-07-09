@@ -1,0 +1,282 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>39 · Salud del sistema — Consola admin</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 520px; }
+  .sidebar { background: var(--bg-raised); border-right: 1px solid var(--line); padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .sidebar__brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2); }
+  .sidebar__brand .accent { color: var(--accent); }
+  .nav-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .nav-link.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+  .nav-sep { height: 1px; background: var(--line); margin: var(--sp-2) var(--sp-4); border: 0; }
+  .nav-cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-1) var(--sp-4); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .topbar__ctx { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .topbar__user { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  .page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .ext::after { content: " ↗"; font-size: 11px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); margin-bottom: var(--sp-4); align-items: start; }
+  .svc-row { display: grid; grid-template-columns: 14px 1fr auto auto auto; gap: var(--sp-2); align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-small); }
+  .svc-row:last-child { border-bottom: 0; }
+  .svc-row .ms, .svc-row .ago { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .svc-row .det { font-size: var(--fs-caption); color: var(--ink-dim); }
+  .sub { font-size: var(--fs-caption); color: var(--ink-faint); font-family: var(--font-mono); }
+
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-1) var(--sp-4); font-size: var(--fs-small); margin: 0; }
+  .kv dt { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); }
+  .kv dd { margin: 0; }
+
+  .danger-panel { border-color: color-mix(in srgb, var(--danger) 50%, var(--line)); }
+  .danger-panel h4 { color: var(--danger); display: flex; gap: var(--sp-2); align-items: center; }
+  .off-banner {
+    display: flex; align-items: center; justify-content: center; gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4);
+    background: color-mix(in srgb, var(--danger) 12%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+    font-size: var(--fs-caption); color: var(--ink); text-align: center;
+  }
+  .off-banner svg { width: 13px; height: 13px; color: var(--danger); flex: none; }
+
+  .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: var(--sp-5); align-items: start; }
+  .modal-demo { width: auto; max-height: none; }
+  .consequences { margin: 0 0 var(--sp-4); padding-left: var(--sp-5); font-size: var(--fs-small); color: var(--ink-dim); display: grid; gap: var(--sp-1); }
+
+  @media (max-width: 900px) { .shell { grid-template-columns: 1fr; } .sidebar { display: none; } .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<div class="doc">
+  <span class="kicker">Mockup 39 · Consola admin</span>
+  <h1>Salud del sistema</h1>
+  <p class="muted">Vista solo-Admin, «de guardia». Incluye el kill-switch global del chat. Spec: <code>VISTAS/07-admin-operacion.md §6</code>. Datos ficticios.</p>
+
+  <section class="doc-section">
+    <h2>Estado normal (refresco cada 30 s)</h2>
+    <div class="frame">
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <div class="sidebar__brand">Resultar <span class="accent">Agents</span></div>
+          <a class="nav-link" href="#">Chat</a>
+          <a class="nav-link" href="#">Catálogo</a>
+          <a class="nav-link" href="#">Workflows</a>
+          <hr class="nav-sep">
+          <span class="nav-cap">Consola admin</span>
+          <a class="nav-link" href="#">Tablero</a>
+          <a class="nav-link" href="#">Usuarios</a>
+          <a class="nav-link" href="#">Grupos</a>
+          <a class="nav-link" href="#">Cuotas</a>
+          <a class="nav-link" href="#">Registro de prompts</a>
+          <a class="nav-link" href="#">Audit</a>
+          <a class="nav-link is-active" href="#" aria-current="page">Salud</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Consola admin / Salud</span>
+            <div class="topbar__right"><span class="badge-rol badge-rol--admin">Admin</span><span class="topbar__user">mterceros</span></div>
+          </div>
+          <div class="content">
+            <div class="page-head">
+              <div><span class="kicker">Consola admin</span><h2 style="margin:0">Salud del sistema</h2></div>
+              <div style="display:flex;gap:var(--sp-2)">
+                <a class="btn btn--secondary btn--sm ext" href="#" target="_blank" rel="noopener">Langfuse</a>
+                <a class="btn btn--secondary btn--sm ext" href="#" target="_blank" rel="noopener">Uptime Kuma</a>
+              </div>
+            </div>
+
+            <div class="two-col">
+              <!-- Columna izquierda: servicios + bridges -->
+              <div style="display:grid;gap:var(--sp-4)">
+                <div class="panel">
+                  <h4>Servicios</h4>
+                  <div class="svc-row"><span class="live-dot" aria-label="OK"></span><span>Gateway LLM</span><span class="det">—</span><span class="ms">38 ms</span><span class="ago">hace 30 s</span></div>
+                  <div class="svc-row"><span class="live-dot" aria-label="OK"></span><span>PostgreSQL <span class="sub">app · langfuse · rag</span></span><span class="det">—</span><span class="ms">4 ms</span><span class="ago">hace 30 s</span></div>
+                  <div class="svc-row"><span class="live-dot live-dot--warn" aria-label="Degradado"></span><span>Langfuse</span><span class="det">ingesta diferida; costos del tablero estimados</span><span class="ms">1.240 ms</span><span class="ago">hace 30 s</span></div>
+                  <div class="svc-row"><span class="live-dot" aria-label="OK"></span><span>Uptime Kuma</span><span class="det">—</span><span class="ms">12 ms</span><span class="ago">hace 30 s</span></div>
+                </div>
+
+                <div class="panel panel--flush">
+                  <h4 style="padding:var(--sp-5) var(--sp-5) 0">Bridges conectados (por dispositivo)</h4>
+                  <div style="overflow-x:auto">
+                  <table class="table table--dense">
+                    <thead><tr><th>Dispositivo</th><th>Usuario</th><th>Versión</th><th>Estado</th><th class="num">Latencia</th><th>Visto</th></tr></thead>
+                    <tbody>
+                      <tr><td class="mono">SRV-INBOLSA</td><td class="mono">sistema</td><td class="mono">tat-mcp v0.4.2</td><td><span class="tag tag--money">CONECTADO</span></td><td class="num">9 ms</td><td class="faint">desde 03/06 08:00</td></tr>
+                      <tr><td class="mono">LAPTOP-LUCIA</td><td class="mono">lucia</td><td class="mono">tat-mcp v0.4.2</td><td><span class="tag tag--money">CONECTADO</span></td><td class="num">21 ms</td><td class="faint">desde hoy 08:12</td></tr>
+                      <tr><td class="mono">LAPTOP-JMENDEZ</td><td class="mono">jmendez</td><td class="mono">tat-mcp v0.4.1</td><td><span class="tag">DESCONECTADO</span></td><td class="num faint">—</td><td class="faint">hace 2 h</td></tr>
+                      <tr><td class="mono">LAPTOP-FGUTIERREZ</td><td class="mono">fgutierrez</td><td class="mono">tat-mcp v0.4.2</td><td><span class="tag tag--warn" data-tip="5 reconexiones en 10 min" tabindex="0">INESTABLE</span></td><td class="num">340 ms</td><td class="faint">hace 40 s</td></tr>
+                    </tbody>
+                  </table>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Columna derecha: backups + retención -->
+              <div style="display:grid;gap:var(--sp-4)">
+                <div class="panel">
+                  <h4>Backups</h4>
+                  <dl class="kv">
+                    <dt>Último backup</dt><dd><span class="tag tag--money">OK</span> <span class="mono">11/06/2026 03:15</span> · <span class="mono">1,8 GB</span> · 6 m 04 s</dd>
+                    <dt>Destino</dt><dd>NAS local + <span class="mono">s3://resultar-backups</span> (offsite)</dd>
+                    <dt>Último fallo</dt><dd><span class="mono">02/06/2026</span> — timeout hacia offsite (resultado <span class="tag tag--warn">PARCIAL</span>: local OK)</dd>
+                  </dl>
+                  <hr class="divider" style="margin:var(--sp-4) 0">
+                  <div style="display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap">
+                    <button class="btn btn--secondary">Probar restore</button>
+                    <span style="font-size:var(--fs-small)">último drill: <span class="tag tag--money">OK</span> <span class="mono">28/05/2026 · 4 m 12 s</span></span>
+                  </div>
+                  <p class="faint" style="font-size:var(--fs-caption);margin:var(--sp-2) 0 0">El drill restaura app+langfuse+rag <strong>en sandbox</strong>, jamás sobre producción. Registra <code>BACKUP_RESTORE_DRILL</code> en el audit.</p>
+                </div>
+
+                <div class="panel panel--flush">
+                  <h4 style="padding:var(--sp-5) var(--sp-5) 0">Jobs de retención</h4>
+                  <table class="table table--dense">
+                    <thead><tr><th>Job</th><th>Política</th><th>Último run</th><th class="num">Purgado</th></tr></thead>
+                    <tbody>
+                      <tr><td>Trazas Langfuse</td><td class="mono">90 días</td><td><span class="tag tag--money">OK</span> <span class="mono">11/06 02:00</span></td><td class="num">12.430 trazas</td></tr>
+                      <tr><td>Mensajes de sesión</td><td class="mono">365 días</td><td><span class="tag tag--money">OK</span> <span class="mono">11/06 02:10</span></td><td class="num">0 mensajes</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- KILL-SWITCH -->
+            <div class="panel danger-panel">
+              <h4><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg> Kill-switch — zona peligrosa</h4>
+              <p style="font-size:var(--fs-small);margin-bottom:var(--sp-3)">Apaga el <strong>chat de la plataforma</strong> para todos los roles. No corta los servicios (el gateway sigue arriba para los checks). Las aprobaciones HITL pendientes quedan visibles pero no aprobables.</p>
+              <div style="display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap">
+                <span style="font-size:var(--fs-small)">Estado: <span class="tag tag--money">CHAT ACTIVO</span></span>
+                <span class="faint" style="font-size:var(--fs-caption)">última acción: reactivado por <span class="mono">mterceros</span> el <span class="mono">04/05/2026 21:40</span></span>
+                <button class="btn btn--danger" style="margin-left:auto">Apagar el chat de la plataforma…</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ MODAL KILL-SWITCH + ESTADO APAGADO ════════ -->
+  <section class="doc-section">
+    <h2>Kill-switch: confirmación y estado apagado</h2>
+    <div class="modal-grid">
+
+      <div class="modal modal-demo" role="dialog" aria-labelledby="m-ks-t">
+        <div class="modal__head"><h3 class="modal__title" id="m-ks-t" style="color:var(--danger)">Apagar el chat de la plataforma</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+        <div class="modal__body">
+          <p style="font-size:var(--fs-small)">Al confirmar:</p>
+          <ul class="consequences">
+            <li>Nadie puede enviar mensajes nuevos — todos los roles.</li>
+            <li>Las sesiones en stream se cortan al terminar el turno actual.</li>
+            <li>Las aprobaciones HITL pendientes <strong>siguen visibles</strong> pero no se pueden aprobar.</li>
+            <li>Los Admin conservan la consola.</li>
+          </ul>
+          <div class="field">
+            <label class="field-label" for="ks-causa">Causa <span class="req" aria-hidden="true">*</span></label>
+            <textarea class="textarea" id="ks-causa" placeholder="Va al audit log y al banner que ven los usuarios…">Mantenimiento de la VM: migración de disco</textarea>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="ks-confirm">Escribí <code>APAGAR</code> para habilitar el botón</label>
+            <input class="input input--mono" id="ks-confirm" placeholder="APAGAR">
+            <span class="field-hint">Esc jamás confirma esta acción.</span>
+          </div>
+        </div>
+        <div class="modal__foot"><button class="btn btn--ghost">Cancelar</button><button class="btn btn--danger" disabled>Apagar el chat</button></div>
+      </div>
+
+      <div style="display:grid;gap:var(--sp-4)">
+        <div class="panel panel--flush">
+          <h4 style="padding:var(--sp-5) var(--sp-5) var(--sp-2)">Banner global (todas las pantallas, todos los roles)</h4>
+          <div class="off-banner" role="status">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+            La plataforma está en pausa por mantenimiento — Mantenimiento de la VM: migración de disco
+          </div>
+        </div>
+        <div class="panel danger-panel">
+          <h4>Panel kill-switch en estado apagado</h4>
+          <div style="display:flex;align-items:center;gap:var(--sp-3);flex-wrap:wrap">
+            <span style="font-size:var(--fs-small)">Estado: <span class="tag tag--danger">CHAT APAGADO</span></span>
+            <span class="faint" style="font-size:var(--fs-caption)">apagado por <span class="mono">mterceros</span> el <span class="mono">11/06/2026 15:02</span> — «Mantenimiento de la VM: migración de disco»</span>
+            <button class="btn btn--primary" style="margin-left:auto">Reactivar el chat</button>
+          </div>
+          <p class="faint" style="font-size:var(--fs-caption);margin:var(--sp-2) 0 0">Reactivar pide confirmación simple. Si dos Admin accionan a la vez, el segundo recibe el estado ya cambiado (sin doble registro).</p>
+        </div>
+        <div class="panel">
+          <h4>Drill de restore en curso</h4>
+          <div style="display:flex;align-items:center;gap:var(--sp-3)">
+            <button class="btn btn--secondary btn--loading" aria-label="Drill en curso">Probar restore</button>
+            <span class="muted" style="font-size:var(--fs-small)">drill en curso… (corre en segundo plano, minutos)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ ESTADOS ════════ -->
+  <section class="doc-section">
+    <h2>Otros estados</h2>
+    <div class="modal-grid">
+      <div class="panel">
+        <h4>Vacío — sin bridges</h4>
+        <div class="empty-state" style="padding:var(--sp-6)">
+          <p class="empty-state__title">Ningún dispositivo conectó su bridge todavía</p>
+          <p class="empty-state__hint">El bridge tat-mcp se conecta con <code>tat-mcp --connect</code>.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>Sin drill de restore</h4>
+        <p style="font-size:var(--fs-small);display:flex;align-items:center;gap:var(--sp-2);margin:0">
+          <span class="tag tag--warn">NUNCA PROBADO</span> Nunca se probó un restore — un backup no probado no es un backup.
+        </p>
+        <button class="btn btn--secondary btn--sm" style="margin-top:var(--sp-3)">Probar restore</button>
+      </div>
+      <div class="panel">
+        <h4>Error global del endpoint de salud</h4>
+        <div class="error-card">
+          <span class="error-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></span>
+          <div>
+            <p class="error-card__code">HEALTH_ENDPOINT_DOWN</p>
+            <p class="error-card__title">No se pudo leer el estado del sistema</p>
+            <p class="error-card__why">Si esta vista no carga, revisá Uptime Kuma desde afuera — el enlace de arriba se mantiene disponible.</p>
+            <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button><a class="btn btn--ghost btn--sm ext" href="#" target="_blank" rel="noopener">Uptime Kuma</a></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>Éxito del drill (toast)</h4>
+        <div class="toast toast--ok" style="position:static;animation:none">
+          <span class="toast__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <div><p class="toast__title">Drill de restore OK</p><p class="toast__msg">Restauró app+langfuse+rag en sandbox en 4 m 12 s. Registrado en el audit.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

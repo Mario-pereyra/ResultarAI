@@ -1,0 +1,1148 @@
+/* ============================================================================
+   tokens.css — Resultar Agents Platform · Sistema de diseño v1.0
+   ----------------------------------------------------------------------------
+   FUENTE DE VERDAD VISUAL de los mockups de documentación de diseño.
+   No es código de producción. Ver docs/design/DESIGN-SYSTEM.md para reglas
+   de uso, anatomía de componentes y matriz de contraste.
+
+   Theming por atributos en <html>:
+     html[data-theme="dark"|"light"][data-brand="default"|"totvs"]
+   Las 4 combinaciones están completas y verificadas WCAG 2.1 AA
+   (ratios calculados en DESIGN-SYSTEM.md §5.4).
+
+   Brand "default" → estética "sala de control": fondo #0a0d13, ámbar #ffb000,
+   verde dinero #3ddc97. Brand "totvs" → paleta oficial rebrand dic-2025:
+   primario #00DBFF, secundario #002233, acento #FF8900 (fuente: Guia da
+   Marca TOTVS, marca.totvs.com — ver investigación citada en DESIGN-SYSTEM).
+
+   ----------------------------------------------------------------------------
+   MINI-SWITCHER OBLIGATORIO — todo mockup lo incluye al inicio de <body>.
+   Copiar tal cual (10 líneas):
+
+   <div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+     <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+     <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+   </div>
+   <script>
+     var dxH = document.documentElement;
+     if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+     if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+   </script>
+
+   ----------------------------------------------------------------------------
+   ÍNDICE
+     1. Fuentes (Google Fonts)
+     2. Tokens globales (tipografía, espaciado, radios, motion, z-index, bp)
+     3. Temas: dark/default · light/default · dark/totvs · light/totvs
+     4. Base de documento
+     5. Clases base: .panel .btn .tag .badge-rol .input .select .textarea
+        .checkbox .field .table .kicker .live-dot .quota-bar .toast .skeleton
+        .empty-state .error-card .chip .chip-cache .tabs .tooltip .overlay
+        .modal .taximeter .hitl-card .escalate-card .cite .wf .branch-sel
+        .ai-banner .notif-bell .dx-switcher + utilidades
+   ========================================================================== */
+
+/* ── 1. Fuentes ──────────────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Saira:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ── 2. Tokens globales (independientes de tema y marca) ─────────────────── */
+:root {
+  /* Tipografía: familias */
+  --font-display: "Chakra Petch", "Saira", system-ui, sans-serif; /* títulos, kickers */
+  --font-body: "Saira", system-ui, sans-serif;                    /* texto de UI */
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;         /* datos, números, código */
+
+  /* Tipografía: escala modular 12→32 px (ratio ≈1.2) */
+  --fs-caption: 12px;  /* metadatos, captions, celdas auxiliares */
+  --fs-small:   13px;  /* botones, tags, texto denso de tablas */
+  --fs-body:    14px;  /* texto base de la UI */
+  --fs-lead:    16px;  /* párrafo destacado, mensajes de chat */
+  --fs-h4:      18px;  /* títulos de card */
+  --fs-h3:      20px;  /* títulos de sección */
+  --fs-h2:      24px;  /* títulos de página secundarios */
+  --fs-h1:      28px;  /* título de página */
+  --fs-display: 32px;  /* cifras protagonistas (taxímetro, dashboards) */
+
+  --lh-tight: 1.2;
+  --lh-base:  1.5;
+  --lh-loose: 1.65;
+  --ls-kicker: .16em;
+
+  /* Espaciado: escala de 4 px */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+  --sp-9: 48px;
+  --sp-10: 64px;
+
+  /* Radios — deliberadamente contenidos (estética instrumental) */
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 10px;
+  --r-xl: 14px;
+  --r-pill: 999px;
+
+  /* Motion */
+  --dur-1: 120ms;  /* micro-feedback: hover, focus */
+  --dur-2: 180ms;  /* transiciones estándar */
+  --dur-3: 280ms;  /* entradas/salidas: toasts, modals */
+  --ease-out: cubic-bezier(.16, .84, .3, 1);
+  --ease-in-out: cubic-bezier(.45, 0, .25, 1);
+
+  /* Z-index */
+  --z-nav: 10;
+  --z-dropdown: 40;
+  --z-overlay: 80;
+  --z-modal: 90;
+  --z-toast: 100;
+  --z-tooltip: 110;
+
+  /* Breakpoints (informativos: las custom properties no funcionan en @media;
+     usar los valores literales en los mockups)
+     --bp-mobile:  380px   (chat, catálogo, aprobaciones HITL)
+     --bp-tablet:  768px
+     --bp-desktop: 1200px  (experiencia completa, desktop-first)            */
+}
+
+/* ── 3. Temas ────────────────────────────────────────────────────────────── */
+
+/* 3.1 DARK · DEFAULT — "sala de control" (tema por defecto del producto) */
+:root,
+html[data-theme="dark"][data-brand="default"] {
+  color-scheme: dark;
+  --bg: #0a0d13;            /* fondo de aplicación */
+  --bg-raised: #10151f;     /* sidebar, zonas elevadas, inputs */
+  --panel: #121826;         /* cards, paneles, modals */
+  --line: #222b3c;          /* bordes y divisores sutiles */
+  --line-strong: #35415a;   /* bordes de controles interactivos */
+  --ink: #e8edf5;           /* texto principal — 16.6:1 sobre --bg */
+  --ink-dim: #9aa7bd;       /* texto secundario — 8.0:1 */
+  --ink-faint: #7c89a0;     /* metadatos, placeholders — 5.5:1 */
+  --accent: #ffb000;        /* ámbar: acento/atención — 10.6:1 */
+  --accent-fill: #ffb000;   /* relleno de acción primaria */
+  --accent-ink: #181102;    /* tinta sobre --accent-fill — 10.2:1 */
+  --accent-soft: rgba(255, 176, 0, .14);  /* tinte de selección/realce */
+  --accent-alt: #ffb000;    /* acento cálido (en default = mismo ámbar) */
+  --money: #3ddc97;         /* dinero, éxito — 11.0:1 */
+  --info: #58aeff;          /* enlaces, datos informativos — 8.2:1 */
+  --warn: #ffb000;          /* advertencia (en default comparte el ámbar) */
+  --danger: #ff5c5c;        /* peligro, destructivo — 6.4:1 */
+  --danger-ink: #1f0a0a;    /* tinta sobre relleno danger */
+  --focus-ring: #ffb000;
+  --scrim: rgba(4, 6, 10, .66);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .45);
+  --shadow-2: 0 4px 14px rgba(0, 0, 0, .45);
+  --shadow-3: 0 12px 40px rgba(0, 0, 0, .55);
+}
+
+/* 3.2 LIGHT · DEFAULT — "sala de control" en papel técnico cálido */
+html[data-theme="light"][data-brand="default"] {
+  color-scheme: light;
+  --bg: #f2efe8;
+  --bg-raised: #f8f6f0;
+  --panel: #fffdf8;
+  --line: #ddd6c6;
+  --line-strong: #b9b09a;
+  --ink: #1b2130;           /* 14.0:1 sobre --bg */
+  --ink-dim: #4f5868;       /* 7.2:1 sobre --panel */
+  --ink-faint: #6e7787;     /* 4.5:1 sobre --panel */
+  --accent: #8a5c00;        /* ámbar oscurecido para texto/ícono — 5.1:1 */
+  --accent-fill: #ffb000;   /* el botón primario conserva el ámbar pleno */
+  --accent-ink: #181102;
+  --accent-soft: rgba(255, 176, 0, .22);
+  --accent-alt: #8a5c00;
+  --money: #0e7a50;         /* 4.7:1 sobre --bg, 5.4:1 sobre --panel */
+  --info: #1d5fc2;          /* 5.3:1 */
+  --warn: #8a5c00;
+  --danger: #b42b2b;        /* 5.5:1 */
+  --danger-ink: #ffffff;
+  --focus-ring: #8a5c00;
+  --scrim: rgba(27, 33, 48, .45);
+  --shadow-1: 0 1px 2px rgba(43, 38, 24, .14);
+  --shadow-2: 0 4px 14px rgba(43, 38, 24, .16);
+  --shadow-3: 0 12px 40px rgba(43, 38, 24, .22);
+}
+
+/* 3.3 DARK · TOTVS — paleta oficial rebrand dic-2025 sobre fondo nocturno */
+html[data-theme="dark"][data-brand="totvs"] {
+  color-scheme: dark;
+  --bg: #0b1020;
+  --bg-raised: #101a2e;
+  --panel: #0e2030;         /* superficie con tinte del Azul Escuro #002233 */
+  --line: #1f3346;
+  --line-strong: #2f4a61;
+  --ink: #eef3f8;           /* 17:1 sobre --bg */
+  --ink-dim: #9fb2c4;       /* 8.1:1 */
+  --ink-faint: #74879b;     /* 5.1:1 */
+  --accent: #00dbff;        /* Azul TOTVS — 11.3:1 sobre --bg */
+  --accent-fill: #00dbff;
+  --accent-ink: #002233;    /* Azul Escuro sobre cian — 9.85:1 */
+  --accent-soft: rgba(0, 219, 255, .12);
+  --accent-alt: #ff8900;    /* Laranja oficial — 7.96:1 (sustituye al ámbar) */
+  --money: #3ddc97;         /* 10.8:1 — el verde dinero es transversal */
+  --info: #58aeff;          /* 8.0:1 */
+  --warn: #ffb800;          /* Yellow oficial del portal TOTVS — 10.9:1 */
+  --danger: #ff5c5c;        /* 6.3:1 */
+  --danger-ink: #1f0a0a;
+  --focus-ring: #00dbff;
+  --scrim: rgba(0, 10, 20, .66);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .45);
+  --shadow-2: 0 4px 14px rgba(0, 0, 0, .45);
+  --shadow-3: 0 12px 40px rgba(0, 0, 0, .55);
+}
+
+/* 3.4 LIGHT · TOTVS — tinta Azul Escuro, interactivo azul funcional oficial.
+   #00DBFF falla como texto sobre blanco (1.67:1): solo se usa como
+   superficie/realce (--accent-soft) con tinta #002233 encima. */
+html[data-theme="light"][data-brand="totvs"] {
+  color-scheme: light;
+  --bg: #f2f5f8;
+  --bg-raised: #f8fafc;
+  --panel: #ffffff;
+  --line: #d7dee5;
+  --line-strong: #b3c0cb;
+  --ink: #002233;           /* 16.45:1 sobre --panel (AAA) */
+  --ink-dim: #3c5666;       /* 7.7:1 */
+  --ink-faint: #5d7382;     /* 5.0:1 */
+  --accent: #0a46ea;        /* azul funcional oficial totvs.com — 6.8:1 */
+  --accent-fill: #0a46ea;
+  --accent-ink: #ffffff;    /* 6.8:1 sobre --accent-fill */
+  --accent-soft: rgba(0, 219, 255, .22);  /* realce cian de marca */
+  --accent-alt: #a85600;    /* laranja oscurecido para texto — 5.3:1 */
+  --money: #0e7a50;
+  --info: #0a46ea;
+  --warn: #8a5c00;
+  --danger: #b42b2b;
+  --danger-ink: #ffffff;
+  --focus-ring: #0a46ea;
+  --scrim: rgba(0, 34, 51, .45);
+  --shadow-1: 0 1px 2px rgba(0, 34, 51, .12);
+  --shadow-2: 0 4px 14px rgba(0, 34, 51, .14);
+  --shadow-3: 0 12px 40px rgba(0, 34, 51, .20);
+}
+
+/* ── 4. Base de documento ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { background: var(--bg); }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--dur-2) var(--ease-in-out),
+              color var(--dur-2) var(--ease-in-out);
+}
+
+h1, h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  margin: 0 0 var(--sp-3);
+}
+h1 { font-size: var(--fs-h1); }
+h2 { font-size: var(--fs-h2); }
+h3, h4 {
+  font-family: var(--font-body);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  margin: 0 0 var(--sp-2);
+}
+h3 { font-size: var(--fs-h3); }
+h4 { font-size: var(--fs-h4); }
+p { margin: 0 0 var(--sp-3); }
+
+a { color: var(--info); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+
+code, kbd, samp {
+  font-family: var(--font-mono);
+  font-size: .92em;
+  background: color-mix(in srgb, var(--ink) 8%, transparent);
+  padding: 1px 5px;
+  border-radius: var(--r-xs);
+}
+
+::selection { background: var(--accent-soft); }
+
+/* ── 5. Clases base ──────────────────────────────────────────────────────── */
+
+/* 5.1 Panel — superficie contenedora estándar */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--sp-5);
+  box-shadow: var(--shadow-1);
+}
+.panel--flush { padding: 0; overflow: hidden; }
+.panel--raised { box-shadow: var(--shadow-2); }
+
+/* 5.2 Botones */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 36px;
+  padding: 0 var(--sp-4);
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  letter-spacing: .02em;
+  line-height: 1;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color var(--dur-1) var(--ease-out),
+              border-color var(--dur-1) var(--ease-out),
+              color var(--dur-1) var(--ease-out),
+              filter var(--dur-1) var(--ease-out),
+              box-shadow var(--dur-1) var(--ease-out);
+}
+.btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.btn svg { width: 16px; height: 16px; flex: none; }
+
+.btn--primary { background: var(--accent-fill); color: var(--accent-ink); }
+.btn--primary:hover { filter: brightness(1.08); box-shadow: var(--shadow-1); }
+.btn--primary:active { filter: brightness(.95); }
+
+.btn--secondary {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.btn--secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.btn--secondary:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+
+.btn--danger { background: var(--danger); color: var(--danger-ink); }
+.btn--danger:hover { filter: brightness(1.08); }
+.btn--danger:active { filter: brightness(.95); }
+
+.btn--ghost { background: transparent; color: var(--ink-dim); }
+.btn--ghost:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.btn--ghost:active { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+
+.btn:disabled, .btn.is-disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: none;
+}
+
+.btn--loading { pointer-events: none; position: relative; color: transparent !important; }
+.btn--loading::after {
+  content: "";
+  position: absolute;
+  width: 14px; height: 14px;
+  border: 2px solid;
+  border-color: currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: dx-spin .7s linear infinite;
+}
+.btn--primary.btn--loading::after { border-color: var(--accent-ink); border-right-color: transparent; }
+.btn--danger.btn--loading::after { border-color: var(--danger-ink); border-right-color: transparent; }
+.btn--secondary.btn--loading::after,
+.btn--ghost.btn--loading::after { border-color: var(--ink-dim); border-right-color: transparent; }
+
+.btn--sm { height: 28px; padding: 0 var(--sp-3); font-size: var(--fs-caption); }
+.btn--lg { height: 44px; padding: 0 var(--sp-5); font-size: var(--fs-body); }
+.btn--block { display: flex; width: 100%; }
+
+/* 5.3 Tags — estados, categorías, metadatos técnicos */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: 22px;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  border-radius: var(--r-sm);
+  border: 1px solid color-mix(in srgb, var(--ink-faint) 40%, transparent);
+  color: var(--ink-dim);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  white-space: nowrap;
+}
+.tag--accent { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.tag--money  { color: var(--money);  border-color: color-mix(in srgb, var(--money) 45%, transparent);  background: color-mix(in srgb, var(--money) 12%, transparent); }
+.tag--info   { color: var(--info);   border-color: color-mix(in srgb, var(--info) 45%, transparent);   background: color-mix(in srgb, var(--info) 12%, transparent); }
+.tag--warn   { color: var(--warn);   border-color: color-mix(in srgb, var(--warn) 45%, transparent);   background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.tag--danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); background: color-mix(in srgb, var(--danger) 12%, transparent); }
+.tag--alt    { color: var(--accent-alt); border-color: color-mix(in srgb, var(--accent-alt) 45%, transparent); background: color-mix(in srgb, var(--accent-alt) 12%, transparent); }
+.tag--outline { background: transparent; }
+
+/* 5.4 Badge de rol — Admin / Técnico / Funcional */
+.badge-rol {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+}
+.badge-rol::before {
+  content: "";
+  width: 7px; height: 7px;
+  border-radius: 2px;
+  background: currentColor;
+}
+.badge-rol--admin {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.badge-rol--tecnico {
+  color: var(--info);
+  background: color-mix(in srgb, var(--info) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--info) 45%, transparent);
+}
+.badge-rol--funcional {
+  color: var(--ink-dim);
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ink-faint) 40%, transparent);
+}
+
+/* 5.5 Formularios */
+.field { display: grid; gap: var(--sp-1); margin-bottom: var(--sp-4); }
+.field-label {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+.field-label .req { color: var(--danger); }
+.field-hint { font-size: var(--fs-caption); color: var(--ink-faint); }
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--danger);
+}
+
+.input, .select, .textarea {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--sp-3);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  transition: border-color var(--dur-1) var(--ease-out),
+              box-shadow var(--dur-1) var(--ease-out);
+}
+.textarea { height: auto; min-height: 88px; padding: var(--sp-2) var(--sp-3); resize: vertical; line-height: var(--lh-base); }
+.input::placeholder, .textarea::placeholder { color: var(--ink-faint); }
+.input:hover, .select:hover, .textarea:hover { border-color: color-mix(in srgb, var(--line-strong) 50%, var(--ink-faint)); }
+.input:focus-visible, .select:focus-visible, .textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring) 25%, transparent);
+}
+.input:disabled, .select:disabled, .textarea:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  background: color-mix(in srgb, var(--ink) 4%, var(--bg-raised));
+}
+.input.is-invalid, .select.is-invalid, .textarea.is-invalid { border-color: var(--danger); }
+.input.is-invalid:focus-visible, .select.is-invalid:focus-visible, .textarea.is-invalid:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent);
+}
+.input--mono { font-family: var(--font-mono); font-size: var(--fs-small); }
+
+.select {
+  appearance: none;
+  padding-right: var(--sp-7);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23808a9c' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right var(--sp-3) center;
+  cursor: pointer;
+}
+
+.checkbox {
+  appearance: auto;
+  width: 16px; height: 16px;
+  margin: 0;
+  accent-color: var(--accent-fill);
+  cursor: pointer;
+}
+html[data-theme="light"][data-brand="totvs"] .checkbox { accent-color: var(--accent); }
+.checkbox:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.checkbox:disabled { cursor: not-allowed; opacity: .5; }
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  font-size: var(--fs-body);
+  cursor: pointer;
+}
+.check-row .checkbox { margin-top: 3px; }
+
+/* 5.6 Tabla de datos */
+.table-wrap {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+}
+.table th {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  text-align: left;
+  color: var(--ink-faint);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--line-strong);
+  white-space: nowrap;
+}
+.table td {
+  padding: 10px var(--sp-3);
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+.table .num { font-family: var(--font-mono); font-size: var(--fs-caption); text-align: right; font-variant-numeric: tabular-nums; }
+.table--dense td { padding: 6px var(--sp-3); }
+.table tr.is-selected { background: var(--accent-soft); }
+
+/* 5.7 Kicker — etiqueta de sección estilo instrumental */
+.kicker {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  letter-spacing: var(--ls-kicker);
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: var(--sp-2);
+}
+.kicker--dim { color: var(--ink-faint); }
+
+/* 5.8 Live dot — estado de servicio en vivo */
+.live-dot {
+  --dot: var(--money);
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--dot);
+  animation: dx-pulse 2s var(--ease-out) infinite;
+  vertical-align: middle;
+}
+.live-dot--warn { --dot: var(--warn); }
+.live-dot--danger { --dot: var(--danger); }
+.live-dot--off { --dot: var(--ink-faint); animation: none; box-shadow: none; }
+
+/* 5.9 Barra de cuota — aviso 80%, bloqueo 100% */
+.quota-bar {
+  position: relative;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: color-mix(in srgb, var(--ink) 12%, transparent);
+  overflow: hidden;
+}
+.quota-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: var(--money);
+  transition: width var(--dur-3) var(--ease-out);
+}
+.quota-bar.is-warn .quota-bar__fill { background: var(--warn); }
+.quota-bar.is-over .quota-bar__fill { background: var(--danger); }
+.quota-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-3);
+  font-size: var(--fs-caption);
+  color: var(--ink-dim);
+  margin-bottom: var(--sp-1);
+}
+.quota-row .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* 5.10 Toast */
+.toast-stack {
+  position: fixed;
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  z-index: var(--z-toast);
+  display: grid;
+  gap: var(--sp-2);
+  width: min(360px, calc(100vw - 32px));
+}
+.toast {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--sp-3);
+  align-items: start;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--info);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  box-shadow: var(--shadow-2);
+  animation: dx-toast-in var(--dur-3) var(--ease-out);
+}
+.toast__icon { color: var(--info); display: flex; margin-top: 2px; }
+.toast__icon svg { width: 16px; height: 16px; }
+.toast__title { font-size: var(--fs-small); font-weight: 600; margin: 0; }
+.toast__msg { font-size: var(--fs-caption); color: var(--ink-dim); margin: 2px 0 0; }
+.toast--ok     { border-left-color: var(--money); }
+.toast--ok     .toast__icon { color: var(--money); }
+.toast--warn   { border-left-color: var(--warn); }
+.toast--warn   .toast__icon { color: var(--warn); }
+.toast--danger { border-left-color: var(--danger); }
+.toast--danger .toast__icon { color: var(--danger); }
+
+/* 5.11 Skeleton — carga progresiva */
+.skeleton {
+  display: block;
+  border-radius: var(--r-sm);
+  color: transparent !important;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--ink) 7%, transparent) 25%,
+    color-mix(in srgb, var(--ink) 13%, transparent) 50%,
+    color-mix(in srgb, var(--ink) 7%, transparent) 75%);
+  background-size: 200% 100%;
+  animation: dx-shimmer 1.4s linear infinite;
+  user-select: none;
+  pointer-events: none;
+}
+.skeleton--text { height: 12px; }
+.skeleton--title { height: 20px; width: 50%; }
+.skeleton--block { height: 80px; }
+
+/* 5.12 Empty state */
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-2);
+  text-align: center;
+  padding: var(--sp-9) var(--sp-6);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-lg);
+  color: var(--ink-dim);
+}
+.empty-state__icon { color: var(--ink-faint); }
+.empty-state__icon svg { width: 32px; height: 32px; }
+.empty-state__title { font-size: var(--fs-h4); font-weight: 600; color: var(--ink); margin: 0; }
+.empty-state__hint { font-size: var(--fs-small); max-width: 42ch; margin: 0; }
+
+/* 5.13 Error card — errores accionables (QUOTA, VPN_OFFLINE, …) */
+.error-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-3);
+  align-items: start;
+  background: color-mix(in srgb, var(--danger) 7%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+}
+.error-card__icon { color: var(--danger); display: flex; margin-top: 2px; }
+.error-card__icon svg { width: 18px; height: 18px; }
+.error-card__code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  color: var(--danger);
+  margin-bottom: 2px;
+}
+.error-card__title { font-size: var(--fs-body); font-weight: 600; margin: 0 0 2px; }
+.error-card__why { font-size: var(--fs-small); color: var(--ink-dim); margin: 0 0 var(--sp-3); }
+.error-card__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.error-card--warn {
+  background: color-mix(in srgb, var(--warn) 8%, var(--panel));
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+}
+.error-card--warn .error-card__icon, .error-card--warn .error-card__code { color: var(--warn); }
+
+/* 5.14 Chip — adjuntos y entidades pequeñas */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 28px;
+  padding: 0 var(--sp-3) 0 var(--sp-2);
+  background: var(--bg-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--ink);
+  max-width: 100%;
+}
+.chip svg { width: 14px; height: 14px; color: var(--ink-faint); flex: none; }
+.chip__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip__meta { color: var(--ink-faint); flex: none; }
+.chip__close {
+  display: inline-flex;
+  border: 0; background: none; padding: 2px; margin-left: 2px;
+  color: var(--ink-faint); cursor: pointer; border-radius: var(--r-xs);
+}
+.chip__close:hover { color: var(--danger); }
+.chip__close:focus-visible { outline: 2px solid var(--focus-ring); }
+.chip.is-error { border-color: color-mix(in srgb, var(--danger) 50%, transparent); }
+.chip.is-error svg { color: var(--danger); }
+.chip.is-loading svg { color: var(--accent); }
+
+/* 5.15 Chips de cache — hit / miss / write (solo roles Técnico y Admin) */
+.chip-cache {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  border-radius: var(--r-xs);
+}
+.chip-cache::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.chip-cache--hit   { color: var(--money);  background: color-mix(in srgb, var(--money) 12%, transparent); }
+.chip-cache--miss  { color: var(--warn);   background: color-mix(in srgb, var(--warn) 14%, transparent); }
+.chip-cache--write { color: var(--info);   background: color-mix(in srgb, var(--info) 12%, transparent); }
+
+/* 5.16 Tabs */
+.tabs {
+  display: flex;
+  gap: var(--sp-1);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+.tab {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: var(--sp-2) var(--sp-3);
+  margin-bottom: -1px;
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--ink-dim);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+.tab:hover { color: var(--ink); }
+.tab:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; border-radius: var(--r-xs); }
+.tab.is-active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.tab .tag { margin-left: var(--sp-1); }
+
+/* 5.17 Tooltip — informativo, vía atributo data-tip */
+[data-tip] { position: relative; }
+[data-tip]:hover::after, [data-tip]:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-tooltip);
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-body);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  line-height: 1.35;
+  padding: 5px 9px;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+  max-width: 280px;
+  box-shadow: var(--shadow-2);
+  pointer-events: none;
+}
+
+/* 5.18 Overlay + Modal */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--scrim);
+  display: grid;
+  place-items: center;
+  padding: var(--sp-4);
+}
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  width: min(540px, 100%);
+  max-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-modal);
+}
+.modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+}
+.modal__title { font-family: var(--font-display); font-size: var(--fs-h4); font-weight: 600; margin: 0; }
+.modal__body { padding: var(--sp-5); overflow-y: auto; }
+.modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-5);
+  border-top: 1px solid var(--line);
+}
+
+/* 5.19 Taxímetro — costo de sesión en vivo (Técnico y Admin) */
+.taximeter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+.taximeter__label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.taximeter__value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--money);
+  font-variant-numeric: tabular-nums;
+}
+.taximeter__detail { font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint); }
+
+/* 5.20 Tarjeta HITL — aprobación humana de escrituras */
+.hitl-card {
+  background: var(--panel);
+  border: 1px solid color-mix(in srgb, var(--warn) 50%, var(--line));
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+  overflow: hidden;
+}
+.hitl-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  background: color-mix(in srgb, var(--warn) 9%, transparent);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.hitl-card__head svg { width: 16px; height: 16px; color: var(--warn); }
+.hitl-card__body { padding: var(--sp-4); display: grid; gap: var(--sp-3); }
+.hitl-card__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-small);
+}
+.hitl-card__meta dt { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); font-family: var(--font-mono); margin: 0 0 2px; }
+.hitl-card__meta dd { margin: 0; font-weight: 500; }
+.hitl-card__payload {
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  line-height: 1.6;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: var(--sp-3);
+  overflow-x: auto;
+  margin: 0;
+}
+.hitl-card__expire {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--ink-faint);
+}
+.hitl-card__foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--ink) 3%, transparent);
+}
+
+/* 5.21 Tarjeta de escalación — marcador <<<NEEDS_PRO>>> */
+.escalate-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-3);
+  align-items: start;
+  background: color-mix(in srgb, var(--accent-alt) 8%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent-alt) 40%, transparent);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+}
+.escalate-card__icon { color: var(--accent-alt); display: flex; margin-top: 2px; }
+.escalate-card__icon svg { width: 18px; height: 18px; }
+.escalate-card__title { font-size: var(--fs-body); font-weight: 600; margin: 0 0 2px; }
+.escalate-card__msg { font-size: var(--fs-small); color: var(--ink-dim); margin: 0 0 var(--sp-3); }
+.escalate-card__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+
+/* 5.22 Cita / evidencia — fuentes de DocAgent */
+.cite {
+  display: grid;
+  gap: var(--sp-2);
+  border-left: 3px solid var(--info);
+  background: color-mix(in srgb, var(--info) 6%, transparent);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-small);
+}
+.cite__quote { color: var(--ink-dim); font-style: italic; margin: 0; }
+.cite__src {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--info);
+}
+.cite__src svg { width: 13px; height: 13px; }
+
+/* 5.23 Timeline de workflow — pasos deterministas */
+.wf { display: grid; gap: 0; }
+.wf-step {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: var(--sp-3);
+  position: relative;
+  padding-bottom: var(--sp-5);
+}
+.wf-step::before {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 24px;
+  bottom: 0;
+  width: 2px;
+  background: var(--line);
+}
+.wf-step:last-child { padding-bottom: 0; }
+.wf-step:last-child::before { display: none; }
+.wf-step__dot {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--ink-faint);
+  z-index: 1;
+}
+.wf-step__dot svg { width: 12px; height: 12px; }
+.wf-step__title { font-size: var(--fs-body); font-weight: 600; margin: 2px 0 0; }
+.wf-step__meta { font-size: var(--fs-caption); color: var(--ink-faint); font-family: var(--font-mono); }
+.wf-step.is-done .wf-step__dot { border-color: var(--money); background: color-mix(in srgb, var(--money) 15%, var(--panel)); color: var(--money); }
+.wf-step.is-done::before { background: var(--money); }
+.wf-step.is-active .wf-step__dot { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+.wf-step.is-active .wf-step__title { color: var(--accent); }
+.wf-step.is-error .wf-step__dot { border-color: var(--danger); color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--panel)); }
+.wf-step.is-error .wf-step__title { color: var(--danger); }
+
+/* 5.24 Selector de rama — "versión 1/2" (editar = rama nueva, nunca reescribir) */
+.branch-sel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--bg-raised);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--ink-dim);
+  padding: 2px;
+}
+.branch-sel__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border: 0;
+  background: none;
+  color: var(--ink-dim);
+  border-radius: var(--r-xs);
+  cursor: pointer;
+}
+.branch-sel__btn:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--ink); }
+.branch-sel__btn:disabled { opacity: .35; cursor: not-allowed; }
+.branch-sel__btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.branch-sel__btn svg { width: 13px; height: 13px; }
+.branch-sel__label { padding: 0 var(--sp-1); font-variant-numeric: tabular-nums; }
+
+/* 5.25 Banner permanente de IA */
+.ai-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-4);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+  font-size: var(--fs-caption);
+  color: var(--ink-dim);
+  text-align: center;
+}
+.ai-banner svg { width: 13px; height: 13px; color: var(--warn); flex: none; }
+
+/* 5.26 Campana de notificaciones */
+.notif-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+.notif-bell:hover { color: var(--ink); border-color: var(--ink-faint); }
+.notif-bell:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.notif-bell svg { width: 18px; height: 18px; }
+.notif-bell__count {
+  position: absolute;
+  top: -6px; right: -6px;
+  min-width: 16px; height: 16px;
+  padding: 0 4px;
+  border-radius: var(--r-pill);
+  background: var(--danger);
+  color: var(--danger-ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+html[data-theme="light"] .notif-bell__count { color: #ffffff; }
+
+/* 5.27 Mini-switcher de vista previa (solo mockups, no es UI de producto) */
+.dx-switcher {
+  position: fixed;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  z-index: var(--z-tooltip);
+  display: flex;
+  gap: var(--sp-1);
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-md);
+  padding: var(--sp-1);
+  box-shadow: var(--shadow-2);
+}
+.dx-switcher__btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-sm);
+  padding: 5px 10px;
+  cursor: pointer;
+}
+.dx-switcher__btn:hover { color: var(--accent); background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.dx-switcher__btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
+/* 5.28 Utilidades */
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.money { font-family: var(--font-mono); color: var(--money); font-variant-numeric: tabular-nums; }
+.muted { color: var(--ink-dim); }
+.faint { color: var(--ink-faint); }
+.divider { height: 1px; background: var(--line); border: 0; margin: var(--sp-5) 0; }
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Animaciones ─────────────────────────────────────────────────────────── */
+@keyframes dx-spin { to { transform: rotate(360deg); } }
+@keyframes dx-shimmer { to { background-position: -200% 0; } }
+@keyframes dx-pulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--dot, var(--money)) 55%, transparent); }
+  70%  { box-shadow: 0 0 0 7px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+@keyframes dx-toast-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* Motion reducido: se apagan animaciones decorativas; el spinner de carga
+   se conserva por ser feedback funcional. */
+@media (prefers-reduced-motion: reduce) {
+  .live-dot, .skeleton, .toast { animation: none; }
+  *, *::before, *::after { transition-duration: 1ms !important; }
+}

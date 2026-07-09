@@ -1,0 +1,217 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Primer acceso — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .mock-section { max-width: 1280px; margin: 0 auto; padding: var(--sp-8) var(--sp-6); }
+  .mock-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: var(--sp-6); align-items: start; }
+  .wiz-card { max-width: 480px; margin: 0 auto; }
+  .wiz-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .wiz-steps { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+  .wiz-dot {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    border: 2px solid var(--line-strong); color: var(--ink-faint); background: var(--panel);
+  }
+  .wiz-dot.is-done { border-color: var(--money); color: var(--money); background: color-mix(in srgb, var(--money) 15%, var(--panel)); }
+  .wiz-dot.is-active { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+  .wiz-line { flex: 1; height: 2px; background: var(--line); }
+  .wiz-line.is-done { background: var(--money); }
+  .wiz-label { font-size: var(--fs-caption); color: var(--ink-faint); }
+  .pw-meter { display: flex; gap: var(--sp-1); margin: var(--sp-2) 0 var(--sp-1); }
+  .pw-meter span { flex: 1; height: 6px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--ink) 12%, transparent); }
+  .pw-meter.lvl-1 span:nth-child(-n+1) { background: var(--danger); }
+  .pw-meter.lvl-2 span:nth-child(-n+2) { background: var(--warn); }
+  .pw-meter.lvl-3 span:nth-child(-n+3) { background: var(--info); }
+  .pw-meter.lvl-4 span:nth-child(-n+4) { background: var(--money); }
+  .pw-reqs { list-style: none; margin: var(--sp-2) 0 0; padding: 0; display: grid; gap: 4px; font-size: var(--fs-caption); color: var(--ink-dim); }
+  .pw-reqs li { display: flex; align-items: center; gap: var(--sp-2); }
+  .pw-reqs svg { width: 13px; height: 13px; flex: none; }
+  .pw-reqs .ok { color: var(--money); }
+  .pw-reqs .ok svg { color: var(--money); }
+  .pw-reqs .ko svg { color: var(--ink-faint); }
+  .qr-box {
+    width: 200px; height: 200px; margin: 0 auto;
+    border: 1px solid var(--line-strong); border-radius: var(--r-md);
+    background:
+      repeating-linear-gradient(0deg, color-mix(in srgb, var(--ink) 80%, transparent) 0 6px, transparent 6px 12px),
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--ink) 80%, transparent) 0 6px, var(--panel) 6px 12px);
+    display: grid; place-items: end center; padding-bottom: 6px;
+  }
+  .qr-box span { font-family: var(--font-mono); font-size: 10px; background: var(--panel); padding: 1px 6px; border-radius: var(--r-xs); color: var(--ink-faint); }
+  .totp-key {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3);
+    margin-top: var(--sp-4); padding: var(--sp-3);
+    background: var(--bg-raised); border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+    font-family: var(--font-mono); font-size: var(--fs-small); letter-spacing: .08em;
+  }
+  .agree-box {
+    max-height: 180px; overflow-y: auto;
+    background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--r-sm);
+    padding: var(--sp-4); font-size: var(--fs-small); color: var(--ink-dim);
+  }
+  .agree-box ul { margin: var(--sp-2) 0 0; padding-left: 18px; display: grid; gap: var(--sp-2); }
+  .wiz-foot { display: flex; justify-content: space-between; gap: var(--sp-2); margin-top: var(--sp-5); }
+  .audit-note { display: flex; gap: var(--sp-2); align-items: flex-start; font-size: var(--fs-caption); color: var(--ink-faint); margin-top: var(--sp-2); }
+  .audit-note svg { width: 13px; height: 13px; flex: none; margin-top: 2px; color: var(--warn); }
+</style>
+</head>
+<body>
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<main class="mock-section">
+  <header style="margin-bottom:var(--sp-6)">
+    <span class="kicker">Acceso · vista 02</span>
+    <h1>Primer acceso — wizard obligatorio</h1>
+    <p class="muted" style="max-width:78ch">Tres pasos: contraseña nueva · enrolamiento TOTP (obligatorio Admin, opcional resto) · acuerdo de uso auditado. No se puede saltar; logout es la única salida y al volver retoma el paso pendiente. Los tres pasos se muestran apilados como estados.</p>
+  </header>
+
+  <div class="mock-grid">
+
+    <!-- ───────────── Paso 1: contraseña ───────────── -->
+    <div>
+      <span class="kicker kicker--dim">Paso 1 · contraseña obligatoria</span>
+      <div class="panel panel--raised wiz-card">
+        <div class="wiz-head">
+          <h2 style="font-size:var(--fs-h3); margin:0">Primer acceso</h2>
+          <span><span class="mono" style="font-size:var(--fs-small)">lucia</span> <span class="badge-rol badge-rol--funcional">Funcional</span></span>
+        </div>
+        <div class="wiz-steps" aria-label="Paso 1 de 3: contraseña">
+          <span class="wiz-dot is-active" aria-current="step">1</span><span class="wiz-line"></span>
+          <span class="wiz-dot">2</span><span class="wiz-line"></span>
+          <span class="wiz-dot">3</span>
+        </div>
+        <h3>Elegí tu contraseña</h3>
+        <p class="muted" style="font-size:var(--fs-small)">La contraseña temporal que te dio el administrador deja de funcionar al continuar.</p>
+        <form onsubmit="return false">
+          <div class="field">
+            <label class="field-label" for="pwa">Contraseña temporal</label>
+            <input class="input" id="pwa" type="password" autocomplete="current-password">
+          </div>
+          <div class="field">
+            <label class="field-label" for="pwn">Contraseña nueva</label>
+            <input class="input" id="pwn" type="password" autocomplete="new-password" value="brisa-andina-742" aria-describedby="pwm">
+            <div id="pwm">
+              <div class="pw-meter lvl-3" role="img" aria-label="Fortaleza: buena"><span></span><span></span><span></span><span></span></div>
+              <span class="field-hint" style="color:var(--info)">Fortaleza: buena</span>
+            </div>
+            <ul class="pw-reqs">
+              <li class="ok"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Al menos 12 caracteres</li>
+              <li class="ok"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Número</li>
+              <li class="ok"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Símbolo</li>
+              <li class="ko"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg> Mayúscula y minúscula</li>
+            </ul>
+          </div>
+          <div class="field">
+            <label class="field-label" for="pwr">Repetí la contraseña</label>
+            <input class="input" id="pwr" type="password" autocomplete="new-password">
+          </div>
+          <div class="wiz-foot">
+            <span></span>
+            <button class="btn btn--primary" type="submit">Continuar →</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ───────────── Paso 2: TOTP ───────────── -->
+    <div>
+      <span class="kicker kicker--dim">Paso 2 · TOTP (Admin: obligatorio)</span>
+      <div class="panel panel--raised wiz-card">
+        <div class="wiz-head">
+          <h2 style="font-size:var(--fs-h3); margin:0">Primer acceso</h2>
+          <span><span class="mono" style="font-size:var(--fs-small)">marcos</span> <span class="badge-rol badge-rol--admin">Admin</span></span>
+        </div>
+        <div class="wiz-steps" aria-label="Paso 2 de 3: verificación en dos pasos">
+          <span class="wiz-dot is-done"><svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="wiz-line is-done"></span>
+          <span class="wiz-dot is-active" aria-current="step">2</span><span class="wiz-line"></span>
+          <span class="wiz-dot">3</span>
+        </div>
+        <h3>Verificación en dos pasos</h3>
+        <p class="muted" style="font-size:var(--fs-small)">Escaneá el código con tu app de autenticación (Google Authenticator, Aegis, 1Password…). <strong>Tu rol requiere verificación en dos pasos.</strong></p>
+        <div class="qr-box" role="img" aria-label="Código QR de enrolamiento TOTP (ejemplo)"><span>QR de ejemplo</span></div>
+        <div class="totp-key">
+          <span aria-label="Clave manual">RSLT AB12 CD34 EF56 GH78</span>
+          <button class="btn btn--ghost btn--sm" type="button"
+            onclick="this.textContent='Copiada ✓'; var n=document.getElementById('copy-live'); n.textContent='Clave copiada al portapapeles';">Copiar</button>
+        </div>
+        <span id="copy-live" class="sr-only" aria-live="polite"></span>
+        <p class="field-hint" style="margin-top:var(--sp-2)">¿Estás en el mismo teléfono que tu app? Copiá la clave y agregala manualmente. Cuenta: <span class="mono">Resultar · marcos</span></p>
+        <form onsubmit="return false" style="margin-top:var(--sp-4)">
+          <div class="field">
+            <label class="field-label" for="totp1">Código de 6 dígitos para confirmar</label>
+            <input class="input input--mono" id="totp1" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="max-width:160px; text-align:center; letter-spacing:.3em">
+            <span class="field-hint">Los códigos rotan cada 30 s — si falla varias veces, verificá la hora del teléfono</span>
+          </div>
+          <div class="wiz-foot">
+            <button class="btn btn--ghost" type="button">← Atrás</button>
+            <button class="btn btn--primary" type="submit">Confirmar y continuar →</button>
+          </div>
+          <p class="field-hint" style="margin-top:var(--sp-3); border-top:1px dashed var(--line); padding-top:var(--sp-3)">
+            Para Técnico/Funcional este paso muestra además: <button class="btn btn--ghost btn--sm" type="button">Configurar más tarde</button>
+          </p>
+        </form>
+      </div>
+    </div>
+
+    <!-- ───────────── Paso 3: acuerdo ───────────── -->
+    <div>
+      <span class="kicker kicker--dim">Paso 3 · acuerdo de uso auditado</span>
+      <div class="panel panel--raised wiz-card">
+        <div class="wiz-head">
+          <h2 style="font-size:var(--fs-h3); margin:0">Primer acceso</h2>
+          <span><span class="mono" style="font-size:var(--fs-small)">lucia</span> <span class="badge-rol badge-rol--funcional">Funcional</span></span>
+        </div>
+        <div class="wiz-steps" aria-label="Paso 3 de 3: acuerdo de uso">
+          <span class="wiz-dot is-done"><svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="wiz-line is-done"></span>
+          <span class="wiz-dot is-done"><svg width="12" height="12" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span class="wiz-line is-done"></span>
+          <span class="wiz-dot is-active" aria-current="step">3</span>
+        </div>
+        <h3>Acuerdo de uso</h3>
+        <p class="muted" style="font-size:var(--fs-small)">Resumen de los puntos clave. <a href="#">Leer el acuerdo completo</a> <span class="mono faint">(acuerdo-uso v1.2 · 03/05/2026)</span></p>
+        <div class="agree-box" tabindex="0" aria-label="Resumen del acuerdo de uso">
+          <strong style="color:var(--ink)">Lo esencial:</strong>
+          <ul>
+            <li><strong style="color:var(--ink)">No pegues datos reales de clientes</strong> ni credenciales en el chat: los niveles N3 (datos personales, contraseñas, llaves) jamás deben llegar a la IA. Usá datos de prueba.</li>
+            <li>Las respuestas son <strong style="color:var(--ink)">generadas por IA</strong>: verificá siempre antes de aplicar algo en el ambiente de un cliente.</li>
+            <li><strong style="color:var(--ink)">Tu actividad queda registrada</strong>: sesiones, aprobaciones y costos son auditables por el administrador.</li>
+            <li>Toda escritura a Protheus pasa por aprobación humana. Nunca compartas tu cuenta.</li>
+          </ul>
+        </div>
+        <form onsubmit="return false" style="margin-top:var(--sp-4)">
+          <label class="check-row">
+            <input class="checkbox" type="checkbox" id="agree"
+              onchange="document.getElementById('finishBtn').disabled=!this.checked">
+            <span>Leí y acepto el acuerdo de uso</span>
+          </label>
+          <p class="audit-note">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></svg>
+            <span>Tu aceptación queda registrada con fecha, hora y versión del acuerdo.</span>
+          </p>
+          <div class="wiz-foot">
+            <button class="btn btn--ghost" type="button">← Atrás</button>
+            <button class="btn btn--primary" type="submit" id="finishBtn" disabled>Aceptar y entrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

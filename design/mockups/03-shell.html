@@ -1,0 +1,237 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · Shell — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .mock-section { max-width: 1500px; margin: 0 auto; padding: var(--sp-8) var(--sp-6); }
+  .shell-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: var(--sp-6); align-items: start; }
+
+  /* ── Frame del shell (miniatura fiel) ── */
+  .shell {
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    background: var(--bg);
+    box-shadow: var(--shadow-2);
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-height: 480px;
+  }
+  .shell-body { display: grid; grid-template-columns: 200px 1fr; min-height: 0; }
+
+  /* sidebar */
+  .sb { background: var(--bg-raised); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: var(--sp-3) 0; }
+  .sb-logo { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4) var(--sp-4); }
+  .sb-logo i {
+    width: 26px; height: 26px; border-radius: var(--r-sm); flex: none;
+    display: grid; place-items: center; font-style: normal;
+    background: var(--accent-soft); color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    font-family: var(--font-display); font-weight: 700; font-size: 13px;
+  }
+  .sb-logo b { font-family: var(--font-display); font-size: var(--fs-small); font-weight: 600; }
+  .sb nav { display: grid; gap: 2px; padding: 0 var(--sp-2); }
+  .sb a {
+    display: flex; align-items: center; gap: var(--sp-2);
+    padding: 7px var(--sp-3); border-radius: var(--r-sm);
+    color: var(--ink-dim); font-size: var(--fs-small); font-weight: 500;
+    border-left: 2px solid transparent;
+  }
+  .sb a:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent); text-decoration: none; }
+  .sb a.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); }
+  .sb a svg { width: 16px; height: 16px; flex: none; }
+  .sb-count {
+    margin-left: auto; min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: var(--r-pill); background: var(--danger); color: var(--danger-ink);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700; line-height: 18px; text-align: center;
+  }
+  html[data-theme="light"] .sb-count { color: #fff; }
+  .sb-kicker { font-family: var(--font-display); font-size: 10px; letter-spacing: var(--ls-kicker); text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-3) var(--sp-4) var(--sp-1); }
+  .sb-foot { margin-top: auto; padding: var(--sp-2) var(--sp-2) 0; }
+
+  /* topbar */
+  .tb {
+    display: flex; align-items: center; gap: var(--sp-3);
+    height: 48px; padding: 0 var(--sp-4);
+    background: var(--bg); border-bottom: 1px solid var(--line);
+  }
+  .tb-search {
+    flex: 1; max-width: 300px; display: flex; align-items: center; gap: var(--sp-2);
+    height: 30px; padding: 0 var(--sp-3);
+    background: var(--bg-raised); border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+    color: var(--ink-faint); font-size: var(--fs-caption);
+  }
+  .tb-search kbd { margin-left: auto; background: none; border: 1px solid var(--line-strong); border-radius: var(--r-xs); padding: 0 4px; font-size: 10px; }
+  .tb-gw { display: flex; align-items: center; gap: var(--sp-2); margin-left: auto; font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); }
+  .tb-right { display: flex; align-items: center; gap: var(--sp-2); }
+  .tb-right.push { margin-left: auto; }
+  .tb-icon {
+    width: 30px; height: 30px; display: grid; place-items: center;
+    border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+    background: transparent; color: var(--ink-dim); cursor: pointer;
+  }
+  .tb-icon:hover { color: var(--ink); }
+  .tb-icon:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .tb-icon svg { width: 15px; height: 15px; }
+  .tb-bell { position: relative; }
+  .tb-user { display: flex; align-items: center; gap: var(--sp-2); border: 1px solid var(--line-strong); border-radius: var(--r-sm); padding: 3px 8px 3px 4px; background: transparent; color: var(--ink); cursor: pointer; font-size: var(--fs-caption); }
+  .tb-user i {
+    width: 22px; height: 22px; border-radius: var(--r-sm); font-style: normal;
+    display: grid; place-items: center; background: var(--accent-soft); color: var(--accent);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  }
+  .content { padding: var(--sp-5); color: var(--ink-faint); display: grid; gap: var(--sp-3); align-content: start; }
+  .frame-label { margin-bottom: var(--sp-2); display: flex; align-items: center; gap: var(--sp-2); }
+
+  /* ── móvil ── */
+  .phone {
+    width: 340px; border: 1px solid var(--line-strong); border-radius: var(--r-xl);
+    overflow: hidden; background: var(--bg); box-shadow: var(--shadow-2); position: relative; min-height: 540px;
+    display: grid; grid-template-rows: auto auto 1fr;
+  }
+  .drawer-scrim { position: absolute; inset: 0; background: var(--scrim); }
+  .drawer { position: absolute; top: 0; bottom: 0; left: 0; width: 250px; background: var(--bg-raised); border-right: 1px solid var(--line); display: flex; flex-direction: column; padding: var(--sp-3) 0; box-shadow: var(--shadow-3); }
+</style>
+</head>
+<body>
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<main class="mock-section">
+  <header style="margin-bottom:var(--sp-6)">
+    <span class="kicker">Acceso · vista 03</span>
+    <h1>Shell de aplicación — capas por rol</h1>
+    <p class="muted" style="max-width:80ch">Una sola UI: lo que un rol no tiene <strong>no se renderiza</strong>. Tres variantes lado a lado (Funcional · Técnico · Admin) y la versión móvil con drawer. Banner IA permanente en todas. Las miniaturas usan los componentes reales del sistema.</p>
+  </header>
+
+  <div class="shell-row" id="shells"></div>
+
+  <hr class="divider">
+
+  <section>
+    <span class="kicker kicker--dim">Versión móvil · drawer abierto (rol Funcional)</span>
+    <p class="muted" style="max-width:70ch">&lt;768 px: el sidebar se vuelve drawer sobre scrim (hamburguesa abre; scrim/Esc cierran, trampa de foco). El buscador vive dentro del drawer. El banner IA permanece, con texto corto.</p>
+    <div class="phone" style="margin-top:var(--sp-4)">
+      <div class="ai-banner">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        Respuestas generadas por IA — verificá antes de aplicar
+      </div>
+      <div class="tb">
+        <button class="tb-icon" aria-label="Abrir menú" aria-expanded="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
+        </button>
+        <div class="tb-right push">
+          <button class="tb-icon tb-bell" aria-label="Notificaciones, 2 sin leer">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M3.3 17H20.7a1 1 0 0 0 .8-1.6 9 9 0 0 1-1.5-5.4V9A6 6 0 0 0 8 9v1a9 9 0 0 1-1.5 5.4 1 1 0 0 0 .8 1.6"/></svg>
+            <span class="notif-bell__count" style="top:-5px; right:-5px">2</span>
+          </button>
+          <button class="tb-user" aria-label="Menú de usuario: lucia, rol Funcional"><i>LU</i></button>
+        </div>
+      </div>
+      <div class="content"><span class="skeleton skeleton--title"></span><span class="skeleton skeleton--text"></span><span class="skeleton skeleton--text" style="width:80%"></span></div>
+      <div class="drawer-scrim" aria-hidden="true"></div>
+      <div class="drawer" role="dialog" aria-modal="true" aria-label="Menú principal">
+        <div class="sb-logo"><i>R</i><b>Resultar Bolivia</b></div>
+        <div style="padding: 0 var(--sp-3) var(--sp-3)">
+          <div class="tb-search" style="max-width:none">
+            <svg width="13" height="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            Buscar…
+          </div>
+        </div>
+        <nav class="sb" style="background:none; border:0; padding:0" aria-label="Principal"><nav id="nav-mobile"></nav></nav>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+// ── Demo trivial: genera las 3 variantes de shell con la misma plantilla. ──
+var ICONS = {
+  catalogo: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>',
+  chat: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  wf: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg>',
+  shield: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>',
+  user: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/></svg>',
+  admin: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>',
+  build: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 12-8.373 8.373a1 1 0 1 1-3-3L12 9"/><path d="m18 15 4-4"/><path d="m21.5 11.5-1.914-1.914A2 2 0 0 1 19 8.172V7l-2.26-2.26a6 6 0 0 0-4.202-1.756L9 2.96l.92.82A6.18 6.18 0 0 1 12 8.4V10l2 2h1.172a2 2 0 0 1 1.414.586L18.5 14.5"/></svg>',
+  collapse: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/></svg>',
+  bell: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="M3.3 17H20.7a1 1 0 0 0 .8-1.6 9 9 0 0 1-1.5-5.4V9A6 6 0 0 0 8 9v1a9 9 0 0 1-1.5 5.4 1 1 0 0 0 .8 1.6"/></svg>',
+  moon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"/></svg>',
+  search: '<svg width="13" height="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>',
+  warn: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>'
+};
+
+function navHTML(role, approvals) {
+  var h = '';
+  h += '<a href="#" class="is-active">' + ICONS.catalogo + 'Catálogo</a>';
+  h += '<a href="#">' + ICONS.chat + 'Chat</a>';
+  h += '<a href="#">' + ICONS.wf + 'Workflows</a>';
+  h += '<a href="#">' + ICONS.shield + 'Aprobaciones' + (approvals ? '<span class="sb-count">' + approvals + '</span>' : '') + '</a>';
+  h += '<a href="#">' + ICONS.user + 'Mi espacio</a>';
+  if (role === 'admin') {
+    h += '<span class="sb-kicker">Admin</span>';
+    h += '<a href="#">' + ICONS.admin + 'Administración</a>';
+    h += '<a href="#">' + ICONS.build + 'Construcción</a>';
+  }
+  return h;
+}
+
+function shellHTML(cfg) {
+  var badge = { funcional: ['badge-rol--funcional', 'Funcional'], tecnico: ['badge-rol--tecnico', 'Técnico'], admin: ['badge-rol--admin', 'Admin'] }[cfg.role];
+  var gw = cfg.role === 'admin'
+    ? '<span class="tb-gw" data-tip="Gateway operativo · perfil activo"><span class="live-dot" aria-hidden="true"></span> gw <span style="color:var(--ink)">deepseek-v4-flash</span></span>'
+    : '';
+  var taxi = cfg.role !== 'funcional'
+    ? '<span class="taximeter" style="height:30px; padding:2px 8px"><span class="taximeter__label">Sesión</span><span class="taximeter__value" style="font-size:12px">USD 0,0312</span></span>'
+    : '';
+  return '' +
+  '<div>' +
+    '<div class="frame-label"><span class="kicker kicker--dim" style="margin:0">Shell como</span> <span class="badge-rol ' + badge[0] + '">' + badge[1] + '</span></div>' +
+    '<div class="shell">' +
+      '<div class="ai-banner">' + ICONS.warn + ' Respuestas generadas por IA — verificá antes de aplicar en cliente</div>' +
+      '<div class="shell-body">' +
+        '<aside class="sb">' +
+          '<div class="sb-logo"><i>R</i><b>Resultar Bolivia</b></div>' +
+          '<nav aria-label="Principal">' + navHTML(cfg.role, cfg.approvals) + '</nav>' +
+          '<div class="sb-foot"><a href="#" style="color:var(--ink-faint)">' + ICONS.collapse + 'Colapsar</a></div>' +
+        '</aside>' +
+        '<div style="display:grid; grid-template-rows:auto 1fr; min-width:0">' +
+          '<div class="tb">' +
+            '<div class="tb-search" role="search">' + ICONS.search + ' Buscar agentes, sesiones, docs… <kbd>Ctrl K</kbd></div>' +
+            gw +
+            '<div class="tb-right' + (cfg.role === 'admin' ? '' : ' push') + '">' +
+              taxi +
+              '<button class="tb-icon" aria-label="Cambiar tema">' + ICONS.moon + '</button>' +
+              '<button class="tb-icon tb-bell" aria-label="Notificaciones, ' + cfg.notifs + ' sin leer">' + ICONS.bell +
+                (cfg.notifs ? '<span class="notif-bell__count" style="top:-5px; right:-5px">' + cfg.notifs + '</span>' : '') + '</button>' +
+              '<button class="tb-user" aria-label="Menú de usuario: ' + cfg.user + '"><i>' + cfg.initials + '</i>' + cfg.user + ' <span class="badge-rol ' + badge[0] + '" style="height:18px; font-size:9px">' + badge[1] + '</span></button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="content"><span class="skeleton skeleton--title"></span><span class="skeleton skeleton--text"></span><span class="skeleton skeleton--text" style="width:75%"></span><span class="skeleton skeleton--block"></span><p style="font-size:var(--fs-caption); margin-top:var(--sp-2)">— slot de contenido (catálogo activo) —</p></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+    '<p class="faint" style="font-size:var(--fs-caption); margin-top:var(--sp-2)">' + cfg.note + '</p>' +
+  '</div>';
+}
+
+document.getElementById('shells').innerHTML =
+  shellHTML({ role: 'funcional', user: 'lucia', initials: 'LU', approvals: 0, notifs: 1, note: 'Sin taxímetro, sin estado de gateway, sin secciones Admin: no existen en su pantalla (ocultar, no deshabilitar).' }) +
+  shellHTML({ role: 'tecnico', user: 'dario', initials: 'DA', approvals: 1, notifs: 2, note: 'Agrega el taxímetro de sesión (USD en vivo). Sin telemetría ni consola: la jerga técnica sí, el dinero global no.' }) +
+  shellHTML({ role: 'admin', user: 'marcos', initials: 'MA', approvals: 3, notifs: 4, note: 'Agrega: dot de estado del gateway + perfil LLM activo, secciones Administración y Construcción tras el kicker ADMIN.' });
+
+document.getElementById('nav-mobile').innerHTML = navHTML('funcional', 0);
+</script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resultar Agents Platform — Galería de mockups</title>
+<link rel="stylesheet" href="tokens.css">
+<style>
+  .gx-wrap { max-width: 1240px; margin: 0 auto; padding: 40px 24px 80px; }
+  .gx-header { margin-bottom: 8px; }
+  .gx-header h1 { font-family: var(--font-display); font-size: var(--fs-h1, 28px); margin: 0 0 6px; }
+  .gx-header p { color: var(--text-2, var(--text-secondary, #9aa3b2)); margin: 0; max-width: 70ch; }
+  .gx-module { margin-top: 36px; }
+  .gx-module > h2 {
+    font-family: var(--font-display); font-size: var(--fs-h4, 18px);
+    text-transform: uppercase; letter-spacing: .08em;
+    border-bottom: 1px solid var(--border, #2a3142); padding-bottom: 8px; margin: 0 0 16px;
+  }
+  .gx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+  .gx-card {
+    display: block; text-decoration: none; color: inherit;
+    border: 1px solid var(--border, #2a3142); border-radius: var(--radius-md, 8px);
+    padding: 14px 16px; background: var(--surface-1, var(--panel-bg, rgba(255,255,255,.03)));
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .gx-card:hover { border-color: var(--accent, #ffb000); transform: translateY(-2px); }
+  .gx-num { font-family: var(--font-mono); font-size: var(--fs-caption, 12px); color: var(--accent, #ffb000); }
+  .gx-title { font-family: var(--font-display); font-size: var(--fs-body, 14px); font-weight: 600; margin: 4px 0 8px; }
+  .gx-roles { font-size: var(--fs-caption, 12px); color: var(--text-2, var(--text-secondary, #9aa3b2)); }
+  .gx-missing { opacity: .55; pointer-events: none; }
+  .gx-badge-missing {
+    display: inline-block; font-family: var(--font-mono); font-size: 11px;
+    border: 1px solid var(--danger, #ff5d5d); color: var(--danger, #ff5d5d);
+    border-radius: 4px; padding: 1px 6px; margin-left: 6px;
+  }
+  .gx-foot { margin-top: 48px; font-size: var(--fs-caption, 12px); color: var(--text-2, var(--text-secondary, #9aa3b2)); }
+</style>
+</head>
+<body>
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<div class="gx-wrap">
+  <header class="gx-header">
+    <div class="gx-num">DOCUMENTACIÓN DE DISEÑO · 44 MOCKUPS</div>
+    <h1>Resultar Agents Platform — Galería de mockups</h1>
+    <p>Referencia visual estática (no código de producción). Cada mockup incluye el switcher de tema (dark/light) y marca (default/totvs). Specs detalladas en <code>../VISTAS/</code>, flujos en <code>../FLUJOS.md</code>, índice maestro en <code>../README.md</code>.</p>
+  </header>
+
+  <section class="gx-module">
+    <h2>Fundación</h2>
+    <div class="gx-grid">
+      <a class="gx-card" href="00-styleguide.html"><span class="gx-num">Nº 00</span><div class="gx-title">Styleguide del sistema de diseño</div><div class="gx-roles">Interna (equipo de diseño/dev)</div></a>
+    </div>
+  </section>
+
+  <section class="gx-module">
+    <h2>Acceso y shell</h2>
+    <div class="gx-grid">
+      <a class="gx-card" href="01-login.html"><span class="gx-num">Nº 01</span><div class="gx-title">Login</div><div class="gx-roles">Todos (TOTP para Admin)</div></a>
+      <a class="gx-card" href="02-primer-acceso.html"><span class="gx-num">Nº 02</span><div class="gx-title">Primer acceso (wizard + acuerdo de uso)</div><div class="gx-roles">Todos (primer ingreso)</div></a>
+      <a class="gx-card" href="03-shell.html"><span class="gx-num">Nº 03</span><div class="gx-title">Shell de aplicación</div><div class="gx-roles">Todos (sidebar según rol)</div></a>
+      <a class="gx-card" href="04-notificaciones.html"><span class="gx-num">Nº 04</span><div class="gx-title">Centro de notificaciones</div><div class="gx-roles">Todos</div></a>
+    </div>
+  </section>
+
+  <section class="gx-module">
+    <h2>Chat</h2>
+    <div class="gx-grid">
+      <a class="gx-card" href="05-chat-funcional.html"><span class="gx-num">Nº 05</span><div class="gx-title">Chat (experiencia Funcional)</div><div class="gx-roles">Funcional (base de todos)</div></a>
+      <a class="gx-card" href="06-chat-admin.html"><span class="gx-num">Nº 06</span><div class="gx-title">Chat con capa de telemetría</div><div class="gx-roles">Admin (telemetría) · Técnico (ficha técnica)</div></a>
+      <a class="gx-card" href="07-composer-attachments.html"><span class="gx-num">Nº 07</span><div class="gx-title">Composer con adjuntos</div><div class="gx-roles">Todos</div></a>
+      <a class="gx-card" href="08-escalacion.html"><span class="gx-num">Nº 08</span><div class="gx-title">Escalación a Pro</div><div class="gx-roles">Todos (según config del agente)</div></a>
+      <a class="gx-card" href="09-branching.html"><span class="gx-num">Nº 09</span><div class="gx-title">Edición y ramas (versión 1/2)</div><div class="gx-roles">Todos</div></a>
+      <a class="gx-card" href="10-errores.html"><span class="gx-num">Nº 10</span><div class="gx-title">Estados de error accionables</div><div class="gx-roles">Todos (QUOTA, VPN/BRIDGE/GATEWAY)</div></a>
+      <a class="gx-card" href="11-citas.html"><span class="gx-num">Nº 11</span><div class="gx-title">Citas y evidencia (DocAgent)</div><div class="gx-roles">Todos</div></a>
+      <a class="gx-card" href="12-historial.html"><span class="gx-num">Nº 12</span><div class="gx-title">Historial de sesiones</div><div class="gx-roles">Todos</div></a>
+    </div>
+  </section>
+
+  <section class="gx-module">
+    <h2>Catálogo</h2>
+    <div class="gx-grid">
+      <a class="gx-card" href="13-catalogo.html"><span class="gx-num">Nº 13</span><div class="gx-title">Catálogo de agentes</div><div class="gx-roles">Todos (visibilidad configurable)</div></a>
+      <a class="gx-card" href="14-ficha-agente.html"><span class="gx-num">Nº 14</span><div class="gx-title">Ficha de agente</div><div class="gx-roles">Todos · ficha técnica para Técnico/Admin</div></a>
+    </div>
+  </section>
+
+  <section class="gx-module">
+    <h2>Workflows</h2>
+    <div class="gx-grid">
+      <a class="gx-card" href="15-workflows-lista.html"><span class="gx-num">Nº 15</span><div class="gx-title">Lista de workflows</div><div class="gx-roles">Todos</div></a>
+      <a class="gx-card" href="16-workflow-form.html"><span class="gx-num">Nº 16</span><div class="gx-title">Formulario de workflow</div><div class="gx-roles">Todos</div></a>
+      <a class="gx-card" href="17-workflow-run.html"><span class="gx-num">Nº 17</span><div class="gx-title">Ejecución en vivo</div><div class="gx-roles">Todos</div></a>
+      <a class="gx-card" href="18-workflow-result.html"><span class="gx-num">Nº 18</span><div class="gx-title">Resultado de workflow</div><div class="gx-roles">Todos</div></a>
+      <a class="gx-card" href="19-workflow-historial.html"><span class="gx-num">Nº 19</span><div class="gx-title">Historial de corridas</div><div class="gx-roles">Todos</div></a>
+    </div>
+  </section>
+
+  <section class="gx-module">
+    <h2>HITL y validación</h2>
+    <div class="gx-grid">
+      <a class="gx-card" href="20-aprobaciones-cola.html"><span class="gx-num">Nº 20</span><div class="gx-title">Cola de aprobaciones</div><div class="gx-roles">Aprobadores (Técnico/Admin)</div></a>
+      <a class="gx-card" href="21-aprobacion-detalle.html"><span class="gx-num">Nº 21</span><div class="gx-title">Detalle de aprobación (tarjeta HITL)</div><div class="gx-roles">Aprobadores</div></a>
+      <a class="gx-card" href="22-aprobaciones-historial.html"><span class="gx-num">Nº 22</span><div class="gx-title">Historial de decisiones</div><div class="gx-roles">Aprobadores · Admin</div></a>
+      <a class="gx-card" href="27-selector-cliente-ambiente.html"><span class="gx-num">Nº 27</span><div class="gx-title">Selector cliente-final / ambiente</div><div class="gx-roles">Técnico · Admin</div></a>
+      <a class="gx-card" href="28-checklists.html"><span class="gx-num">Nº 28</span><div class="gx-title">Gestión de checklists</div><div class="gx-roles">Técnico · Admin</div></a>
+      <a class="gx-card" href="29-checklist-review.html"><span class="gx-num">Nº 29</span><div class="gx-title">Revisión de checklist convertido</div><div class="gx-roles">Técnico · Admin</div></a>
+    </div>
+  </section>
+
+  <section class="gx-module">
+    <h2>Mi espacio</h2>
+    <div class="gx-grid">
+      <a class="gx-card" href="23-mi-consumo.html"><span class="gx-num">Nº 23</span><div class="gx-title">Mi consumo (cuotas)</div><div class="gx-roles">Todos</div></a>
+      <a class="gx-card" href="24-mi-memoria.html"><span class="gx-num">Nº 24</span><div class="gx-title">Mi memoria</div><div class="gx-roles">Todos</div></a>
+      <a class="gx-card" href="25-mi-auditoria.html"><span class="gx-num">Nº 25</span><div class="gx-title">Mi auditoría personal</div><div class="gx-roles">Todos</div></a>
+      <a class="gx-card" href="26-config-personal.html"><span class="gx-num">Nº 26</span><div class="gx-title">Configuración personal</div><div class="gx-roles">Todos</div></a>
+    </div>
+  </section>
+
+  <section class="gx-module">
+    <h2>Admin · Operación</h2>
+    <div class="gx-grid">
+      <a class="gx-card" href="30-admin-dashboard.html"><span class="gx-num">Nº 30</span><div class="gx-title">Tablero de operación</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="31-admin-usuarios.html"><span class="gx-num">Nº 31</span><div class="gx-title">Gestión de usuarios</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="32-admin-grupos.html"><span class="gx-num">Nº 32</span><div class="gx-title">Grupos y equipos</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="33-admin-cuotas.html"><span class="gx-num">Nº 33</span><div class="gx-title">Cuotas y liberaciones</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="37-admin-audit.html"><span class="gx-num">Nº 37</span><div class="gx-title">Audit log global</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="39-admin-salud.html"><span class="gx-num">Nº 39</span><div class="gx-title">Salud del sistema</div><div class="gx-roles">Admin</div></a>
+    </div>
+  </section>
+
+  <section class="gx-module">
+    <h2>Admin · Gobernanza</h2>
+    <div class="gx-grid">
+      <a class="gx-card" href="34-admin-prompts.html"><span class="gx-num">Nº 34</span><div class="gx-title">Registro de prompts</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="35-admin-tools.html"><span class="gx-num">Nº 35</span><div class="gx-title">Tools y permisos</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="36-admin-conexiones.html"><span class="gx-num">Nº 36</span><div class="gx-title">Conexiones (bridges/proveedores)</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="38-admin-flags.html"><span class="gx-num">Nº 38</span><div class="gx-title">Flags y kill-switch</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="40-admin-instancia.html"><span class="gx-num">Nº 40</span><div class="gx-title">Configuración de instancia (branding)</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="43-admin-evals.html"><span class="gx-num">Nº 43</span><div class="gx-title">Evals y gates de publicación</div><div class="gx-roles">Admin</div></a>
+    </div>
+  </section>
+
+  <section class="gx-module">
+    <h2>Builders</h2>
+    <div class="gx-grid">
+      <a class="gx-card" href="41-builder-agentes.html"><span class="gx-num">Nº 41</span><div class="gx-title">Builder de agentes</div><div class="gx-roles">Admin</div></a>
+      <a class="gx-card" href="42-builder-skills.html"><span class="gx-num">Nº 42</span><div class="gx-title">Builder de skills</div><div class="gx-roles">Admin</div></a>
+    </div>
+  </section>
+
+  <footer class="gx-foot">
+    Resultar Agents Platform · documentación de diseño · 44/44 mockups presentes · datos de ejemplo 100% ficticios.
+  </footer>
+</div>
+</body>
+</html>

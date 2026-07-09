@@ -1,0 +1,270 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>37 · Audit log global — Consola admin</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 520px; }
+  .sidebar { background: var(--bg-raised); border-right: 1px solid var(--line); padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .sidebar__brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2); }
+  .sidebar__brand .accent { color: var(--accent); }
+  .nav-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .nav-link.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+  .nav-sep { height: 1px; background: var(--line); margin: var(--sp-2) var(--sp-4); border: 0; }
+  .nav-cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-1) var(--sp-4); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .topbar__ctx { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .topbar__user { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  .page-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .page-head__left { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
+
+  .filters { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: end; margin-bottom: var(--sp-4); }
+  .filters .field { margin-bottom: 0; flex: 0 1 160px; }
+  .filters .f-entidad { flex: 1 1 180px; }
+
+  .exp-btn { background: none; border: 0; cursor: pointer; color: var(--ink-dim); padding: 2px; border-radius: var(--r-xs); font-size: var(--fs-small); }
+  .exp-btn:hover { color: var(--ink); }
+  .exp-btn:focus-visible { outline: 2px solid var(--focus-ring); }
+  tr.payload-row td { background: var(--bg-raised); }
+  .payload {
+    font-family: var(--font-mono); font-size: var(--fs-caption); line-height: 1.6;
+    background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm);
+    padding: var(--sp-3); overflow-x: auto; margin: 0;
+  }
+  .payload-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-2); }
+
+  .pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .pager__btns { display: flex; gap: var(--sp-1); align-items: center; }
+  .frame-foot { padding: var(--sp-2) var(--sp-5); border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+
+  .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: var(--sp-5); align-items: start; }
+  .modal-demo { width: auto; max-height: none; }
+
+  @media (max-width: 900px) { .shell { grid-template-columns: 1fr; } .sidebar { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<div class="doc">
+  <span class="kicker">Mockup 37 · Consola admin</span>
+  <h1>Audit log global</h1>
+  <p class="muted">Vista solo-Admin. Registro append-only: nadie edita ni borra, ni el Admin. Spec: <code>VISTAS/07-admin-operacion.md §5</code>. Datos ficticios.</p>
+
+  <section class="doc-section">
+    <h2>Tabla filtrable con fila expandida</h2>
+    <p class="doc-caption">Orden fijo: fecha-hora desc (lectura forense). Segunda fila expandida como demo (chevron con <code>aria-expanded</code>).</p>
+
+    <div class="frame">
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <div class="sidebar__brand">Resultar <span class="accent">Agents</span></div>
+          <a class="nav-link" href="#">Chat</a>
+          <a class="nav-link" href="#">Catálogo</a>
+          <a class="nav-link" href="#">Workflows</a>
+          <hr class="nav-sep">
+          <span class="nav-cap">Consola admin</span>
+          <a class="nav-link" href="#">Tablero</a>
+          <a class="nav-link" href="#">Usuarios</a>
+          <a class="nav-link" href="#">Grupos</a>
+          <a class="nav-link" href="#">Cuotas</a>
+          <a class="nav-link" href="#">Registro de prompts</a>
+          <a class="nav-link is-active" href="#" aria-current="page">Audit</a>
+          <a class="nav-link" href="#">Salud</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Consola admin / Audit</span>
+            <div class="topbar__right"><span class="badge-rol badge-rol--admin">Admin</span><span class="topbar__user">mterceros</span></div>
+          </div>
+          <div class="content">
+            <div class="page-head">
+              <div class="page-head__left">
+                <div><span class="kicker">Consola admin</span><h2 style="margin:0">Audit log</h2></div>
+                <span class="tag tag--outline" data-tip="Nadie edita ni borra registros — ni el Admin" tabindex="0">🔒 APPEND-ONLY — INMUTABLE</span>
+              </div>
+              <button class="btn btn--secondary">Exportar CSV…</button>
+            </div>
+
+            <form class="filters" aria-label="Filtros del audit log">
+              <div class="field"><label class="field-label" for="f-actor">Actor</label><select class="select" id="f-actor"><option>Todos</option><option>mterceros</option><option>lucia</option><option>sistema</option><option>anónimo</option></select></div>
+              <div class="field"><label class="field-label" for="f-accion">Acción</label><select class="select" id="f-accion"><option>Todas</option><option>QUOTA_RELEASE_APPROVED — liberación aprobada</option><option>HITL_APPROVED — aprobación de escritura</option><option>USER_CREATED — usuario creado</option><option>LOGIN_FAILED — login fallido</option></select></div>
+              <div class="field f-entidad"><label class="field-label" for="f-ent">Entidad</label><input class="input input--mono" id="f-ent" placeholder="tipo:id…"></div>
+              <div class="field"><label class="field-label" for="f-desde">Desde</label><input class="input" id="f-desde" type="date" value="2026-06-01"></div>
+              <div class="field"><label class="field-label" for="f-hasta">Hasta</label><input class="input" id="f-hasta" type="date" value="2026-06-11"></div>
+              <div class="field"><label class="field-label" for="f-amb">Cliente/ambiente</label><select class="select" id="f-amb"><option>Todos</option><option>Comercial Andina S.A. / TEST</option><option>Ferretería El Tornillo / PROD</option></select></div>
+              <button type="button" class="btn btn--secondary">Aplicar</button>
+              <button type="button" class="btn btn--ghost">Limpiar</button>
+            </form>
+
+            <div class="table-wrap">
+              <table class="table table--dense">
+                <thead><tr><th>Fecha-hora</th><th>Actor</th><th>Acción</th><th>Entidad</th><th>Cliente/amb</th><th><span class="sr-only">Expandir</span></th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td class="mono">11/06/2026 14:32:08</td><td class="mono">mterceros</td>
+                    <td><span class="tag tag--money">QUOTA_RELEASE_APPROVED</span></td>
+                    <td class="mono">usuario:cquiroga</td><td class="faint">—</td>
+                    <td><button class="exp-btn" aria-expanded="false" aria-label="Expandir payload">▸</button></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">11/06/2026 14:28:51</td><td class="mono">lucia</td>
+                    <td><span class="tag tag--warn">HITL_APPROVED</span></td>
+                    <td class="mono">escritura:wr_8f31</td><td>Comercial Andina S.A. / TEST</td>
+                    <td><button class="exp-btn" aria-expanded="true" aria-label="Colapsar payload">▾</button></td>
+                  </tr>
+                  <tr class="payload-row">
+                    <td colspan="6">
+                      <div class="payload-bar">
+                        <span class="faint mono" style="font-size:11px">payload completo — jamás truncado (auditoría)</span>
+                        <button class="btn btn--ghost btn--sm">Copiar</button>
+                      </div>
+                      <pre class="payload">{
+  "action": "HITL_APPROVED",
+  "entity": "escritura:wr_8f31",
+  "actor": "lucia",
+  "client_env": { "client": "Comercial Andina S.A.", "env": "TEST" },
+  "payload": {
+    "api": "POST /rest/fwmodel/MATA020",
+    "body": { "A1_COD": "000312", "A1_NOME": "DISTRIBUIDORA KANTUTA SRL", "A1_LIMCRED": 1500.00 },
+    "risk": "medio"
+  },
+  "comment": "Cliente nuevo del piloto, límite chico para arrancar",
+  "approvals": [{ "user": "lucia", "at": "2026-06-11T14:28:51-04:00" }],
+  "note": null,
+  "ip": "10.20.4.18",
+  "user_agent": "Mozilla/5.0 …"
+}</pre>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td class="mono">11/06/2026 13:05:17</td><td class="mono">mterceros</td>
+                    <td><span class="tag tag--info">USER_CREATED</span></td>
+                    <td class="mono">usuario:asoliz</td><td class="faint">—</td>
+                    <td><button class="exp-btn" aria-expanded="false" aria-label="Expandir payload">▸</button></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">11/06/2026 12:58:40</td><td class="mono">sistema</td>
+                    <td><span class="tag">PROMPT_ACTIVATED</span></td>
+                    <td class="mono">prompt:docagent@13</td><td class="faint">—</td>
+                    <td><button class="exp-btn" aria-expanded="false" aria-label="Expandir payload">▸</button></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">11/06/2026 09:14:02</td><td class="mono">anónimo</td>
+                    <td><span class="tag tag--danger">LOGIN_FAILED</span></td>
+                    <td class="mono">usuario:jmendez</td><td class="faint">—</td>
+                    <td><button class="exp-btn" aria-expanded="false" aria-label="Expandir payload">▸</button></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">11/06/2026 09:13:45</td><td class="mono">anónimo</td>
+                    <td><span class="tag tag--danger">LOGIN_FAILED</span></td>
+                    <td class="mono">usuario:jmendez</td><td class="faint">—</td>
+                    <td><button class="exp-btn" aria-expanded="false" aria-label="Expandir payload">▸</button></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">10/06/2026 18:22:30</td><td class="mono">dvillegas</td>
+                    <td><span class="tag tag--info">QUOTA_UPDATED</span></td>
+                    <td class="mono">cuota:grupo/tecnico-advpl</td><td class="faint">—</td>
+                    <td><button class="exp-btn" aria-expanded="false" aria-label="Expandir payload">▸</button></td>
+                  </tr>
+                  <tr>
+                    <td class="mono">10/06/2026 08:01:11</td><td class="mono">asoliz</td>
+                    <td><span class="tag">AGREEMENT_ACCEPTED</span></td>
+                    <td class="mono">usuario:asoliz</td><td class="faint">—</td>
+                    <td><button class="exp-btn" aria-expanded="false" aria-label="Expandir payload">▸</button></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="pager">
+                <div class="pager__btns">
+                  <button class="btn btn--ghost btn--sm" disabled aria-label="Página anterior">«</button>
+                  <button class="btn btn--secondary btn--sm" aria-current="page">1</button>
+                  <button class="btn btn--ghost btn--sm">2</button>
+                  <button class="btn btn--ghost btn--sm">3</button>
+                  <span>…</span>
+                  <button class="btn btn--ghost btn--sm">42</button>
+                  <button class="btn btn--ghost btn--sm" aria-label="Página siguiente">»</button>
+                </div>
+                <label>50 por página
+                  <select class="select" style="display:inline-block;width:auto;height:28px;margin-left:6px;font-size:var(--fs-caption)"><option>25</option><option selected>50</option><option>100</option></select>
+                </label>
+                <span>2.084 registros</span>
+              </div>
+            </div>
+            <div class="frame-foot">hora de la instancia: UTC−4</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ EXPORT + ESTADOS ════════ -->
+  <section class="doc-section">
+    <h2>Export CSV y estados</h2>
+    <div class="modal-grid">
+
+      <div class="modal modal-demo" role="dialog" aria-labelledby="m-x-t">
+        <div class="modal__head"><h3 class="modal__title" id="m-x-t">Exportar CSV</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+        <div class="modal__body">
+          <div class="field"><label class="field-label" for="x-desde">Desde</label><input class="input" id="x-desde" type="date" value="2026-06-01"></div>
+          <div class="field"><label class="field-label" for="x-hasta">Hasta</label><input class="input" id="x-hasta" type="date" value="2026-06-11"></div>
+          <p style="font-size:var(--fs-small);margin-bottom:var(--sp-2)">≈ <strong class="mono">2.084</strong> registros — el export respeta los filtros activos.</p>
+          <p class="faint" style="font-size:var(--fs-caption);margin:0">El CSV incluye el payload serializado. Encabezados invariantes y fechas en ISO 8601. El export queda registrado en el audit (<code>AUDIT_EXPORTED</code>).</p>
+        </div>
+        <div class="modal__foot"><button class="btn btn--ghost">Cancelar</button><button class="btn btn--primary">Generar CSV</button></div>
+      </div>
+
+      <div style="display:grid;gap:var(--sp-4)">
+        <div class="panel">
+          <h4>Éxito (toast)</h4>
+          <div class="toast toast--ok" style="position:static;animation:none">
+            <span class="toast__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+            <div><p class="toast__title">CSV generado — 2.084 registros</p><p class="toast__msg"><a href="#">Descargar audit_2026-06-01_2026-06-11.csv</a></p></div>
+          </div>
+          <p class="faint" style="font-size:var(--fs-caption);margin:var(--sp-2) 0 0">Export &gt; 50k registros: corre en segundo plano y notifica por campana.</p>
+        </div>
+        <div class="panel">
+          <h4>Vacío (solo por filtros)</h4>
+          <div class="empty-state" style="padding:var(--sp-6)">
+            <p class="empty-state__title">Ningún registro coincide con los filtros</p>
+            <p class="empty-state__hint">El log nunca está vacío en una instancia operativa: la propia creación de usuarios deja eventos.</p>
+            <button class="btn btn--secondary btn--sm">Limpiar filtros</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h4>Rango de export &gt; 12 meses</h4>
+          <div class="error-card error-card--warn">
+            <span class="error-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            <div>
+              <p class="error-card__title">Rango muy amplio</p>
+              <p class="error-card__why" style="margin:0">El export se ejecuta en segundo plano por su tamaño; te avisamos por la campana cuando esté listo.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

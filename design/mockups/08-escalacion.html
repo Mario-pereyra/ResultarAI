@@ -1,0 +1,171 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 · Escalación a Pro — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1080px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); padding: var(--sp-5); }
+  .col { max-width: 760px; margin: 0 auto; display: grid; gap: var(--sp-4); }
+
+  .msg-agent { display: grid; grid-template-columns: 30px 1fr; gap: var(--sp-3); }
+  .msg-agent__avatar { width: 30px; height: 30px; display: grid; place-items: center; border-radius: var(--r-md); background: var(--accent-soft); color: var(--accent); }
+  .msg-agent__avatar svg { width: 16px; height: 16px; }
+  .msg-agent__body { font-size: var(--fs-lead); line-height: var(--lh-loose); }
+  .msg-agent__body p { margin: 0 0 var(--sp-2); }
+
+  .esc-cost { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); margin: 0 0 var(--sp-3); }
+  .esc-done { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-dim); border: 1px dashed var(--line-strong); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-4); }
+  .esc-done svg { width: 14px; height: 14px; color: var(--accent-alt); }
+  .esc-dismissed { font-size: var(--fs-caption); color: var(--ink-faint); font-style: italic; }
+
+  .note { border-left: 3px solid var(--info); background: color-mix(in srgb, var(--info) 6%, transparent); border-radius: 0 var(--r-sm) var(--r-sm) 0; padding: var(--sp-3) var(--sp-4); font-size: var(--fs-small); color: var(--ink-dim); max-width: 760px; }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .escalate-card__actions { flex-direction: column-reverse; align-items: stretch; }
+    .escalate-card__actions .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
+  <symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+</defs></svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 08 · Módulo chat</span>
+    <h1>Escalación a Pro — marcador <code>&lt;&lt;&lt;NEEDS_PRO&gt;&gt;&gt;</code></h1>
+    <p class="muted">Escalación 100% manual con un clic, jamás automática (ADR-0006). Abre una conversación NUEVA (stickiness de modelo). Spec: <code>docs/design/VISTAS/02-chat.md §4</code>.</p>
+    <p class="doc-caption">La tarjeta entra como contenido del stream (en el flujo, tras la respuesta parcial) — no es modal y no roba foco.</p>
+  </header>
+
+  <!-- ════════ A — Tarjeta estándar (Funcional/Técnico) ════════ -->
+  <section class="doc-section" aria-labelledby="a-t">
+    <span class="kicker kicker--dim">A</span>
+    <h2 id="a-t">Tarjeta estándar — todos los roles</h2>
+    <div class="frame">
+      <div class="col">
+        <article class="msg-agent">
+          <span class="msg-agent__avatar" aria-hidden="true"><svg><use href="#i-bot"/></svg></span>
+          <div class="msg-agent__body">
+            <p>Tu consulta cruza la parametrización de tres localizaciones (BOL, ARG, PER) con reglas de impuestos encadenadas. Puedo darte una respuesta general, pero un análisis confiable amerita el modelo avanzado.</p>
+          </div>
+        </article>
+
+        <div class="escalate-card" role="group" aria-label="Propuesta de escalación al modelo Pro" aria-live="polite">
+          <span class="escalate-card__icon"><svg aria-hidden="true"><use href="#i-zap"/></svg></span>
+          <div>
+            <p class="escalate-card__title">Este caso amerita el modelo Pro</p>
+            <p class="escalate-card__msg">El modelo avanzado cuesta ~3× más por consulta. Si escalás, se abre una <strong>conversación nueva</strong> con el contexto de esta — la actual queda intacta.</p>
+            <div class="escalate-card__actions">
+              <button type="button" class="btn btn--primary">Escalar a Pro</button>
+              <button type="button" class="btn btn--ghost">Seguir con Flash</button>
+              <span class="tag tag--outline">deepseek-v4-pro</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ B — Variante Admin (con estimación de costo) ════════ -->
+  <section class="doc-section" aria-labelledby="b-t">
+    <span class="kicker kicker--dim">B</span>
+    <h2 id="b-t">Variante Admin — estimación de costo</h2>
+    <div class="frame">
+      <div class="col">
+        <div class="escalate-card" role="group" aria-label="Propuesta de escalación al modelo Pro">
+          <span class="escalate-card__icon"><svg aria-hidden="true"><use href="#i-zap"/></svg></span>
+          <div>
+            <p class="escalate-card__title">Este caso amerita el modelo Pro</p>
+            <p class="escalate-card__msg">El modelo avanzado cuesta ~3× más por consulta. Si escalás, se abre una <strong>conversación nueva</strong> con el contexto de esta — la actual queda intacta.</p>
+            <p class="esc-cost">Estimado: <span class="money">USD 0,018</span>/turno en Pro vs <span class="money">USD 0,006</span> actual</p>
+            <div class="escalate-card__actions">
+              <button type="button" class="btn btn--primary">Escalar a Pro</button>
+              <button type="button" class="btn btn--ghost">Seguir con Flash</button>
+              <span class="tag tag--outline">deepseek-v4-pro</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ C — Estados: loading · escalada · descartada · bloqueada por cuota ════════ -->
+  <section class="doc-section" aria-labelledby="c-t">
+    <span class="kicker kicker--dim">C</span>
+    <h2 id="c-t">Estados de la tarjeta</h2>
+    <div class="frame">
+      <div class="col">
+
+        <p class="doc-caption" style="margin:0">1 · Loading — creando la rama/sesión Pro:</p>
+        <div class="escalate-card">
+          <span class="escalate-card__icon"><svg aria-hidden="true"><use href="#i-zap"/></svg></span>
+          <div>
+            <p class="escalate-card__title">Este caso amerita el modelo Pro</p>
+            <p class="escalate-card__msg">Creando la conversación en Pro…</p>
+            <div class="escalate-card__actions">
+              <button type="button" class="btn btn--primary btn--loading" aria-busy="true" aria-label="Escalando a Pro">Escalar a Pro</button>
+              <button type="button" class="btn btn--ghost" disabled>Seguir con Flash</button>
+            </div>
+          </div>
+        </div>
+
+        <p class="doc-caption" style="margin:0">2 · Escalada — la tarjeta se reemplaza por nota-enlace (idempotente, no re-usable):</p>
+        <a class="esc-done" href="#"><svg aria-hidden="true"><use href="#i-branch"/></svg>Continuaste esta consulta en Pro — abrir conversación</a>
+
+        <p class="doc-caption" style="margin:0">3 · Descartada («Seguir con Flash») — colapsa a una línea atenuada:</p>
+        <p class="esc-dismissed">Decidiste seguir con Flash</p>
+
+        <p class="doc-caption" style="margin:0">4 · Bloqueada por cuota — primario deshabilitado + motivo + «Solicitar liberación»:</p>
+        <div class="escalate-card">
+          <span class="escalate-card__icon"><svg aria-hidden="true"><use href="#i-zap"/></svg></span>
+          <div>
+            <p class="escalate-card__title">Este caso amerita el modelo Pro</p>
+            <p class="escalate-card__msg">Escalar a Pro excede tu cuota mensual — alcanzaste el límite de tu plan de uso.</p>
+            <div class="escalate-card__actions">
+              <button type="button" class="btn btn--primary" disabled data-tip="Tu cuota mensual no alcanza para Pro">Escalar a Pro</button>
+              <button type="button" class="btn btn--secondary">Solicitar liberación</button>
+              <button type="button" class="btn btn--ghost">Seguir con Flash</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ D — Escalación deshabilitada por agente (no hay UI) ════════ -->
+  <section class="doc-section" aria-labelledby="d-t">
+    <span class="kicker kicker--dim">D</span>
+    <h2 id="d-t">Agente con escalación deshabilitada — la tarjeta NO aparece</h2>
+    <div class="note" role="note">
+      <strong>Documentación, no UI:</strong> la escalación es configurable por agente. Si está deshabilitada, el marcador <code>&lt;&lt;&lt;NEEDS_PRO&gt;&gt;&gt;</code> se suprime del stream y el agente continúa con su mejor respuesta Flash. <strong>No existe una tarjeta «deshabilitada»</strong>: lo que no está disponible no se muestra (DS §9.7 — ocultar, no deshabilitar). Tampoco la dispara un marcador que llegue dentro de un adjunto (ANEXO §4.3: se marca como posible inyección).
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

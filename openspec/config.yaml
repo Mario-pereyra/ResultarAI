@@ -1,0 +1,49 @@
+schema: spec-driven
+
+context: |
+  ResultarAI: plataforma interna de IA para Resultar Soluciones (partner TOTVS Bolivia).
+  Chat gobernado (Default Chat) que activa skills aprobadas para consultar sistemas
+  (empezando por el ERP Protheus) de forma segura, trazable y sin SQL libre.
+
+  Arquitectura: monolito modular Python + núcleo hexagonal (core/ sin frameworks,
+  solo stdlib + Pydantic) + DDD estratégico. LangGraph/LiteLLM/Langfuse/MCP viven
+  SOLO en adapters/ detrás de ports (typing.Protocol). 3 deployables por física de
+  red: plataforma core, ERP Safe Query API (junto al Protheus de cada cliente) y
+  Edge Connector Windows.
+
+  Reglas duras: Policy Gate deny-by-default evaluado en cada paso; tools solo vía
+  skills (el Default Chat nunca ejecuta tools directamente); toda llamada a modelo
+  pasa por LiteLLM; todo agente/skill/tool tiene manifiesto YAML versionado validado
+  con Pydantic; skills que tocan el ERP usan plan-then-execute; audit log append-only.
+
+  Pivote 2026-07-09: producto completo genérico "de fábrica" primero (contenido de
+  ejemplo: default_chat + 1 skill + 1 MCP server + 1 workflow); personalización
+  Protheus/ERP después (Etapa P). design/ es la fuente NORMATIVA de producto y UX
+  (44 vistas, flujos, funcionalidades, design system, anexo attachments), con los
+  ajustes de la tabla de pivote de docs/07-roadmap.md. Skills siguen la spec oficial
+  Agent Skills (SKILL.md); tools la spec oficial MCP vigente. RAG solo como puerta
+  abierta (RetrievalPort + adapter nulo), sin implementar.
+
+  Leer antes de proponer: docs/02-arquitectura.md (estilo y regla de dependencia),
+  docs/03-glosario-dominio.md (términos obligatorios), docs/04-manifiestos.md
+  (los 6 contratos declarativos), docs/07-roadmap.md (etapas y dependencias) y las
+  vistas de design/VISTAS/ que cubra el change.
+
+  Idioma: docs, specs y commits en español; código e identificadores en inglés.
+  Stack: Python 3.12+, uv, Pydantic v2, ruff, mypy estricto, import-linter, pytest.
+
+rules:
+  proposal:
+    - Incluir siempre una sección "No-objetivos"
+    - Indicar el bounded context afectado (core/adapters/app/manifests o satélite)
+    - Citar el blueprint por sección cuando aplique (docs/referencias/), sin copiarlo
+  specs:
+    - Usar exactamente los términos de docs/03-glosario-dominio.md, sin sinónimos
+    - Los escenarios de skills/tools deben declarar la decisión esperada del Policy Gate
+    - Capacidades de skills conformes a la spec Agent Skills; tools conformes a la spec MCP vigente
+    - Vistas y flujos deben referenciar el archivo de design/ que los define (VISTAS/, FLUJOS.md, ANEXO-ATTACHMENTS.md)
+  tasks:
+    - Tareas de máximo ~2 horas, con criterio de verificación observable
+    - Toda tarea declara su escalón de ejecución con el sufijo "[modelo: haiku|sonnet|opus]" según la escalera de /asignar-modelo (docs/07-roadmap.md)
+    - Toda tarea que toque core/ debe indicar el test que la cubre
+    - Toda tarea que agregue una capacidad debe incluir su manifiesto YAML y su validación

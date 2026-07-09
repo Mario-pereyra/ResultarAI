@@ -1,0 +1,345 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>23 · Mi consumo — Mi espacio — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg-raised); }
+  .topbar__ctx { font-family: var(--font-display); font-size: var(--fs-small); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-dim); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .topbar__user { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  /* Tabs de ruta de Mi espacio (nav-links, no tabs ARIA) */
+  .space-tabs { display: flex; gap: var(--sp-1); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-5); overflow-x: auto; }
+  .space-tab { padding: var(--sp-2) var(--sp-3); margin-bottom: -1px; font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-bottom: 2px solid transparent; white-space: nowrap; }
+  .space-tab:hover { color: var(--ink); text-decoration: none; }
+  .space-tab[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+  /* Tarjetas de cuota */
+  .quota-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); margin-bottom: var(--sp-4); }
+  .quota-card .kicker { margin-bottom: var(--sp-1); }
+  .quota-card__figure { font-family: var(--font-mono); font-size: var(--fs-h3); font-weight: 700; font-variant-numeric: tabular-nums; margin-bottom: var(--sp-2); }
+  .quota-card__figure .lim { color: var(--ink-faint); font-weight: 400; }
+  .quota-card__renew { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-2) 0 0; }
+  .quota-card__lib { margin-top: var(--sp-3); display: grid; gap: var(--sp-2); }
+
+  /* Anillo de cache (solo Admin) */
+  .cache-panel { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-6); margin-bottom: var(--sp-4); }
+  .cache-ring { position: relative; width: 110px; height: 110px; flex: none; }
+  .cache-ring svg { width: 110px; height: 110px; transform: rotate(-90deg); }
+  .cache-ring__val { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-mono); font-size: var(--fs-h3); font-weight: 700; color: var(--money); }
+  .cache-legend { display: grid; gap: var(--sp-1); font-size: var(--fs-small); color: var(--ink-dim); }
+  .cache-legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+  .sess-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+  .sess-row-agent { display: inline-flex; align-items: center; gap: var(--sp-2); color: var(--ink); }
+  .sess-row-agent svg { width: 15px; height: 15px; color: var(--ink-faint); flex: none; }
+  .table a.row-link { color: inherit; display: block; }
+
+  .variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); align-items: start; }
+  .state-grid { display: grid; gap: var(--sp-4); }
+  @media (max-width: 1024px) { .variant-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .content { padding: var(--sp-4); }
+    .quota-grid { grid-template-columns: 1fr; }
+    .quota-card__lib .btn { width: 100%; height: 44px; }
+    .cache-panel { justify-content: center; text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 23 · Mi espacio</span>
+    <h1>Mi consumo</h1>
+    <p class="muted">Consumo personal hoy/mes contra cuota (ADR-0007/0010 §4), sesiones recientes y, solo para Admin, la capa de telemetría de cache. Spec: <code>docs/design/VISTAS/06-mi-espacio.md</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios (usuaria «lucia», montos pequeños). Las dos variantes de rol se muestran lado a lado solo como andamiaje de documentación.</p>
+  </header>
+
+  <!-- ═══════════ VARIANTES FUNCIONAL ↔ ADMIN, LADO A LADO ═══════════ -->
+  <section class="doc-section" aria-labelledby="v-roles">
+    <span class="kicker kicker--dim">Variantes por rol</span>
+    <h2 id="v-roles">Funcional (base) y Admin (base + telemetría)</h2>
+    <p class="doc-caption">Funcional ve USD en esta vista (la cuota se define en presupuesto y la barra sería ilegible sin la cifra) pero jamás tokens, cache ni modelos. Lo que un rol no tiene, no se renderiza.</p>
+
+    <div class="variant-grid">
+
+      <!-- ── FUNCIONAL ── -->
+      <div>
+        <p style="margin-bottom:var(--sp-2)"><span class="badge-rol badge-rol--funcional">Funcional</span></p>
+        <div class="frame">
+          <div class="topbar">
+            <span class="topbar__ctx">Mi espacio</span>
+            <div class="topbar__right"><span class="topbar__user">lucia</span><span class="badge-rol badge-rol--funcional">Funcional</span></div>
+          </div>
+          <div class="content">
+            <nav class="space-tabs" aria-label="Secciones de Mi espacio">
+              <a class="space-tab" href="#" aria-current="page">Mi consumo</a>
+              <a class="space-tab" href="#">Mi memoria</a>
+              <a class="space-tab" href="#">Mi auditoría</a>
+              <a class="space-tab" href="#">Configuración</a>
+            </nav>
+
+            <div class="quota-grid">
+              <div class="panel quota-card">
+                <span class="kicker kicker--dim">Hoy</span>
+                <p class="quota-card__figure">USD 1,12 <span class="lim">/ USD 5,00</span></p>
+                <div class="quota-row"><span>22% usado</span><span class="num">USD 3,88 disponibles</span></div>
+                <div class="quota-bar" role="meter" aria-valuenow="22" aria-valuemin="0" aria-valuemax="100" aria-label="Cuota de hoy: 22% usada"><span class="quota-bar__fill" style="width:22%"></span></div>
+                <p class="quota-card__renew">Se renueva a medianoche (GMT−4)</p>
+              </div>
+              <div class="panel quota-card">
+                <span class="kicker kicker--dim">Este mes</span>
+                <p class="quota-card__figure">USD 41,20 <span class="lim">/ USD 50,00</span></p>
+                <div class="quota-row"><span style="color:var(--warn);font-weight:600">82% usado — te estás acercando al límite</span><span class="num">USD 8,80 disponibles</span></div>
+                <div class="quota-bar is-warn" role="meter" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100" aria-label="Cuota del mes: 82% usada, aviso de 80% activo"><span class="quota-bar__fill" style="width:82%"></span></div>
+                <p class="quota-card__renew">Se renueva el 01/07/2026</p>
+              </div>
+            </div>
+
+            <div class="sess-head">
+              <h3 style="margin:0">Sesiones recientes</h3>
+              <span class="mono faint" style="font-size:var(--fs-caption)">últimas 10</span>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th scope="col">Agente</th><th scope="col">Inicio</th><th scope="col" class="num">Turnos</th><th scope="col" class="num">Costo</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="sess-row-agent"><svg aria-hidden="true"><use href="#i-bot"/></svg><a href="#" class="row-link">DocAgent</a></span></td><td class="mono">11/06/2026 14:32</td><td class="num">12</td><td class="num money">USD 0,18</td></tr>
+                  <tr><td><span class="sess-row-agent"><svg aria-hidden="true"><use href="#i-bot"/></svg><a href="#" class="row-link">ValidationAgent</a></span></td><td class="mono">10/06/2026 16:48</td><td class="num">21</td><td class="num money">USD 0,42</td></tr>
+                  <tr><td><span class="sess-row-agent"><svg aria-hidden="true"><use href="#i-bot"/></svg><a href="#" class="row-link">DocAgent</a></span></td><td class="mono">10/06/2026 09:15</td><td class="num">5</td><td class="num money">USD 0,07</td></tr>
+                  <tr><td><span class="sess-row-agent"><svg aria-hidden="true"><use href="#i-bot"/></svg><a href="#" class="row-link">DocAgent</a></span></td><td class="mono">09/06/2026 17:02</td><td class="num">9</td><td class="num money">USD 0,11</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ADMIN ── -->
+      <div>
+        <p style="margin-bottom:var(--sp-2)"><span class="badge-rol badge-rol--admin">Admin</span></p>
+        <div class="frame">
+          <div class="topbar">
+            <span class="topbar__ctx">Mi espacio</span>
+            <div class="topbar__right"><span class="topbar__user">mario</span><span class="badge-rol badge-rol--admin">Admin</span></div>
+          </div>
+          <div class="content">
+            <nav class="space-tabs" aria-label="Secciones de Mi espacio">
+              <a class="space-tab" href="#" aria-current="page">Mi consumo</a>
+              <a class="space-tab" href="#">Mi memoria</a>
+              <a class="space-tab" href="#">Mi auditoría</a>
+              <a class="space-tab" href="#">Configuración</a>
+            </nav>
+
+            <div class="quota-grid">
+              <div class="panel quota-card">
+                <span class="kicker kicker--dim">Hoy</span>
+                <p class="quota-card__figure">USD 2,35 <span class="lim">/ USD 8,00</span></p>
+                <div class="quota-row"><span>29% usado</span><span class="num">USD 5,65 disponibles</span></div>
+                <div class="quota-bar" role="meter" aria-valuenow="29" aria-valuemin="0" aria-valuemax="100" aria-label="Cuota de hoy: 29% usada"><span class="quota-bar__fill" style="width:29%"></span></div>
+                <p class="quota-card__renew">Se renueva a medianoche (GMT−4)</p>
+              </div>
+              <div class="panel quota-card">
+                <span class="kicker kicker--dim">Este mes</span>
+                <p class="quota-card__figure">USD 34,90 <span class="lim">/ USD 80,00</span></p>
+                <div class="quota-row"><span>44% usado</span><span class="num">USD 45,10 disponibles</span></div>
+                <div class="quota-bar" role="meter" aria-valuenow="44" aria-valuemin="0" aria-valuemax="100" aria-label="Cuota del mes: 44% usada"><span class="quota-bar__fill" style="width:44%"></span></div>
+                <p class="quota-card__renew">Se renueva el 01/07/2026</p>
+              </div>
+            </div>
+
+            <!-- Capa de telemetría: SOLO Admin -->
+            <div class="panel cache-panel">
+              <div class="cache-ring" role="img" aria-label="Cache hit del mes: 87 por ciento">
+                <svg viewBox="0 0 110 110">
+                  <circle cx="55" cy="55" r="46" fill="none" stroke="color-mix(in srgb, var(--ink) 12%, transparent)" stroke-width="10"/>
+                  <circle cx="55" cy="55" r="46" fill="none" stroke="var(--money)" stroke-width="10" stroke-linecap="round" stroke-dasharray="251.5 289" stroke-dashoffset="0" pathLength="289"/>
+                </svg>
+                <span class="cache-ring__val">87%</span>
+              </div>
+              <div>
+                <span class="kicker kicker--dim">Cache — este mes</span>
+                <div class="cache-legend">
+                  <span><span class="sw" style="background:var(--money)"></span>Hit: 87% de los tokens de entrada</span>
+                  <span><span class="sw" style="background:color-mix(in srgb, var(--ink) 18%, transparent)"></span>Miss: 13%</span>
+                  <span class="mono" style="color:var(--money)">Ahorro estimado: USD 12,40</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="sess-head">
+              <h3 style="margin:0">Sesiones recientes</h3>
+              <span class="mono faint" style="font-size:var(--fs-caption)">últimas 10</span>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead><tr><th scope="col">Agente</th><th scope="col">Inicio</th><th scope="col" class="num">Turnos</th><th scope="col" class="num">Costo</th><th scope="col" class="num">Tokens</th><th scope="col" class="num">Hit-rate</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="sess-row-agent"><svg aria-hidden="true"><use href="#i-bot"/></svg><a href="#" class="row-link">DocAgent</a></span></td><td class="mono">11/06/2026 14:32</td><td class="num">12</td><td class="num money">USD 0,18</td><td class="num">48,2k</td><td class="num">91%</td></tr>
+                  <tr><td><span class="sess-row-agent"><svg aria-hidden="true"><use href="#i-bot"/></svg><a href="#" class="row-link">ValidationAgent</a></span></td><td class="mono">10/06/2026 16:48</td><td class="num">21</td><td class="num money">USD 0,42</td><td class="num">96,7k</td><td class="num">88%</td></tr>
+                  <tr><td><span class="sess-row-agent"><svg aria-hidden="true"><use href="#i-bot"/></svg><a href="#" class="row-link">DevAgent</a></span></td><td class="mono">10/06/2026 11:20</td><td class="num">7</td><td class="num money">USD 0,15</td><td class="num">31,4k</td><td class="num">54% <span class="tag tag--warn">bajo</span></td></tr>
+                  <tr><td><span class="sess-row-agent"><svg aria-hidden="true"><use href="#i-bot"/></svg><a href="#" class="row-link">DocAgent</a></span></td><td class="mono">09/06/2026 17:02</td><td class="num">9</td><td class="num money">USD 0,11</td><td class="num">26,9k</td><td class="num">93%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════ ESCALERA DE ESTADOS DE CUOTA ═══════════ -->
+  <section class="doc-section" aria-labelledby="v-estados">
+    <span class="kicker kicker--dim">Estados de cuota</span>
+    <h2 id="v-estados">OK · aviso 80% · bloqueado 100% · estados de liberación</h2>
+    <p class="doc-caption">«Solicitar liberación» solo aparece bloqueado al 100%. La solicitud y su resolución quedan en Mi auditoría (ADR-0007).</p>
+
+    <div class="state-grid">
+
+      <div class="panel quota-card">
+        <span class="kicker kicker--dim">Bloqueado — sin solicitar</span>
+        <p class="quota-card__figure">USD 5,00 <span class="lim">/ USD 5,00</span></p>
+        <div class="quota-row"><span style="color:var(--danger);font-weight:600">100% — cuota diaria agotada</span><span class="num">USD 0,00 disponibles</span></div>
+        <div class="quota-bar is-over" role="meter" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Cuota de hoy agotada"><span class="quota-bar__fill" style="width:100%"></span></div>
+        <div class="quota-card__lib">
+          <div class="error-card" role="alert">
+            <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+            <div>
+              <p class="error-card__code">QUOTA</p>
+              <p class="error-card__title">Alcanzaste tu cuota diaria</p>
+              <p class="error-card__why">No vas a poder iniciar turnos nuevos hasta medianoche, salvo que el Admin amplíe tu límite por hoy.</p>
+              <div class="error-card__actions"><button type="button" class="btn btn--primary">Solicitar liberación</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel quota-card">
+        <span class="kicker kicker--dim">Bloqueado — solicitud pendiente</span>
+        <p class="quota-card__figure">USD 5,00 <span class="lim">/ USD 5,00</span></p>
+        <div class="quota-bar is-over"><span class="quota-bar__fill" style="width:100%"></span></div>
+        <div class="quota-card__lib" style="flex-direction:row;display:flex;align-items:center;gap:var(--sp-2)">
+          <span class="tag tag--warn">Pendiente</span>
+          <span class="muted" style="font-size:var(--fs-small)">Solicitud enviada hace 12 min — el Admin recibió una notificación.</span>
+        </div>
+      </div>
+
+      <div class="panel quota-card">
+        <span class="kicker kicker--dim">Liberación concedida</span>
+        <p class="quota-card__figure">USD 5,10 <span class="lim">/ USD 7,00</span></p>
+        <div class="quota-row"><span>73% usado</span><span class="num">USD 1,90 disponibles</span></div>
+        <div class="quota-bar"><span class="quota-bar__fill" style="width:73%"></span></div>
+        <div class="quota-card__lib" style="flex-direction:row;display:flex;align-items:center;gap:var(--sp-2)">
+          <span class="tag tag--money">Concedida</span>
+          <span class="muted" style="font-size:var(--fs-small)">Límite ampliado a USD 7,00 por hoy. Vence a medianoche.</span>
+        </div>
+      </div>
+
+      <div class="panel quota-card">
+        <span class="kicker kicker--dim">Liberación rechazada</span>
+        <p class="quota-card__figure">USD 5,00 <span class="lim">/ USD 5,00</span></p>
+        <div class="quota-bar is-over"><span class="quota-bar__fill" style="width:100%"></span></div>
+        <div class="quota-card__lib" style="flex-direction:row;display:flex;align-items:flex-start;gap:var(--sp-2)">
+          <span class="tag tag--danger">Rechazada</span>
+          <span class="muted" style="font-size:var(--fs-small)">Motivo del Admin: «El presupuesto del grupo está al tope este mes. Retomá mañana.»</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════ CARGA · VACÍO · ERROR · DEGRADADO ═══════════ -->
+  <section class="doc-section" aria-labelledby="v-est2">
+    <span class="kicker kicker--dim">Estados de la vista</span>
+    <h2 id="v-est2">Carga, vacío, error y degradado</h2>
+
+    <div class="variant-grid">
+      <div class="panel" aria-busy="true" aria-label="Cargando consumo">
+        <span class="kicker kicker--dim">Carga (skeleton)</span>
+        <span class="skeleton skeleton--title" style="margin-bottom:var(--sp-3)">…</span>
+        <span class="skeleton" style="height:8px;border-radius:999px;margin-bottom:var(--sp-4)">…</span>
+        <span class="skeleton skeleton--text" style="width:90%;margin-bottom:var(--sp-2)">…</span>
+        <span class="skeleton skeleton--text" style="width:84%;margin-bottom:var(--sp-2)">…</span>
+        <span class="skeleton skeleton--text" style="width:88%;margin-bottom:var(--sp-2)">…</span>
+        <span class="skeleton skeleton--text" style="width:80%">…</span>
+      </div>
+
+      <div class="panel">
+        <span class="kicker kicker--dim">Vacío (sin sesiones aún)</span>
+        <div class="empty-state">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-inbox"/></svg></span>
+          <p class="empty-state__title">Todavía no usaste ningún agente este mes</p>
+          <p class="empty-state__hint">Cuando abras tu primera conversación, va a aparecer acá con su costo y sus turnos.</p>
+          <a class="btn btn--secondary" href="#">Ir al catálogo</a>
+        </div>
+      </div>
+
+      <div class="panel">
+        <span class="kicker kicker--dim">Error de carga</span>
+        <div class="error-card" role="alert">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">CONSUMO_NO_DISPONIBLE</p>
+            <p class="error-card__title">No pudimos cargar tu consumo</p>
+            <p class="error-card__why">El servicio de telemetría no respondió. Tus cuotas siguen vigentes; solo falla la lectura.</p>
+            <div class="error-card__actions"><button type="button" class="btn btn--secondary">Reintentar</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel quota-card">
+        <span class="kicker kicker--dim">Degradado (telemetría diferida)</span>
+        <p class="quota-card__figure">~USD 1,10 <span class="lim">/ USD 5,00</span></p>
+        <div class="quota-bar"><span class="quota-bar__fill" style="width:22%"></span></div>
+        <p class="quota-card__renew">Costo estimado, telemetría diferida — se ajusta al reconectar. El anillo de cache muestra «—».</p>
+      </div>
+    </div>
+
+    <div class="toast-stack" style="position:static;width:min(360px,100%);margin-top:var(--sp-5)">
+      <div class="toast toast--ok" role="status">
+        <span class="toast__icon"><svg aria-hidden="true"><use href="#i-check"/></svg></span>
+        <div>
+          <p class="toast__title">Solicitud enviada</p>
+          <p class="toast__msg">El Admin va a recibir una notificación. Vas a ver el estado acá.</p>
+        </div>
+      </div>
+    </div>
+    <p class="doc-caption">Toast de confirmación al enviar la solicitud de liberación (mostrado estático como referencia).</p>
+  </section>
+
+</main>
+</body>
+</html>

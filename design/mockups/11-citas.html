@@ -1,0 +1,164 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>11 · Citas y evidencia (DocAgent) — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1120px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); padding: var(--sp-5); }
+
+  .answer-grid { display: grid; grid-template-columns: 1fr 300px; gap: var(--sp-5); align-items: start; max-width: 1060px; margin: 0 auto; }
+
+  .msg-agent { display: grid; grid-template-columns: 30px 1fr; gap: var(--sp-3); }
+  .msg-agent__avatar { width: 30px; height: 30px; display: grid; place-items: center; border-radius: var(--r-md); background: var(--accent-soft); color: var(--accent); }
+  .msg-agent__avatar svg { width: 16px; height: 16px; }
+  .msg-agent__body { font-size: var(--fs-lead); line-height: var(--lh-loose); }
+  .msg-agent__body p { margin: 0 0 var(--sp-3); }
+
+  /* Marca de cita inline */
+  .cite-ref { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 3px; font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--info); background: color-mix(in srgb, var(--info) 12%, transparent); border: 1px solid color-mix(in srgb, var(--info) 40%, transparent); border-radius: var(--r-xs); text-decoration: none; vertical-align: super; line-height: 1; margin: 0 1px; }
+  .cite-ref:hover { text-decoration: none; filter: brightness(1.15); }
+  .cite-ref:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+
+  /* Panel de fuentes (lateral sticky en desktop) */
+  .sources { position: sticky; top: var(--sp-4); display: grid; gap: var(--sp-3); }
+  .sources__title { font-family: var(--font-display); font-size: var(--fs-caption); font-weight: 600; letter-spacing: var(--ls-kicker); text-transform: uppercase; color: var(--ink-faint); margin: 0; }
+  .source { display: grid; gap: var(--sp-2); }
+  .source.is-flash { animation: flash 1.2s var(--ease-out); }
+  @keyframes flash { 0% { background: var(--accent-soft); } 100% { background: color-mix(in srgb, var(--info) 6%, transparent); } }
+  .source__meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .source__open { font-size: var(--fs-caption); display: inline-flex; align-items: center; gap: 4px; }
+  .source__open svg { width: 12px; height: 12px; }
+
+  .searched { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); display: grid; gap: var(--sp-1); text-align: left; }
+  .sugg-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: center; }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .answer-grid { grid-template-columns: 1fr; }
+    .sources { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></symbol>
+  <symbol id="i-quote" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/><path d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+  <symbol id="i-searchx" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13.5 8.5-5 5"/><path d="m8.5 8.5 5 5"/><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+</defs></svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 11 · Módulo chat</span>
+    <h1>Citas y evidencia — DocAgent</h1>
+    <p class="muted">Toda afirmación lleva evidencia o no se afirma. Citas numeradas inline, panel de fuentes verificable y abstención honesta. Spec: <code>docs/design/VISTAS/02-chat.md §7</code>.</p>
+    <p class="doc-caption">Todos los roles ven lo mismo: la evidencia no es telemetría, es parte de la respuesta. Datos ficticios.</p>
+  </header>
+
+  <!-- ════════ A — Respuesta con citas + panel de fuentes ════════ -->
+  <section class="doc-section" aria-labelledby="a-t">
+    <span class="kicker kicker--dim">A</span>
+    <h2 id="a-t">Respuesta con citas — panel lateral sticky (desktop) / inferior colapsable (móvil)</h2>
+    <p class="doc-caption">Click en [n] resalta la fuente (scroll + flash). Navegación bidireccional. Las marcas no se renumeran entre versiones.</p>
+
+    <div class="frame">
+      <div class="answer-grid">
+        <article class="msg-agent">
+          <span class="msg-agent__avatar" aria-hidden="true"><svg><use href="#i-bot"/></svg></span>
+          <div class="msg-agent__body">
+            <p>El parámetro <code>MV_PAISLOC</code> define la localización del ambiente <a class="cite-ref" href="#src1" aria-label="ver fuente 1: TDN MATA010">1</a>. Para Bolivia debe valer <code>BOL</code>, lo que habilita las rutinas de facturación e impuestos locales <a class="cite-ref" href="#src1" aria-label="ver fuente 1">1</a><a class="cite-ref" href="#src2" aria-label="ver fuente 2: TDN Localización Bolivia">2</a>.</p>
+            <p>El CST recomienda validar después del cambio la consistencia de los parámetros tributarios (<code>MV_ALIQIT</code>, <code>MV_AGENTE</code>) en un ambiente de prueba antes de tocar producción <a class="cite-ref" href="#src3" aria-label="ver fuente 3: CST ticket 18821">3</a>.</p>
+            <p>Sobre la alícuota vigente de IT no encontré confirmación en la documentación — verificalo con normativa local actualizada.</p>
+          </div>
+        </article>
+
+        <aside class="sources" aria-label="Fuentes de esta respuesta">
+          <p class="sources__title">Fuentes (3)</p>
+
+          <blockquote class="cite source is-flash" id="src1" cite="https://tdn.example/mata010">
+            <p class="cite__quote">«El contenido del parámetro MV_PAISLOC determina la localización activa del ambiente…»</p>
+            <span class="cite__src"><svg aria-hidden="true"><use href="#i-quote"/></svg>[1] TDN · MATA010 — Parámetros de localización</span>
+            <div class="source__meta">
+              <span>§ Localización Bolivia</span> · <span>14/03/2026</span>
+              <span class="tag tag--money">vigente</span>
+              <span class="tag tag--money">confianza alta</span>
+            </div>
+            <a class="source__open" href="#">Abrir documento <svg aria-hidden="true"><use href="#i-ext"/></svg></a>
+          </blockquote>
+
+          <blockquote class="cite source" id="src2" cite="https://tdn.example/bol">
+            <p class="cite__quote" lang="pt">«Para a localização Bolívia o conteúdo deve ser BOL, habilitando as rotinas fiscais…»</p>
+            <span class="cite__src"><svg aria-hidden="true"><use href="#i-quote"/></svg>[2] TDN · Localização Bolívia — Visão geral</span>
+            <div class="source__meta">
+              <span>§ Configuração inicial</span> · <span>02/11/2023</span>
+              <span class="tag tag--warn" data-tip="documento de más de 18 meses">desactualizado</span>
+              <span class="tag tag--warn">confianza media</span>
+            </div>
+            <a class="source__open" href="#">Abrir documento <svg aria-hidden="true"><use href="#i-ext"/></svg></a>
+          </blockquote>
+
+          <blockquote class="cite source" id="src3">
+            <p class="cite__quote">«Se recomienda validar los parámetros tributarios en TEST antes de replicar el cambio…»</p>
+            <span class="cite__src"><svg aria-hidden="true"><use href="#i-quote"/></svg>[3] CST · Ticket 18821 — Cambio de localización</span>
+            <div class="source__meta">
+              <span>08/01/2026</span>
+              <span class="tag tag--money">vigente</span>
+              <span class="tag tag--warn" data-tip="el enlace al documento no responde; la evidencia textual se conserva">fuente no disponible</span>
+            </div>
+          </blockquote>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ B — Abstención ════════ -->
+  <section class="doc-section" aria-labelledby="b-t">
+    <span class="kicker kicker--dim">B</span>
+    <h2 id="b-t">Abstención — estado de éxito del sistema, jamás texto inventado</h2>
+    <p class="doc-caption">Texto fijo de i18n (el agente no lo redacta libre). Muestra qué buscó y ofrece salidas accionables. «Reformular» precarga el composer.</p>
+
+    <div class="frame">
+      <article class="msg-agent" style="max-width:760px; margin:0 auto;">
+        <span class="msg-agent__avatar" aria-hidden="true"><svg><use href="#i-bot"/></svg></span>
+        <div style="width:100%">
+          <div class="empty-state">
+            <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-searchx"/></svg></span>
+            <p class="empty-state__title">No encontré evidencia suficiente para responder con seguridad</p>
+            <p class="empty-state__hint">Antes de inventar una respuesta, prefiero decírtelo. Esto fue lo que busqué:</p>
+            <div class="searched">
+              <span>· "MV_XYZ" — en TDN y CST</span>
+              <span>· "parámetro XYZ localización BOL" — en TDN</span>
+              <span>· "XYZ configurador SX6" — en CST</span>
+            </div>
+            <div class="sugg-row" style="margin-top: var(--sp-3);">
+              <button type="button" class="btn btn--secondary btn--sm">Reformular la consulta</button>
+              <button type="button" class="btn btn--secondary btn--sm">Acotar a un módulo</button>
+              <button type="button" class="btn btn--ghost btn--sm">Consultar a CST</button>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

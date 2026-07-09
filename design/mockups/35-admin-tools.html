@@ -1,0 +1,304 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>35 · Tool Registry — Consola admin — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+
+  .srv-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); background: color-mix(in srgb, var(--ink) 3%, transparent); border-bottom: 1px solid var(--line); }
+  .srv-head h3 { margin: 0; font-family: var(--font-mono); font-size: var(--fs-body); }
+  .srv-head .meta { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .summary-chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-2) 0 var(--sp-4); }
+  tr.is-drift td { background: color-mix(in srgb, var(--warn) 8%, transparent); }
+  .hash { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); }
+  .hash--drift { color: var(--warn); font-weight: 700; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); align-items: start; margin-top: var(--sp-4); }
+  .matrix th, .matrix td { text-align: center; }
+  .matrix th:first-child, .matrix td:first-child { text-align: left; }
+  .matrix .checkbox { vertical-align: middle; }
+  .schema-diff { font-family: var(--font-mono); font-size: var(--fs-caption); line-height: 1.7; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--sp-3); margin: 0; overflow-x: auto; }
+  .schema-diff .del { color: var(--danger); background: color-mix(in srgb, var(--danger) 10%, transparent); display: block; }
+  .schema-diff .add { color: var(--money); background: color-mix(in srgb, var(--money) 10%, transparent); display: block; }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-plug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 35 · Consola admin · Gobernanza</span>
+    <h1>Tool Registry</h1>
+    <p class="muted">Tools MCP por servidor: riesgo, HITL, límites, kill-switch y drift de schema. Spec: <code>docs/design/VISTAS/08-admin-gobernanza.md §8.2</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Solo Admin. Toolset fijo por versión de agente (ADR-0001): los cambios aplican a sesiones nuevas.</p>
+  </header>
+
+  <!-- ════════ VARIANTE A — Registro completo con drift ════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Registro con 2 servidores y un drift de schema activo</h2>
+
+    <div class="summary-chips">
+      <span class="tag tag--outline">2 servidores</span>
+      <span class="tag tag--outline">9 tools</span>
+      <span class="tag tag--warn">1 drift de schema</span>
+      <span class="tag tag--danger tag--outline">1 tool inactiva</span>
+    </div>
+
+    <div class="error-card error-card--warn" style="margin-bottom:var(--sp-4);">
+      <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+      <div>
+        <p class="error-card__code">SCHEMA_DRIFT</p>
+        <p class="error-card__title">protheus_update_param: el schema cambió respecto a lo aprobado — revisar</p>
+        <p class="error-card__why">Hash aprobado <code>9f4e21ab</code> · hash actual <code>c803d7e2</code> · detectado 11/06/2026 07:40. Aprobar exige mirar el diff primero.</p>
+        <div class="error-card__actions">
+          <button class="btn btn--secondary btn--sm">Ver diff de schema</button>
+          <button class="btn btn--ghost btn--sm" disabled>Aprobar nuevo schema</button>
+          <button class="btn btn--danger btn--sm">Suspender tool</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Servidor 1 -->
+    <div class="panel panel--flush" style="margin-bottom:var(--sp-4);">
+      <div class="srv-head">
+        <h3>tat-mcp</h3>
+        <span class="tag tag--outline">v0.6.x</span>
+        <span class="meta">WSS --connect</span>
+        <span class="meta"><span class="live-dot" aria-hidden="true"></span> conectado</span>
+        <span class="meta">6 tools</span>
+      </div>
+      <div class="table-wrap" style="border:0;">
+        <table class="table table--dense">
+          <caption class="sr-only">Tools del servidor tat-mcp</caption>
+          <thead><tr>
+            <th scope="col">Tool</th><th scope="col">Riesgo</th><th scope="col">HITL</th>
+            <th scope="col" class="num">Rate</th><th scope="col" class="num">Timeout</th>
+            <th scope="col">Bridge ≥</th><th scope="col">Hash schema</th><th scope="col">Estado</th>
+          </tr></thead>
+          <tbody>
+            <tr class="is-selected">
+              <td><span class="mono">protheus_query</span><br><span class="faint" style="font-size:11px;">SELECT solo perfil INBOLSA</span></td>
+              <td><span class="tag tag--money">LECTURA</span></td><td>no</td>
+              <td class="num">30/min</td><td class="num">20 s</td>
+              <td class="mono">0.4.0</td><td><span class="hash">a1b2c3d4</span></td>
+              <td><span class="tag tag--money">ACTIVA</span></td>
+            </tr>
+            <tr class="is-drift">
+              <td><span class="mono">protheus_update_param</span><br><span class="faint" style="font-size:11px;">actualiza MV_* vía API REST oficial</span></td>
+              <td><span class="tag tag--warn">ESCRITURA</span></td><td>sí <svg style="width:12px;height:12px;vertical-align:-2px;color:var(--ink-faint);" aria-hidden="true"><use href="#i-lock"/></svg></td>
+              <td class="num">6/min</td><td class="num">30 s</td>
+              <td class="mono">0.4.2</td><td><span class="hash hash--drift">⚠ c803d7e2</span></td>
+              <td><span class="tag tag--money">ACTIVA</span></td>
+            </tr>
+            <tr>
+              <td><span class="mono">protheus_delete_branch</span><br><span class="faint" style="font-size:11px;">elimina sucursal de prueba</span></td>
+              <td><span class="tag tag--danger">DESTRUCTIVA</span></td><td>sí <svg style="width:12px;height:12px;vertical-align:-2px;color:var(--ink-faint);" aria-hidden="true"><use href="#i-lock"/></svg></td>
+              <td class="num">2/min</td><td class="num">60 s</td>
+              <td class="mono">0.4.2</td><td><span class="hash">77e0fa15</span></td>
+              <td><span class="tag tag--danger tag--outline">INACTIVA</span></td>
+            </tr>
+            <tr>
+              <td><span class="mono">protheus_get_sx3</span><br><span class="faint" style="font-size:11px;">lee metadatos de campos SX3</span></td>
+              <td><span class="tag tag--money">LECTURA</span></td><td>no</td>
+              <td class="num">60/min</td><td class="num">15 s</td>
+              <td class="mono">0.4.0</td><td><span class="hash">5d2c91f0</span></td>
+              <td><span class="tag tag--money">ACTIVA</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Servidor 2 -->
+    <div class="panel panel--flush">
+      <div class="srv-head">
+        <h3>docs-mcp</h3>
+        <span class="tag tag--outline">interno</span>
+        <span class="meta"><span class="live-dot" aria-hidden="true"></span> conectado</span>
+        <span class="meta">3 tools</span>
+      </div>
+      <div class="table-wrap" style="border:0;">
+        <table class="table table--dense">
+          <caption class="sr-only">Tools del servidor docs-mcp</caption>
+          <thead><tr>
+            <th scope="col">Tool</th><th scope="col">Riesgo</th><th scope="col">HITL</th>
+            <th scope="col" class="num">Rate</th><th scope="col" class="num">Timeout</th>
+            <th scope="col">Bridge ≥</th><th scope="col">Hash schema</th><th scope="col">Estado</th>
+          </tr></thead>
+          <tbody>
+            <tr><td><span class="mono">tdn_search</span><br><span class="faint" style="font-size:11px;">busca en el portal TDN</span></td><td><span class="tag tag--money">LECTURA</span></td><td>no</td><td class="num">20/min</td><td class="num">25 s</td><td class="mono">—</td><td><span class="hash">0be77a39</span></td><td><span class="tag tag--money">ACTIVA</span></td></tr>
+            <tr><td><span class="mono">cst_get_ticket</span><br><span class="faint" style="font-size:11px;">lee tickets de soporte CST</span></td><td><span class="tag tag--money">LECTURA</span></td><td>no</td><td class="num">20/min</td><td class="num">25 s</td><td class="mono">—</td><td><span class="hash">f41d08c6</span></td><td><span class="tag tag--money">ACTIVA</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Detalle + matriz -->
+    <div class="detail-grid">
+      <div class="panel">
+        <span class="kicker">Detalle de tool</span>
+        <h3 class="mono" style="margin-bottom:var(--sp-1);">protheus_query</h3>
+        <p class="doc-caption" style="margin-bottom:var(--sp-4);">SQL SELECT solo perfil INBOLSA vía tat-mcp.</p>
+        <div class="field">
+          <label class="field-label" for="t-riesgo">Clasificación de riesgo</label>
+          <select class="select" id="t-riesgo"><option selected>Lectura</option><option>Escritura</option><option>Destructiva</option></select>
+          <span class="field-hint">Reclasificar a lectura exige confirmación con motivo.</span>
+        </div>
+        <label class="check-row" style="margin-bottom:var(--sp-4);">
+          <input type="checkbox" class="checkbox" id="t-hitl">
+          <span>Requiere HITL <span class="field-hint" style="display:block;">En escritura/destructiva queda marcado y bloqueado: las escrituras a Protheus siempre pasan por aprobación humana — regla de plataforma, no configurable.</span></span>
+        </label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--sp-3);">
+          <div class="field"><label class="field-label" for="t-rate">Rate limit</label><input class="input input--mono" id="t-rate" value="30/min"><span class="field-hint">1–120/min</span></div>
+          <div class="field"><label class="field-label" for="t-to">Timeout</label><input class="input input--mono" id="t-to" value="20 s"><span class="field-hint">5–120 s</span></div>
+          <div class="field"><label class="field-label" for="t-br">Bridge mín.</label><input class="input input--mono" id="t-br" value="0.4.0"></div>
+        </div>
+        <hr class="divider">
+        <div style="display:flex;gap:var(--sp-2);align-items:center;flex-wrap:wrap;">
+          <button class="btn btn--primary btn--sm">Guardar cambios</button>
+          <button class="btn btn--danger btn--sm">Desactivar tool (kill-switch)</button>
+        </div>
+      </div>
+
+      <div class="panel panel--flush">
+        <div class="table-wrap" style="border:0;">
+          <table class="table table--dense matrix">
+            <caption style="text-align:left;padding:var(--sp-3) var(--sp-3) 0;font-family:var(--font-display);font-weight:600;">Permisos rol × tool</caption>
+            <thead><tr><th scope="col">Tool</th><th scope="col">Admin</th><th scope="col">Técnico</th><th scope="col">Funcional</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">protheus_query</td>
+                <td><input type="checkbox" class="checkbox" checked aria-label="protheus_query para Admin"></td>
+                <td><input type="checkbox" class="checkbox" checked aria-label="protheus_query para Técnico"></td>
+                <td><input type="checkbox" class="checkbox" aria-label="protheus_query para Funcional"></td></tr>
+              <tr><td class="mono">protheus_update_param</td>
+                <td><input type="checkbox" class="checkbox" checked aria-label="protheus_update_param para Admin"></td>
+                <td><input type="checkbox" class="checkbox" checked aria-label="protheus_update_param para Técnico"></td>
+                <td><input type="checkbox" class="checkbox" aria-label="protheus_update_param para Funcional"></td></tr>
+              <tr><td class="mono">protheus_delete_branch</td>
+                <td><input type="checkbox" class="checkbox" checked aria-label="protheus_delete_branch para Admin"></td>
+                <td><input type="checkbox" class="checkbox" aria-label="protheus_delete_branch para Técnico"></td>
+                <td><input type="checkbox" class="checkbox" disabled data-tip="Funcional nunca recibe tools destructivas" aria-label="protheus_delete_branch para Funcional, bloqueado"></td></tr>
+              <tr><td class="mono">tdn_search</td>
+                <td><input type="checkbox" class="checkbox" checked aria-label="tdn_search para Admin"></td>
+                <td><input type="checkbox" class="checkbox" checked aria-label="tdn_search para Técnico"></td>
+                <td><input type="checkbox" class="checkbox" checked aria-label="tdn_search para Funcional"></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="doc-caption" style="padding:var(--sp-2) var(--sp-3) var(--sp-3);margin:0;">Quitar una tool a un rol con sesiones activas advierte «aplica a sesiones nuevas» (stickiness). Funcional nunca puede recibir tools destructivas (checkbox bloqueado).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ VARIANTE B — Modal kill-switch + diff de schema ════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Kill-switch de tool y diff de schema (drift)</h2>
+    <div class="detail-grid">
+      <div class="panel" role="dialog" aria-labelledby="ks-title" style="box-shadow:var(--shadow-3);">
+        <h4 class="modal__title" id="ks-title" style="margin-bottom:var(--sp-3);">Desactivar protheus_update_param</h4>
+        <div class="error-card error-card--warn" style="margin-bottom:var(--sp-4);">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div><p class="error-card__title">Consecuencia</p>
+          <p class="error-card__why" style="margin:0;">Las sesiones en curso verán la tool fallar con <code>TOOL_DISABLED</code>; los agentes cuya versión la incluye en su toolset seguirán declarándola (toolset fijo por versión, ADR-0001).</p></div>
+        </div>
+        <div class="field" style="margin-bottom:var(--sp-3);">
+          <label class="field-label" for="ks-reason">Motivo <span class="req" aria-hidden="true">*</span></label>
+          <textarea class="textarea" id="ks-reason" placeholder="Ej.: drift de schema sin revisar — suspendida por precaución"></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:var(--sp-2);">
+          <button class="btn btn--ghost">Cancelar</button>
+          <button class="btn btn--danger" disabled>Desactivar tool</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <span class="kicker kicker--dim">Diff de schema — protheus_update_param</span>
+        <p class="doc-caption">«Aprobar nuevo schema» se habilita recién después de abrir este diff. La aprobación registra hash anterior y nuevo en auditoría.</p>
+        <pre class="schema-diff">{
+  "name": "protheus_update_param",
+  "parameters": {
+    "param": { "type": "string" },
+<span class="del">-   "value": { "type": "string" }</span>
+<span class="add">+   "value": { "type": "string" },</span>
+<span class="add">+   "branch": { "type": "string", "description": "sucursal" }</span>
+  }
+}</pre>
+        <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3);">
+          <button class="btn btn--primary btn--sm">Aprobar nuevo schema</button>
+          <button class="btn btn--danger btn--sm">Suspender tool</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ VARIANTE C — Estados ════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Estados — servidor desconectado, vacío y carga</h2>
+    <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="panel panel--flush">
+        <div class="srv-head">
+          <h3>tat-mcp</h3>
+          <span class="meta"><span class="live-dot live-dot--off" aria-hidden="true"></span></span>
+          <span class="tag tag--danger">DESCONECTADO</span>
+        </div>
+        <p class="doc-caption" style="padding:var(--sp-3) var(--sp-4);">Las tools se listan igual (último estado conocido). Datos del último contacto: hace 2 h.</p>
+      </div>
+      <div class="panel">
+        <div class="empty-state" style="padding:var(--sp-6);">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-plug"/></svg></span>
+          <p class="empty-state__title">Ningún servidor MCP conectado</p>
+          <p class="empty-state__hint">Conectá un bridge con <code>tat-mcp --connect wss://…</code> o emparejalo desde <a href="./36-admin-conexiones.html">Conexiones</a>.</p>
+        </div>
+      </div>
+      <div class="panel" aria-busy="true">
+        <span class="kicker kicker--dim">Carga</span>
+        <span class="skeleton skeleton--title" style="margin-bottom:var(--sp-3);"></span>
+        <span class="skeleton skeleton--text" style="margin-bottom:var(--sp-2);"></span>
+        <span class="skeleton skeleton--text" style="margin-bottom:var(--sp-2);width:85%;"></span>
+        <span class="skeleton skeleton--text" style="width:70%;"></span>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast-stack" aria-live="polite">
+    <div class="toast toast--ok">
+      <span class="toast__icon"><svg aria-hidden="true"><use href="#i-plug"/></svg></span>
+      <div><p class="toast__title">Cambios guardados</p><p class="toast__msg">protheus_query · rate 30/min · registrado en auditoría</p></div>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>

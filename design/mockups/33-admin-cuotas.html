@@ -1,0 +1,338 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>33 · Cuotas y liberaciones — Consola admin</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 520px; }
+  .sidebar { background: var(--bg-raised); border-right: 1px solid var(--line); padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .sidebar__brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2); }
+  .sidebar__brand .accent { color: var(--accent); }
+  .nav-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .nav-link.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+  .nav-sep { height: 1px; background: var(--line); margin: var(--sp-2) var(--sp-4); border: 0; }
+  .nav-cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-1) var(--sp-4); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .topbar__ctx { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .topbar__user { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  .page-head { margin-bottom: var(--sp-4); }
+  .tabpanel { padding-top: var(--sp-4); }
+  [hidden] { display: none !important; }
+
+  .use-cell { min-width: 170px; }
+  .use-cell .quota-bar { margin-top: 4px; }
+
+  .req-card { display: grid; gap: var(--sp-3); }
+  .req-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--sp-2); align-items: baseline; }
+  .req-quote { border-left: 3px solid var(--line-strong); padding: var(--sp-1) var(--sp-3); color: var(--ink-dim); font-style: italic; margin: 0; font-size: var(--fs-small); }
+  .req-actions { display: flex; justify-content: flex-end; gap: var(--sp-2); flex-wrap: wrap; }
+
+  .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: var(--sp-5); align-items: start; }
+  .modal-demo { width: auto; max-height: none; }
+  .quick { display: flex; gap: var(--sp-2); margin-top: var(--sp-1); }
+
+  @media (max-width: 900px) { .shell { grid-template-columns: 1fr; } .sidebar { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<div class="doc">
+  <span class="kicker">Mockup 33 · Consola admin</span>
+  <h1>Cuotas y liberaciones</h1>
+  <p class="muted">Vista solo-Admin. Cascada global→grupo→usuario→sesión (ADR-0007/0010). Las cuotas se evalúan ANTES de cada llamada LLM. Spec: <code>VISTAS/07-admin-operacion.md §4</code>. Datos ficticios. Tabs funcionales (micro-demo JS).</p>
+
+  <section class="doc-section">
+    <h2>Vista con tabs</h2>
+    <div class="frame">
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <div class="sidebar__brand">Resultar <span class="accent">Agents</span></div>
+          <a class="nav-link" href="#">Chat</a>
+          <a class="nav-link" href="#">Catálogo</a>
+          <a class="nav-link" href="#">Workflows</a>
+          <hr class="nav-sep">
+          <span class="nav-cap">Consola admin</span>
+          <a class="nav-link" href="#">Tablero</a>
+          <a class="nav-link" href="#">Usuarios</a>
+          <a class="nav-link" href="#">Grupos</a>
+          <a class="nav-link is-active" href="#" aria-current="page">Cuotas</a>
+          <a class="nav-link" href="#">Registro de prompts</a>
+          <a class="nav-link" href="#">Audit</a>
+          <a class="nav-link" href="#">Salud</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Consola admin / Cuotas</span>
+            <div class="topbar__right"><span class="badge-rol badge-rol--admin">Admin</span><span class="topbar__user">mterceros</span></div>
+          </div>
+          <div class="content">
+            <div class="page-head"><span class="kicker">Consola admin</span><h2 style="margin:0">Cuotas</h2></div>
+
+            <div class="tabs" role="tablist" aria-label="Secciones de cuotas">
+              <button class="tab is-active" role="tab" id="tab-cuotas" aria-selected="true" aria-controls="tp-cuotas" onclick="dxTab(this)">Cuotas</button>
+              <button class="tab" role="tab" id="tab-sol" aria-selected="false" aria-controls="tp-sol" onclick="dxTab(this)">Solicitudes <span class="tag tag--danger">2</span></button>
+              <button class="tab" role="tab" id="tab-hist" aria-selected="false" aria-controls="tp-hist" onclick="dxTab(this)">Historial</button>
+            </div>
+
+            <!-- TAB CUOTAS -->
+            <div class="tabpanel" id="tp-cuotas" role="tabpanel" aria-labelledby="tab-cuotas">
+              <div class="table-wrap">
+                <table class="table">
+                  <thead><tr><th>Alcance</th><th>Entidad</th><th class="num">Límite / mes</th><th>Origen</th><th class="num">Aviso</th><th>Uso actual</th><th></th></tr></thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="tag">GLOBAL</span></td><td class="faint">— (instancia)</td><td class="num money">600,00</td><td><span class="tag tag--outline">DEFAULT</span></td><td class="num">80%</td>
+                      <td class="use-cell"><div class="quota-row" style="margin:0"><span class="num">USD 414,00 / 600,00</span><span class="num">69%</span></div><div class="quota-bar"><span class="quota-bar__fill" style="width:69%"></span></div></td>
+                      <td><button class="btn btn--ghost btn--sm">Editar</button></td>
+                    </tr>
+                    <tr>
+                      <td><span class="tag">GRUPO</span></td><td class="faint">— (default)</td><td class="num money">100,00</td><td><span class="tag tag--outline">DEFAULT</span></td><td class="num">80%</td>
+                      <td class="faint">—</td>
+                      <td><button class="btn btn--ghost btn--sm">Editar</button></td>
+                    </tr>
+                    <tr>
+                      <td><span class="tag">GRUPO</span></td><td class="mono">tecnico-advpl</td><td class="num money">160,00</td><td><span class="tag tag--info" data-tip="Override creado por mterceros el 03/05/2026" tabindex="0">OVERRIDE</span></td><td class="num">80%</td>
+                      <td class="use-cell"><div class="quota-row" style="margin:0"><span class="num">USD 142,40 / 160,00</span><span class="num" style="color:var(--warn)">89% ⚠</span></div><div class="quota-bar is-warn"><span class="quota-bar__fill" style="width:89%"></span></div></td>
+                      <td><button class="btn btn--ghost btn--sm">Editar</button></td>
+                    </tr>
+                    <tr>
+                      <td><span class="tag">USUARIO</span></td><td class="faint">— (default)</td><td class="num money">25,00</td><td><span class="tag tag--outline">DEFAULT</span></td><td class="num">80%</td>
+                      <td class="faint">—</td>
+                      <td><button class="btn btn--ghost btn--sm">Editar</button></td>
+                    </tr>
+                    <tr>
+                      <td><span class="tag">USUARIO</span></td><td class="mono">jmendez</td><td class="num money">40,00</td><td><span class="tag tag--info" data-tip="Override creado por dvillegas el 20/05/2026" tabindex="0">OVERRIDE</span></td><td class="num">90%</td>
+                      <td class="use-cell"><div class="quota-row" style="margin:0"><span class="num">USD 24,80 / 40,00</span><span class="num">62%</span></div><div class="quota-bar"><span class="quota-bar__fill" style="width:62%"></span></div></td>
+                      <td><button class="btn btn--ghost btn--sm">Editar</button></td>
+                    </tr>
+                    <tr>
+                      <td><span class="tag">SESIÓN</span></td><td class="faint">— (default)</td><td class="num money">2,00 <span class="faint">por sesión</span></td><td><span class="tag tag--outline">DEFAULT</span></td><td class="num faint" data-tip="La sesión no avisa: corta" tabindex="0">—</td>
+                      <td class="faint">—</td>
+                      <td><button class="btn btn--ghost btn--sm">Editar</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- TAB SOLICITUDES -->
+            <div class="tabpanel" id="tp-sol" role="tabpanel" aria-labelledby="tab-sol" hidden>
+              <div style="display:grid;gap:var(--sp-4)">
+                <div class="panel req-card">
+                  <div class="req-head">
+                    <div><strong class="mono">cquiroga</strong> — Carla Quiroga <span class="faint">· grupo consultoria-funcional · alcance bloqueado: <span class="tag">USUARIO</span></span></div>
+                    <span class="faint mono" data-tip="11/06/2026 14:05" tabindex="0">hace 27 min</span>
+                  </div>
+                  <div>
+                    <div class="quota-row"><span>Consumo actual</span><span class="num">USD 25,00 / 25,00</span></div>
+                    <div class="quota-bar is-over" aria-label="100% — bloqueado"><span class="quota-bar__fill" style="width:100%"></span></div>
+                  </div>
+                  <blockquote class="req-quote">«Estoy cerrando la parametrización de compras de Comercial Andina y me quedan dos checklists por validar hoy.»</blockquote>
+                  <div class="req-actions">
+                    <button class="btn btn--secondary">Denegar…</button>
+                    <button class="btn btn--primary">Aprobar…</button>
+                  </div>
+                </div>
+                <div class="panel req-card">
+                  <div class="req-head">
+                    <div><strong class="mono">fgutierrez</strong> — Fabián Gutiérrez <span class="faint">· grupo tecnico-advpl · alcance bloqueado: <span class="tag">USUARIO</span> · <span class="tag tag--warn">2.ª solicitud del mes</span></span></div>
+                    <span class="faint mono" data-tip="11/06/2026 13:12" tabindex="0">hace 1 h</span>
+                  </div>
+                  <div>
+                    <div class="quota-row"><span>Consumo actual <span class="faint">(incluye liberación previa +USD 5,00)</span></span><span class="num">USD 30,00 / 30,00</span></div>
+                    <div class="quota-bar is-over" aria-label="100% — bloqueado"><span class="quota-bar__fill" style="width:100%"></span></div>
+                  </div>
+                  <blockquote class="req-quote">«Sigo con la migración de fuentes AdvPL del proyecto, necesito DevAgent el resto de la tarde.»</blockquote>
+                  <div class="req-actions">
+                    <button class="btn btn--secondary">Denegar…</button>
+                    <button class="btn btn--primary">Aprobar…</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB HISTORIAL -->
+            <div class="tabpanel" id="tp-hist" role="tabpanel" aria-labelledby="tab-hist" hidden>
+              <div class="table-wrap">
+                <table class="table table--dense">
+                  <thead><tr><th>Fecha-hora</th><th>Usuario</th><th>Alcance</th><th class="num">Monto adicional</th><th>Resuelta por</th><th>Motivo del usuario</th><th>Comentario del admin</th></tr></thead>
+                  <tbody>
+                    <tr><td class="mono">09/06/2026 16:40</td><td class="mono">lucia</td><td><span class="tag">USUARIO</span></td><td class="num money">+10,00</td><td class="mono">mterceros</td><td data-tip="Cierre de mes de Comercial Andina, quedan validaciones pendientes" tabindex="0">Cierre de mes de Comercial An…</td><td>OK por cierre</td></tr>
+                    <tr><td class="mono">05/06/2026 11:02</td><td class="mono">fgutierrez</td><td><span class="tag">USUARIO</span></td><td class="num money">+5,00</td><td class="mono">dvillegas</td><td data-tip="Migración AdvPL en curso" tabindex="0">Migración AdvPL en curso</td><td>—</td></tr>
+                    <tr><td class="mono">28/05/2026 09:55</td><td class="mono">pmamani</td><td><span class="tag">USUARIO</span></td><td class="num"><span class="tag tag--danger">DENEGADA</span></td><td class="mono">mterceros</td><td data-tip="Quería probar el DevAgent" tabindex="0">Quería probar el DevAgent</td><td>Esperá al próximo ciclo; no es trabajo de cliente.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ MODALS ════════ -->
+  <section class="doc-section">
+    <h2>Modals (exhibidos en estático)</h2>
+    <div class="modal-grid">
+
+      <!-- Editar cuota -->
+      <div class="modal modal-demo" role="dialog" aria-labelledby="m-e-t">
+        <div class="modal__head"><h3 class="modal__title" id="m-e-t">Editar cuota — usuario jmendez</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+        <div class="modal__body">
+          <div class="field">
+            <label class="field-label" for="e-lim">Límite mensual USD <span class="req" aria-hidden="true">*</span></label>
+            <input class="input input--mono" id="e-lim" type="number" value="40,00" min="0.01" step="0.01">
+          </div>
+          <div class="field">
+            <label class="field-label" for="e-aviso">Umbral de aviso %</label>
+            <input class="input input--mono" id="e-aviso" type="number" value="90" min="50" max="95">
+            <span class="field-hint">Entre 50 y 95. Default de la instancia: 80%.</span>
+          </div>
+          <div class="field">
+            <label class="field-label" for="e-nota">Nota de auditoría <span class="req" aria-hidden="true">*</span></label>
+            <textarea class="textarea" id="e-nota" placeholder="Mínimo 10 caracteres — viaja al audit log…"></textarea>
+          </div>
+          <p style="font-size:var(--fs-small);background:var(--accent-soft);border-radius:var(--r-sm);padding:var(--sp-2) var(--sp-3);margin:0">Resumen: <span class="mono">USD 25,00 → USD 40,00</span> para <strong class="mono">jmendez</strong>.</p>
+        </div>
+        <div class="modal__foot"><button class="btn btn--ghost">Cancelar</button><button class="btn btn--primary">Guardar cuota</button></div>
+      </div>
+
+      <!-- Editar default con validación inválida -->
+      <div class="modal modal-demo" role="dialog" aria-labelledby="m-d-t">
+        <div class="modal__head"><h3 class="modal__title" id="m-d-t">Editar default de usuario · validación</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+        <div class="modal__body">
+          <div class="field">
+            <label class="field-label" for="d-lim">Límite mensual USD <span class="req" aria-hidden="true">*</span></label>
+            <input class="input input--mono is-invalid" id="d-lim" type="number" value="0" aria-invalid="true" aria-describedby="d-err">
+            <span class="field-error" id="d-err">El límite debe ser mayor que 0.</span>
+          </div>
+          <div class="error-card error-card--warn" style="margin-bottom:var(--sp-3)">
+            <span class="error-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+            <div>
+              <p class="error-card__title">Cambio de default</p>
+              <p class="error-card__why" style="margin:0">Afecta a todos los usuarios sin override: <strong>27 usuarios</strong>.</p>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="d-nota">Nota de auditoría <span class="req" aria-hidden="true">*</span></label>
+            <textarea class="textarea" id="d-nota"></textarea>
+          </div>
+        </div>
+        <div class="modal__foot"><button class="btn btn--ghost">Cancelar</button><button class="btn btn--primary" disabled>Guardar cuota</button></div>
+      </div>
+
+      <!-- Aprobar liberación -->
+      <div class="modal modal-demo" role="dialog" aria-labelledby="m-ap-t">
+        <div class="modal__head"><h3 class="modal__title" id="m-ap-t">Aprobar liberación — cquiroga</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+        <div class="modal__body">
+          <div class="field">
+            <label class="field-label" for="ap-monto">Monto adicional USD <span class="req" aria-hidden="true">*</span></label>
+            <input class="input input--mono" id="ap-monto" type="number" value="10,00">
+            <div class="quick">
+              <button type="button" class="btn btn--secondary btn--sm">+5</button>
+              <button type="button" class="btn btn--secondary btn--sm">+10</button>
+              <button type="button" class="btn btn--secondary btn--sm">+25</button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Vigencia</label>
+            <input class="input" value="Hasta fin de mes (fijo en v1)" disabled>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="ap-nota">Nota <span class="faint">(opcional)</span></label>
+            <textarea class="textarea" id="ap-nota"></textarea>
+          </div>
+        </div>
+        <div class="modal__foot"><button class="btn btn--ghost">Cancelar</button><button class="btn btn--primary">Aprobar +USD 10,00</button></div>
+      </div>
+
+      <!-- Denegar -->
+      <div class="modal modal-demo" role="dialog" aria-labelledby="m-de-t">
+        <div class="modal__head"><h3 class="modal__title" id="m-de-t">Denegar solicitud — fgutierrez</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+        <div class="modal__body">
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="de-com">Comentario <span class="req" aria-hidden="true">*</span></label>
+            <textarea class="textarea" id="de-com" placeholder="El usuario lo ve en su notificación…"></textarea>
+            <span class="field-hint">Obligatorio: explicá el porqué; llega a la campana del usuario.</span>
+          </div>
+        </div>
+        <div class="modal__foot"><button class="btn btn--ghost">Cancelar</button><button class="btn btn--danger" disabled>Denegar</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ ESTADOS ════════ -->
+  <section class="doc-section">
+    <h2>Estados</h2>
+    <div class="modal-grid">
+      <div class="panel">
+        <h4>Solicitudes — vacío</h4>
+        <div class="empty-state" style="padding:var(--sp-6)">
+          <p class="empty-state__title">Estás al día</p>
+          <p class="empty-state__hint">Cuando alguien llegue al 100% de su cuota y pida liberación, aparece acá.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>Conflicto de resolución concurrente</h4>
+        <div class="error-card error-card--warn">
+          <span class="error-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></span>
+          <div>
+            <p class="error-card__code">ALREADY_RESOLVED</p>
+            <p class="error-card__title">Ya resuelta por mterceros hace 1 min</p>
+            <p class="error-card__why">La solicitud se movió al Historial; no se registró tu resolución.</p>
+            <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Ver en Historial</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4>Degradado — telemetría diferida</h4>
+        <p class="muted" style="font-size:var(--fs-small);margin-bottom:var(--sp-2)">Columnas de uso con <code>~</code>; editar cuotas sigue disponible (la cuota se evalúa en el gateway, no en Langfuse).</p>
+        <div class="quota-row"><span class="mono">tecnico-advpl</span><span class="num">~USD 140,00 / 160,00</span></div>
+        <div class="quota-bar is-warn"><span class="quota-bar__fill" style="width:87%;opacity:.5"></span></div>
+      </div>
+      <div class="panel">
+        <h4>Éxito (toast)</h4>
+        <div class="toast toast--ok" style="position:static;animation:none">
+          <span class="toast__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <div><p class="toast__title">Liberación aprobada: +USD 10,00 para cquiroga</p><p class="toast__msg">El desbloqueo es inmediato. Registrado en el audit log.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+  // Micro-demo: tabs
+  function dxTab(btn) {
+    var tabs = btn.parentElement.querySelectorAll('.tab');
+    tabs.forEach(function (t) {
+      t.classList.toggle('is-active', t === btn);
+      t.setAttribute('aria-selected', t === btn ? 'true' : 'false');
+      document.getElementById(t.getAttribute('aria-controls')).hidden = (t !== btn);
+    });
+  }
+</script>
+</body>
+</html>

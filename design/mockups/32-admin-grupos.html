@@ -1,0 +1,292 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>32 · Grupos y equipos — Consola admin</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 520px; }
+  .sidebar { background: var(--bg-raised); border-right: 1px solid var(--line); padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .sidebar__brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2); }
+  .sidebar__brand .accent { color: var(--accent); }
+  .nav-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .nav-link.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+  .nav-sep { height: 1px; background: var(--line); margin: var(--sp-2) var(--sp-4); border: 0; }
+  .nav-cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-1) var(--sp-4); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .topbar__ctx { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .topbar__user { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  .page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+
+  .md-grid { display: grid; grid-template-columns: 280px 1fr; gap: var(--sp-4); align-items: start; }
+  .group-card { padding: var(--sp-3) var(--sp-4); cursor: pointer; display: grid; gap: var(--sp-2); }
+  .group-card:hover { border-color: var(--line-strong); }
+  .group-card.is-selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .group-card h4 { margin: 0; font-size: var(--fs-body); }
+  .group-card .slug { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .group-card .meta { display: flex; justify-content: space-between; font-size: var(--fs-caption); color: var(--ink-dim); font-family: var(--font-mono); }
+
+  .detail-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .detail-actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+  .sect-label { font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); margin: var(--sp-5) 0 var(--sp-2); border-top: 1px solid var(--line); padding-top: var(--sp-4); }
+
+  .bar-row { display: grid; grid-template-columns: 130px 1fr auto; gap: var(--sp-3); align-items: center; padding: var(--sp-1) 0; font-size: var(--fs-small); }
+  .bar-row .bar { height: 10px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+  .bar-row .bar i { display: block; height: 100%; background: var(--accent); border-radius: var(--r-pill); }
+
+  .modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: var(--sp-5); align-items: start; }
+  .modal-demo { width: auto; max-height: none; }
+  .assign-list { display: grid; gap: var(--sp-1); max-height: 180px; overflow-y: auto; border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--sp-2); margin-bottom: var(--sp-3); }
+  .chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+
+  @media (max-width: 900px) { .shell { grid-template-columns: 1fr; } .sidebar { display: none; } .md-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<div class="doc">
+  <span class="kicker">Mockup 32 · Consola admin</span>
+  <h1>Grupos y equipos</h1>
+  <p class="muted">Vista solo-Admin. Cuota de grupo = nivel intermedio de la cascada global→grupo→usuario→sesión (ADR-0007). Spec: <code>VISTAS/07-admin-operacion.md §3</code>. Datos ficticios.</p>
+
+  <!-- ════════ MAESTRO-DETALLE ════════ -->
+  <section class="doc-section">
+    <h2>Maestro-detalle</h2>
+    <p class="doc-caption">Lista de grupos a la izquierda (deep-link por slug); detalle del grupo seleccionado a la derecha.</p>
+
+    <div class="frame">
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <div class="sidebar__brand">Resultar <span class="accent">Agents</span></div>
+          <a class="nav-link" href="#">Chat</a>
+          <a class="nav-link" href="#">Catálogo</a>
+          <a class="nav-link" href="#">Workflows</a>
+          <hr class="nav-sep">
+          <span class="nav-cap">Consola admin</span>
+          <a class="nav-link" href="#">Tablero</a>
+          <a class="nav-link" href="#">Usuarios</a>
+          <a class="nav-link is-active" href="#" aria-current="page">Grupos</a>
+          <a class="nav-link" href="#">Cuotas</a>
+          <a class="nav-link" href="#">Registro de prompts</a>
+          <a class="nav-link" href="#">Audit</a>
+          <a class="nav-link" href="#">Salud</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Consola admin / Grupos</span>
+            <div class="topbar__right"><span class="badge-rol badge-rol--admin">Admin</span><span class="topbar__user">mterceros</span></div>
+          </div>
+          <div class="content">
+            <div class="page-head">
+              <div><span class="kicker">Consola admin</span><h2 style="margin:0">Grupos</h2></div>
+              <button class="btn btn--primary">+ Crear grupo</button>
+            </div>
+
+            <div class="md-grid">
+              <!-- Lista -->
+              <div style="display:grid;gap:var(--sp-3)" role="list" aria-label="Grupos">
+                <div class="panel group-card is-selected" role="listitem" tabindex="0" aria-current="true">
+                  <h4>Consultoría funcional</h4>
+                  <span class="slug">consultoria-funcional</span>
+                  <div class="quota-bar" aria-label="54% de la cuota usada"><span class="quota-bar__fill" style="width:54%"></span></div>
+                  <div class="meta"><span>12 miembros</span><span>54%</span></div>
+                </div>
+                <div class="panel group-card" role="listitem" tabindex="0">
+                  <h4>Técnico AdvPL</h4>
+                  <span class="slug">tecnico-advpl</span>
+                  <div class="quota-bar is-warn" aria-label="89% de la cuota usada"><span class="quota-bar__fill" style="width:89%"></span></div>
+                  <div class="meta"><span>8 miembros</span><span style="color:var(--warn)">89% ⚠</span></div>
+                </div>
+                <div class="panel group-card" role="listitem" tabindex="0">
+                  <h4>Proyecto Comercial Andina</h4>
+                  <span class="slug">proyecto-c-andina</span>
+                  <div class="quota-bar is-over" aria-label="100% de la cuota usada — bloqueado"><span class="quota-bar__fill" style="width:100%"></span></div>
+                  <div class="meta"><span>6 miembros</span><span style="color:var(--danger)">100% ✕</span></div>
+                </div>
+              </div>
+
+              <!-- Detalle -->
+              <div class="panel">
+                <div class="detail-head">
+                  <div>
+                    <h3 style="margin:0 0 2px">Consultoría funcional</h3>
+                    <p class="muted" style="margin:0;font-size:var(--fs-small)">Equipo de consultores funcionales Protheus.</p>
+                    <p class="faint" style="margin:var(--sp-1) 0 0;font-family:var(--font-mono);font-size:11px">consultoria-funcional · creado 02/2026</p>
+                  </div>
+                  <div class="detail-actions">
+                    <button class="btn btn--secondary btn--sm">Editar</button>
+                    <button class="btn btn--secondary btn--sm">Asignar usuarios</button>
+                    <span data-tip="Solo se puede eliminar un grupo sin miembros" tabindex="0"><button class="btn btn--ghost btn--sm" disabled>Eliminar grupo</button></span>
+                  </div>
+                </div>
+
+                <p class="sect-label" style="border-top:0;padding-top:0;margin-top:0">Cuota del grupo</p>
+                <div class="quota-row"><span>Mensual · <span class="tag tag--info" style="vertical-align:middle">OVERRIDE</span> · aviso al 80%</span><span class="num"><span class="money">USD 64,20</span> / USD 120,00</span></div>
+                <div class="quota-bar" aria-label="54% usado"><span class="quota-bar__fill" style="width:54%"></span></div>
+                <p style="margin:var(--sp-2) 0 0;font-size:var(--fs-caption)"><a href="#">Editar en Cuotas →</a></p>
+
+                <p class="sect-label">Miembros</p>
+                <div class="table-wrap" style="border:0;border-radius:0">
+                  <table class="table table--dense">
+                    <thead><tr><th>Usuario</th><th>Nombre</th><th>Rol</th><th class="num">Consumo mes</th><th class="num">% cuota grupo</th><th></th></tr></thead>
+                    <tbody>
+                      <tr><td class="mono">lucia <span class="tag" data-tip="También en: proyecto-c-andina, onboarding" tabindex="0">+2 grupos</span></td><td>Lucía Fernández</td><td><span class="badge-rol badge-rol--funcional">Funcional</span></td><td class="num money">18,40</td><td class="num">15%</td><td><button class="btn btn--ghost btn--sm">Quitar</button></td></tr>
+                      <tr><td class="mono">cquiroga</td><td>Carla Quiroga</td><td><span class="badge-rol badge-rol--funcional">Funcional</span></td><td class="num money">14,10</td><td class="num">12%</td><td><button class="btn btn--ghost btn--sm">Quitar</button></td></tr>
+                      <tr><td class="mono">asoliz</td><td>Andrea Soliz</td><td><span class="badge-rol badge-rol--funcional">Funcional</span></td><td class="num money">9,75</td><td class="num">8%</td><td><button class="btn btn--ghost btn--sm">Quitar</button></td></tr>
+                      <tr><td class="mono">jmendez</td><td>Jorge Méndez</td><td><span class="badge-rol badge-rol--tecnico">Técnico</span></td><td class="num money">8,20</td><td class="num">7%</td><td><button class="btn btn--ghost btn--sm">Quitar</button></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="faint" style="font-size:var(--fs-caption);margin:var(--sp-2) 0 0">… y 8 miembros más · el gasto se atribuye al grupo activo de la sesión.</p>
+
+                <p class="sect-label">Consumo por agente (30 d)</p>
+                <div class="bar-row"><span>DocAgent</span><span class="bar"><i style="width:71%"></i></span><span class="money">USD 45,60</span></div>
+                <div class="bar-row"><span>ValidationAgent</span><span class="bar"><i style="width:21%"></i></span><span class="money">USD 13,40</span></div>
+                <div class="bar-row"><span>Workflows</span><span class="bar"><i style="width:8%;background:var(--info)"></i></span><span class="money">USD 5,20</span></div>
+                <div class="bar-row" style="border-top:1px solid var(--line);padding-top:var(--sp-2)"><strong>Total</strong><span></span><strong class="money">USD 64,20</strong></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ MODALS ════════ -->
+  <section class="doc-section">
+    <h2>Modals (exhibidos en estático)</h2>
+    <div class="modal-grid">
+
+      <!-- Crear / editar grupo -->
+      <div class="modal modal-demo" role="dialog" aria-labelledby="m-g-t">
+        <div class="modal__head"><h3 class="modal__title" id="m-g-t">Crear grupo</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+        <div class="modal__body">
+          <div class="field">
+            <label class="field-label" for="g-nombre">Nombre <span class="req" aria-hidden="true">*</span></label>
+            <input class="input" id="g-nombre" value="Onboarding 2026">
+          </div>
+          <div class="field">
+            <label class="field-label" for="g-slug">Slug</label>
+            <input class="input input--mono" id="g-slug" value="onboarding-2026">
+            <span class="field-hint">Auto-generado; editable solo al crear. Invariante después.</span>
+          </div>
+          <div class="field">
+            <label class="field-label" for="g-desc">Descripción</label>
+            <textarea class="textarea" id="g-desc" placeholder="Para qué existe el grupo…"></textarea>
+          </div>
+          <div class="field">
+            <label class="field-label" for="g-cuota">Cuota mensual USD</label>
+            <input class="input input--mono" id="g-cuota" type="number" placeholder="100,00">
+            <span class="field-hint">Si queda vacía, hereda el default de grupo: USD 100,00.</span>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="g-aviso">Umbral de aviso %</label>
+            <input class="input input--mono" id="g-aviso" type="number" value="80" min="50" max="95">
+          </div>
+        </div>
+        <div class="modal__foot"><button class="btn btn--ghost">Cancelar</button><button class="btn btn--primary">Crear grupo</button></div>
+      </div>
+
+      <!-- Asignar usuarios -->
+      <div class="modal modal-demo" role="dialog" aria-labelledby="m-a-t">
+        <div class="modal__head"><h3 class="modal__title" id="m-a-t">Asignar usuarios — consultoria-funcional</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+        <div class="modal__body">
+          <div class="field">
+            <label class="field-label" for="a-buscar">Buscar usuarios activos</label>
+            <input class="input" id="a-buscar" type="search" placeholder="username o nombre…">
+          </div>
+          <div class="assign-list" role="group" aria-label="Usuarios disponibles">
+            <label class="check-row"><input type="checkbox" class="checkbox" checked> <span><span class="mono">dvillegas</span> — Daniel Villegas</span></label>
+            <label class="check-row"><input type="checkbox" class="checkbox" checked> <span><span class="mono">pmamani</span> — Paola Mamani</span></label>
+            <label class="check-row"><input type="checkbox" class="checkbox" checked> <span><span class="mono">fgutierrez</span> — Fabián Gutiérrez</span></label>
+            <label class="check-row"><input type="checkbox" class="checkbox"> <span><span class="mono">vrojas</span> — Valeria Rojas</span></label>
+          </div>
+          <div class="chips">
+            <span class="chip"><span class="chip__name">dvillegas</span><button class="chip__close" aria-label="Quitar dvillegas">✕</button></span>
+            <span class="chip"><span class="chip__name">pmamani</span><button class="chip__close" aria-label="Quitar pmamani">✕</button></span>
+            <span class="chip"><span class="chip__name">fgutierrez</span><button class="chip__close" aria-label="Quitar fgutierrez">✕</button></span>
+          </div>
+          <p style="font-size:var(--fs-small);margin:0">Vas a agregar <strong>3 usuarios</strong> al grupo.</p>
+        </div>
+        <div class="modal__foot"><button class="btn btn--ghost">Cancelar</button><button class="btn btn--primary">Asignar 3 usuarios</button></div>
+      </div>
+
+      <!-- Advertencia cuota bajo consumo -->
+      <div class="modal modal-demo" role="dialog" aria-labelledby="m-w-t">
+        <div class="modal__head"><h3 class="modal__title" id="m-w-t">Editar grupo — cuota bajo el consumo</h3><button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button></div>
+        <div class="modal__body">
+          <div class="field">
+            <label class="field-label" for="w-cuota">Cuota mensual USD</label>
+            <input class="input input--mono" id="w-cuota" type="number" value="50,00" aria-describedby="w-warn">
+          </div>
+          <div class="error-card error-card--warn" id="w-warn" style="margin-bottom:var(--sp-3)">
+            <span class="error-card__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.7 3.86a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span>
+            <div>
+              <p class="error-card__title">La cuota nueva (USD 50,00) es menor que el consumo del mes (USD 64,20)</p>
+              <p class="error-card__why" style="margin:0">El grupo queda bloqueado hasta el próximo ciclo o hasta una liberación.</p>
+            </div>
+          </div>
+          <label class="check-row"><input type="checkbox" class="checkbox"> <span>Entiendo que el grupo queda bloqueado</span></label>
+        </div>
+        <div class="modal__foot"><button class="btn btn--ghost">Cancelar</button><button class="btn btn--primary" disabled>Guardar</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ ESTADOS ════════ -->
+  <section class="doc-section">
+    <h2>Estados</h2>
+    <div class="modal-grid">
+      <div class="panel">
+        <h4>Vacío — sin grupos</h4>
+        <div class="empty-state" style="padding:var(--sp-6)">
+          <p class="empty-state__title">Todavía no hay grupos</p>
+          <p class="empty-state__hint">Los grupos permiten presupuestar por equipo. Sin grupo, los usuarios solo tienen la cuota global y la individual.</p>
+          <button class="btn btn--primary btn--sm">Crear el primer grupo</button>
+        </div>
+      </div>
+      <div class="panel" aria-busy="true" aria-label="Cargando grupos">
+        <h4>Carga</h4>
+        <span class="skeleton skeleton--title" style="margin-bottom:var(--sp-3)">.</span>
+        <span class="skeleton skeleton--text" style="margin-bottom:var(--sp-2)">.</span>
+        <span class="skeleton skeleton--block">.</span>
+      </div>
+      <div class="panel">
+        <h4>Degradado — telemetría diferida</h4>
+        <p class="muted" style="font-size:var(--fs-small)">Las columnas de consumo muestran <code data-tip="Telemetría diferida — consumo estimado" tabindex="0">~</code>; la membresía y las cuotas siguen editables.</p>
+        <div class="quota-row"><span>Cuota mensual</span><span class="num"><span class="money">~USD 60,00</span> / USD 120,00</span></div>
+        <div class="quota-bar"><span class="quota-bar__fill" style="width:50%;opacity:.5"></span></div>
+      </div>
+      <div class="panel">
+        <h4>Éxito (toast)</h4>
+        <div class="toast toast--ok" style="position:static;animation:none">
+          <span class="toast__icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></span>
+          <div><p class="toast__title">3 usuarios asignados</p><p class="toast__msg">consultoria-funcional ahora tiene 15 miembros.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

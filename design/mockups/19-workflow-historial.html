@@ -1,0 +1,280 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>19 · Workflow — historial — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .frame__pad { padding: var(--sp-6); }
+
+  .filters { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: end; margin-bottom: var(--sp-4); }
+  .filters .field { margin: 0; flex: 0 1 180px; }
+  .filters .field--date { flex: 0 1 140px; }
+
+  .sev-mini { font-family: var(--font-mono); font-size: var(--fs-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sev-mini .c { color: var(--danger); }
+  .sev-mini .a { color: var(--accent-alt); }
+  .sev-mini .m { color: var(--warn); }
+  .sev-mini .b { color: var(--ink-dim); }
+
+  .cmp-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); background: var(--accent-soft); border-radius: var(--r-md); margin-top: var(--sp-4); font-size: var(--fs-small); }
+  .cmp-bar code { background: transparent; }
+
+  .diff-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+  .diff-sum { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+  .diff-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--sp-4); }
+  .diff-col { display: grid; gap: var(--sp-2); align-content: start; }
+  .diff-col__cap { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+  .diff-item { display: grid; gap: 2px; padding: var(--sp-2) var(--sp-3); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg-raised); font-size: var(--fs-small); }
+  .diff-item code { font-size: var(--fs-caption); }
+  .diff-item__sev { font-size: var(--fs-caption); color: var(--ink-dim); display: flex; gap: var(--sp-1); align-items: center; }
+  .diff-warn { display: flex; align-items: flex-start; gap: var(--sp-2); font-size: var(--fs-caption); color: var(--warn); margin-bottom: var(--sp-3); }
+  .diff-warn svg { width: 13px; height: 13px; flex: none; margin-top: 2px; }
+
+  .pager { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); margin-top: var(--sp-3); font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .pager__btns { display: flex; gap: var(--sp-1); }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .filters .field { flex: 1 1 100%; }
+    .diff-cols { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-retry" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-cable" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1v2"/><path d="M19 15V6.5a1 1 0 0 0-7 0v11a1 1 0 0 1-7 0V9"/><path d="M21 21v-2h-4"/><path d="M3 5h4V3"/><path d="M7 5a1 1 0 0 1 1 1v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1V3"/></symbol>
+    <symbol id="i-listchecks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 19 · Módulo workflows</span>
+    <h1>Historial de corridas</h1>
+    <p class="muted">Filtros, comparación de dos corridas (diff de hallazgos) y re-ejecución con parámetros congelados. Spec: <code>docs/design/VISTAS/04-workflows.md</code> §5.</p>
+    <p class="doc-caption">Datos 100% ficticios. Renderizado como rol <strong>Admin</strong> (ve filtro «Usuario» y columna Costo).</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — tabla + selección + diff ════════════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Tabla con 2 corridas seleccionadas + comparación</h2>
+    <p class="doc-caption">Con 2 marcadas, los demás checkboxes se deshabilitan con motivo. El diff agrupa nuevos / resueltos / persistentes por código de regla; orden siempre cronológico.</p>
+
+    <div class="frame frame__pad">
+      <div class="filters">
+        <div class="field"><label class="field-label" for="fl-cli">Cliente</label><select class="select" id="fl-cli"><option>Todos</option><option selected>Comercial Andina S.A.</option><option>Ferretería El Tornillo S.R.L.</option></select></div>
+        <div class="field"><label class="field-label" for="fl-wf">Workflow</label><select class="select" id="fl-wf"><option>Todos</option><option selected>Validación Facturación</option></select></div>
+        <div class="field"><label class="field-label" for="fl-est">Estado</label><select class="select" id="fl-est"><option>Todos</option><option>Completada</option><option>Error</option><option>Cancelada</option><option>En ejecución</option></select></div>
+        <div class="field field--date"><label class="field-label" for="fl-d1">Desde</label><input class="input input--mono" id="fl-d1" type="text" value="01/06/2026"></div>
+        <div class="field field--date"><label class="field-label" for="fl-d2">Hasta</label><input class="input input--mono" id="fl-d2" type="text" value="11/06/2026"></div>
+        <div class="field"><label class="field-label" for="fl-usr">Usuario <span class="faint">(solo Admin)</span></label><select class="select" id="fl-usr"><option>Todos</option><option selected>lucia</option><option>tomas</option></select></div>
+        <button type="button" class="btn btn--ghost">Limpiar filtros</button>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table table--dense">
+          <caption class="sr-only">Corridas de workflows, ordenadas por fecha descendente</caption>
+          <thead><tr>
+            <th scope="col"><span class="sr-only">Seleccionar para comparar</span>☐</th>
+            <th scope="col">Corrida</th><th scope="col">Workflow</th><th scope="col">Cliente · ambiente</th>
+            <th scope="col">Fecha</th><th scope="col">Duración</th><th scope="col">Estado</th>
+            <th scope="col">Hallazgos</th><th scope="col" class="num">Costo</th><th scope="col">Acciones</th>
+          </tr></thead>
+          <tbody>
+            <tr class="is-selected">
+              <td><input type="checkbox" class="checkbox" checked aria-label="Comparar WF-2026-0347"></td>
+              <td><a href="#"><code>WF-2026-0347</code></a></td>
+              <td>Validación Facturación <span class="faint mono">v1.4</span></td>
+              <td>Comercial Andina S.A. <span class="tag tag--info">VAL</span></td>
+              <td class="mono">10/06/2026 14:32</td><td class="mono">9 min 42 s</td>
+              <td><span class="tag tag--money">Completada</span></td>
+              <td><span class="sev-mini" data-tip="1 crítico · 3 altos · 5 medios · 2 bajos"><span class="c">1C</span> <span class="a">3A</span> <span class="m">5M</span> <span class="b">2B</span></span></td>
+              <td class="num money">USD 0,21</td>
+              <td><a class="btn btn--ghost btn--sm" href="#">Ver</a> <button type="button" class="btn btn--ghost btn--sm"><svg style="width:13px;height:13px" aria-hidden="true"><use href="#i-retry"/></svg>Re-ejecutar</button></td>
+            </tr>
+            <tr class="is-selected">
+              <td><input type="checkbox" class="checkbox" checked aria-label="Comparar WF-2026-0341"></td>
+              <td><a href="#"><code>WF-2026-0341</code></a></td>
+              <td>Validación Facturación <span class="faint mono">v1.3</span></td>
+              <td>Comercial Andina S.A. <span class="tag tag--info">VAL</span></td>
+              <td class="mono">06/06/2026 09:15</td><td class="mono">11 min 08 s</td>
+              <td><span class="tag tag--money">Completada</span></td>
+              <td><span class="sev-mini" data-tip="2 críticos · 4 altos · 6 medios · 4 bajos"><span class="c">2C</span> <span class="a">4A</span> <span class="m">6M</span> <span class="b">4B</span></span></td>
+              <td class="num money">USD 0,24</td>
+              <td><a class="btn btn--ghost btn--sm" href="#">Ver</a> <button type="button" class="btn btn--ghost btn--sm"><svg style="width:13px;height:13px" aria-hidden="true"><use href="#i-retry"/></svg>Re-ejecutar</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="checkbox" disabled aria-label="No disponible: ya hay 2 corridas seleccionadas" data-tip="Ya hay 2 corridas seleccionadas"></td>
+              <td><a href="#"><code>WF-2026-0338</code></a></td>
+              <td>Validación Facturación <span class="faint mono">v1.3</span></td>
+              <td>Comercial Andina S.A. <span class="tag tag--info">VAL</span></td>
+              <td class="mono">03/06/2026 16:02</td><td class="mono">—</td>
+              <td><span class="tag tag--danger">Error</span></td>
+              <td><span class="sev-mini faint">—</span></td>
+              <td class="num money">USD 0,09</td>
+              <td><a class="btn btn--ghost btn--sm" href="#">Ver</a> <button type="button" class="btn btn--ghost btn--sm"><svg style="width:13px;height:13px" aria-hidden="true"><use href="#i-retry"/></svg>Re-ejecutar</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="checkbox" disabled aria-label="No disponible: otro workflow o cliente" data-tip="Solo se comparan corridas del mismo workflow y cliente"></td>
+              <td><a href="#"><code>WF-2026-0335</code></a></td>
+              <td>YAML de ambiente <span class="faint mono">v2.0</span></td>
+              <td>Ferretería El Tornillo S.R.L. <span class="tag">DEV</span></td>
+              <td class="mono">02/06/2026 11:47</td><td class="mono">2 min 51 s</td>
+              <td><span class="tag tag--money">Completada</span></td>
+              <td><span class="sev-mini faint">—</span></td>
+              <td class="num money">USD 0,05</td>
+              <td><a class="btn btn--ghost btn--sm" href="#">Ver</a> <button type="button" class="btn btn--ghost btn--sm"><svg style="width:13px;height:13px" aria-hidden="true"><use href="#i-retry"/></svg>Re-ejecutar</button></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" class="checkbox" disabled aria-label="No disponible: la corrida no terminó" data-tip="La corrida no terminó"></td>
+              <td><a href="#"><code>WF-2026-0348</code></a></td>
+              <td>Validación Facturación <span class="faint mono">v1.4</span></td>
+              <td>Comercial Andina S.A. <span class="tag tag--info">VAL</span></td>
+              <td class="mono">11/06/2026 14:32</td><td class="mono">—</td>
+              <td><span class="tag tag--accent">En ejecución</span></td>
+              <td><span class="sev-mini faint">—</span></td>
+              <td class="num money">USD 0,14</td>
+              <td><a class="btn btn--ghost btn--sm" href="#">Ver</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pager">
+        <span>Mostrando 1–5 de 156</span>
+        <div class="pager__btns">
+          <button type="button" class="btn btn--ghost btn--sm" disabled>‹ Anterior</button>
+          <button type="button" class="btn btn--ghost btn--sm">Siguiente ›</button>
+        </div>
+      </div>
+
+      <div class="cmp-bar" role="status">
+        <span>2 seleccionadas: <code>WF-2026-0341</code> → <code>WF-2026-0347</code></span>
+        <span style="display:flex; gap:var(--sp-2)">
+          <button type="button" class="btn btn--ghost btn--sm">Quitar selección</button>
+          <button type="button" class="btn btn--primary">Comparar corridas</button>
+        </span>
+      </div>
+
+      <hr class="divider">
+
+      <span class="kicker">Comparación</span>
+      <div class="diff-head">
+        <span class="mono" style="font-size:var(--fs-small)"><code>WF-2026-0341</code> (06/06/2026) → <code>WF-2026-0347</code> (10/06/2026)</span>
+        <span class="faint" style="font-size:var(--fs-caption)">Comercial Andina S.A. · VAL</span>
+      </div>
+      <div class="diff-warn"><svg aria-hidden="true"><use href="#i-alert"/></svg>Checklist v2 → v3: el diff puede incluir reglas nuevas del checklist.</div>
+      <div class="diff-sum">
+        <span class="tag tag--danger">+3 nuevos</span>
+        <span class="tag tag--money">5 resueltos</span>
+        <span class="tag tag--warn">8 persistentes</span>
+      </div>
+      <div class="diff-cols">
+        <div class="diff-col">
+          <span class="diff-col__cap" style="color:var(--danger)">Nuevos (3)</span>
+          <div class="diff-item"><span><code>FAT-012</code> Serie de facturación</span><span class="diff-item__sev"><span class="tag tag--alt">Alto</span></span></div>
+          <div class="diff-item"><span><code>FAT-027</code> Mensaje de pie de factura</span><span class="diff-item__sev"><span class="tag tag--warn">Medio</span> <span class="faint">(regla nueva en checklist v3)</span></span></div>
+          <div class="diff-item"><span><code>FAT-038</code> Días de vencimiento default</span><span class="diff-item__sev"><span class="tag">Bajo</span></span></div>
+        </div>
+        <div class="diff-col">
+          <span class="diff-col__cap" style="color:var(--money)">Resueltos (5)</span>
+          <div class="diff-item"><span><code>FAT-003</code> Moneda contable</span><span class="diff-item__sev">era <span class="tag tag--danger">Crítico</span></span></div>
+          <div class="diff-item"><span><code>FAT-008</code> Plan de cuentas FAT</span><span class="diff-item__sev">era <span class="tag tag--alt">Alto</span></span></div>
+          <div class="diff-item"><span><code>FAT-015</code> Numeración de NCM</span><span class="diff-item__sev">era <span class="tag tag--warn">Medio</span></span></div>
+          <div class="diff-item"><span><code>FAT-022</code> Tipo de cambio diario</span><span class="diff-item__sev">era <span class="tag tag--warn">Medio</span></span></div>
+          <div class="diff-item"><span><code>FAT-033</code> Permisos de anulación</span><span class="diff-item__sev">era <span class="tag">Bajo</span></span></div>
+        </div>
+        <div class="diff-col">
+          <span class="diff-col__cap" style="color:var(--warn)">Persistentes (8)</span>
+          <div class="diff-item"><span><code>FAT-001</code> Localización país</span><span class="diff-item__sev"><span class="tag tag--danger">Crítico</span></span></div>
+          <div class="diff-item"><span><code>FAT-007</code> Alícuota IVA</span><span class="diff-item__sev"><span class="tag tag--alt">Alto</span></span></div>
+          <div class="diff-item"><span><code>FAT-019</code> Tipo de saldo</span><span class="diff-item__sev"><span class="tag tag--warn">Medio</span> <span class="faint">· medio → alto en próxima revisión</span></span></div>
+          <div class="diff-item"><span><code>FAT-021</code> Símbolo de moneda 1</span><span class="diff-item__sev"><span class="tag tag--warn">Medio</span></span></div>
+          <div class="diff-item faint" style="text-align:center">+ 4 más…</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — modal re-ejecutar ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Modal «Re-ejecutar con los mismos parámetros»</h2>
+    <p class="doc-caption">Parámetros congelados de la corrida original. Advierte si la versión activa del workflow cambió; con bridge caído el CTA se deshabilita. Crea SIEMPRE una corrida nueva.</p>
+    <div class="frame frame__pad" style="display:grid; place-items:center; background:var(--bg-raised)">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mr-t" style="box-shadow:var(--shadow-2)">
+        <div class="modal__head">
+          <h3 class="modal__title" id="mr-t">Re-ejecutar WF-2026-0341</h3>
+          <button type="button" class="btn btn--ghost btn--sm" aria-label="Cerrar"><svg style="width:14px;height:14px" aria-hidden="true"><use href="#i-x"/></svg></button>
+        </div>
+        <div class="modal__body" style="display:grid; gap:var(--sp-3)">
+          <dl style="margin:0; display:grid; gap:var(--sp-2); font-size:var(--fs-small)">
+            <div style="display:flex; justify-content:space-between; gap:var(--sp-3)"><dt class="muted">Cliente final</dt><dd style="margin:0">Comercial Andina S.A.</dd></div>
+            <div style="display:flex; justify-content:space-between; gap:var(--sp-3)"><dt class="muted">Ambiente</dt><dd style="margin:0"><span class="tag tag--info">VAL</span></dd></div>
+            <div style="display:flex; justify-content:space-between; gap:var(--sp-3)"><dt class="muted">Checklist</dt><dd style="margin:0" class="mono">checklist-fact-v3.xlsx · v3 · a41f…9c2e</dd></div>
+            <div style="display:flex; justify-content:space-between; gap:var(--sp-3)"><dt class="muted">Módulo / país</dt><dd style="margin:0" class="mono">SIGAFAT · BOL</dd></div>
+          </dl>
+          <div class="error-card error-card--warn" role="status">
+            <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+            <div>
+              <p class="error-card__title" style="margin:0">La corrida original usó v1.3; hoy se ejecuta v1.4</p>
+              <p class="error-card__why" style="margin:0">Los resultados pueden diferir por cambios del workflow, no solo del ambiente.</p>
+            </div>
+          </div>
+          <span class="bridge-status" style="display:inline-flex; align-items:center; gap:var(--sp-2); font-family:var(--font-mono); font-size:var(--fs-caption); color:var(--ink-dim)"><span class="live-dot" aria-hidden="true"></span> bridge conectado · 41 ms</span>
+        </div>
+        <div class="modal__foot">
+          <button type="button" class="btn btn--ghost">Cancelar</button>
+          <button type="button" class="btn btn--primary"><svg style="width:14px;height:14px" aria-hidden="true"><use href="#i-retry"/></svg>Ejecutar corrida nueva</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE C — vacíos ════════════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Vacíos: sin corridas · filtros sin resultados</h2>
+    <div class="frame frame__pad" style="display:grid; gap:var(--sp-4)">
+      <div class="empty-state">
+        <span class="empty-state__icon"><svg aria-hidden="true" style="width:32px;height:32px"><use href="#i-listchecks"/></svg></span>
+        <p class="empty-state__title">Todavía no ejecutaste ningún workflow</p>
+        <p class="empty-state__hint">Las corridas van a aparecer acá, con su resultado y trazabilidad.</p>
+        <a class="btn btn--secondary" href="#">Ir a workflows</a>
+      </div>
+      <div class="empty-state">
+        <p class="empty-state__title">Sin resultados para los filtros aplicados</p>
+        <p class="empty-state__hint">Probá ampliar el rango de fechas o quitar algún filtro.</p>
+        <button type="button" class="btn btn--ghost">Limpiar filtros</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

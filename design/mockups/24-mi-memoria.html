@@ -1,0 +1,300 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>24 · Mi memoria — Mi espacio — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  .space-tabs { display: flex; gap: var(--sp-1); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-5); overflow-x: auto; }
+  .space-tab { padding: var(--sp-2) var(--sp-3); margin-bottom: -1px; font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-bottom: 2px solid transparent; white-space: nowrap; }
+  .space-tab:hover { color: var(--ink); text-decoration: none; }
+  .space-tab[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+  /* Nota informativa de aplicación del snapshot */
+  .note { display: flex; gap: var(--sp-2); align-items: flex-start; background: color-mix(in srgb, var(--info) 7%, var(--panel)); border: 1px solid color-mix(in srgb, var(--info) 35%, transparent); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-small); color: var(--ink-dim); margin-bottom: var(--sp-4); }
+  .note svg { width: 16px; height: 16px; color: var(--info); flex: none; margin-top: 2px; }
+  .note strong { color: var(--ink); }
+
+  .mem-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: var(--sp-4); align-items: start; }
+  .mem-counter { display: grid; gap: var(--sp-1); margin: var(--sp-3) 0; }
+  .mem-counter__row { display: flex; justify-content: space-between; font-size: var(--fs-caption); color: var(--ink-dim); }
+  .mem-counter__row .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .mem-actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+  .mem-actions .spacer { flex: 1; }
+  .mem-version { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); margin-top: var(--sp-3); }
+
+  .know-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); }
+  .know-list dt, .know-item__k { font-family: var(--font-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 2px; }
+  .know-item__v { font-size: var(--fs-small); color: var(--ink); }
+
+  .variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); align-items: start; }
+  .modal-demo { position: static; display: block; padding: 0; background: none; }
+  .modal-demo .modal { margin: 0 auto; }
+
+  @media (max-width: 1024px) { .variant-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .content { padding: var(--sp-4); }
+    .mem-grid { grid-template-columns: 1fr; }
+    .mem-actions .btn { flex: 1 1 100%; height: 44px; }
+    .mem-actions .spacer { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 24 · Mi espacio</span>
+    <h1>Mi memoria</h1>
+    <p class="muted">Control total sobre la memoria personal (ADR-0010 §1): editar en claro, guardar con confirmación, borrar todo, historial propio. El snapshot se aplica al <strong>crear</strong> una conversación nueva. Spec: <code>docs/design/VISTAS/06-mi-espacio.md</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Vista idéntica para todos los roles — la memoria es personal y nadie (tampoco el Admin) lee ni edita la de otro desde acá.</p>
+  </header>
+
+  <!-- ═══════════ ESTADO NORMAL: EDITOR + PANEL + HISTORIAL ═══════════ -->
+  <section class="doc-section" aria-labelledby="v-base">
+    <span class="kicker kicker--dim">Estado normal</span>
+    <h2 id="v-base">Editor con contador en vivo, «qué sabe la plataforma» e historial</h2>
+    <p class="doc-caption">Micro-demo: escribí en la textarea y mirá el contador (estimación ≈4 caracteres/token; warn ≥90%, over &gt;100% deshabilita Guardar con motivo).</p>
+
+    <div class="frame">
+      <div class="content">
+        <nav class="space-tabs" aria-label="Secciones de Mi espacio">
+          <a class="space-tab" href="#">Mi consumo</a>
+          <a class="space-tab" href="#" aria-current="page">Mi memoria</a>
+          <a class="space-tab" href="#">Mi auditoría</a>
+          <a class="space-tab" href="#">Configuración</a>
+        </nav>
+
+        <div class="note">
+          <svg aria-hidden="true"><use href="#i-info"/></svg>
+          <span><strong>La memoria se aplica al crear una conversación nueva.</strong> Las conversaciones abiertas siguen usando la versión que tenían al iniciarse. Los agentes leen esto como información tuya, no como instrucciones.</span>
+        </div>
+
+        <div class="mem-grid">
+          <div class="panel">
+            <span class="kicker kicker--dim">Tu memoria</span>
+            <div class="field" style="margin-bottom:0">
+              <label class="field-label" for="mem-txt">Texto de memoria</label>
+              <textarea class="textarea" id="mem-txt" rows="9" aria-describedby="mem-hint mem-count">Soy consultora funcional de Resultar Bolivia, área de localización.
+Atiendo a Comercial Andina S.A. (ambiente TEST) y a Ferretera del Sur Ltda.
+Domino los módulos ACT y FIN; estoy aprendiendo COM.
+Prefiero respuestas con pasos numerados y referencias a tablas SX3/SX6 cuando aplique.</textarea>
+              <span class="field-hint" id="mem-hint">Texto plano. Sin credenciales ni datos personales (CI, teléfonos, correos personales) — se envía a un servicio de IA externo.</span>
+            </div>
+            <div class="mem-counter" id="mem-count">
+              <div class="mem-counter__row"><span>Tamaño estimado</span><span class="num"><span id="mem-tokens">≈ 0</span> / 1.000 tokens</span></div>
+              <div class="quota-bar" id="mem-bar" role="meter" aria-valuemin="0" aria-valuemax="1000" aria-label="Uso del límite de memoria"><span class="quota-bar__fill" id="mem-fill" style="width:0%"></span></div>
+              <span class="field-error" id="mem-over" hidden><svg width="13" height="13" aria-hidden="true"><use href="#i-alert"/></svg><span id="mem-over-txt"></span></span>
+            </div>
+            <div class="mem-actions">
+              <button type="button" class="btn btn--primary" id="mem-save">Guardar memoria</button>
+              <button type="button" class="btn btn--ghost">Descartar cambios</button>
+              <span class="spacer"></span>
+              <button type="button" class="btn btn--danger">Borrar todo</button>
+            </div>
+            <p class="mem-version">versión 7 · actualizada el 09/06/2026 18:21</p>
+          </div>
+
+          <div class="panel">
+            <span class="kicker kicker--dim">Qué sabe la plataforma de vos</span>
+            <ul class="know-list">
+              <li><span class="know-item__k">Rol y área</span><span class="know-item__v">Consultora funcional · localización Bolivia</span></li>
+              <li><span class="know-item__k">Clientes que atendés</span><span class="know-item__v">Comercial Andina S.A. (TEST) · Ferretera del Sur Ltda.</span></li>
+              <li><span class="know-item__k">Módulos que dominás</span><span class="know-item__v">ACT, FIN · aprendiendo COM</span></li>
+              <li><span class="know-item__k">Preferencias de formato</span><span class="know-item__v">Pasos numerados · referencias SX3/SX6</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 style="margin-top:var(--sp-6)">Historial de cambios <span class="faint" style="font-weight:400;font-size:var(--fs-small)">(propio, solo lectura)</span></h3>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th scope="col">Versión</th><th scope="col">Fecha</th><th scope="col">Origen</th><th scope="col">Cambio</th><th scope="col" class="num">Tamaño</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">v7</td><td class="mono">09/06/2026 18:21</td><td>vos</td><td>+2 líneas: módulos ACT/FIN</td><td class="num">≈ 412 tok</td></tr>
+              <tr><td class="mono">v6</td><td class="mono">02/06/2026 10:05</td><td>propuesta del agente (aceptada por vos)</td><td>+1 línea: preferencia de formato</td><td class="num">≈ 368 tok</td></tr>
+              <tr><td class="mono">v5</td><td class="mono">27/05/2026 16:40</td><td>vos</td><td>−1 línea: cliente que ya no atendés</td><td class="num">≈ 341 tok</td></tr>
+              <tr><td class="mono">v4</td><td class="mono">20/05/2026 09:12</td><td>vos</td><td>borraste todo</td><td class="num">≈ 0 tok</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ MODALES: CONFIRMAR GUARDADO · BORRAR TODO ═══════════ -->
+  <section class="doc-section" aria-labelledby="v-modales">
+    <span class="kicker kicker--dim">Confirmaciones</span>
+    <h2 id="v-modales">Guardar (confirmación obligatoria) y borrar todo (escribir-para-confirmar)</h2>
+    <p class="doc-caption">Mostrados estáticos, sin scrim, como referencia. Esc cancela; Esc jamás confirma.</p>
+
+    <div class="variant-grid">
+      <div class="overlay modal-demo">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-save-t">
+          <div class="modal__head">
+            <h3 class="modal__title" id="m-save-t">Guardar tu memoria</h3>
+            <button type="button" class="btn btn--ghost btn--sm" aria-label="Cerrar"><svg width="14" height="14" aria-hidden="true"><use href="#i-x"/></svg></button>
+          </div>
+          <div class="modal__body">
+            <p>Resumen del cambio: <span class="mono">+2 líneas, −1 línea · ≈ 412 → 446 tokens</span></p>
+            <div class="note" style="margin-bottom:0">
+              <svg aria-hidden="true"><use href="#i-info"/></svg>
+              <span><strong>Se aplica desde tu próxima conversación.</strong> Las conversaciones abiertas siguen usando la versión anterior de tu memoria.</span>
+            </div>
+          </div>
+          <div class="modal__foot">
+            <button type="button" class="btn btn--ghost">Cancelar</button>
+            <button type="button" class="btn btn--primary">Confirmar y guardar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="overlay modal-demo">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-del-t">
+          <div class="modal__head">
+            <h3 class="modal__title" id="m-del-t">Borrar toda tu memoria</h3>
+            <button type="button" class="btn btn--ghost btn--sm" aria-label="Cerrar"><svg width="14" height="14" aria-hidden="true"><use href="#i-x"/></svg></button>
+          </div>
+          <div class="modal__body">
+            <p>Vas a borrar las <strong>≈ 412 tokens</strong> de tu memoria. Los agentes dejan de recordarte desde tu próxima conversación. El borrado queda registrado en tu historial y en Mi auditoría.</p>
+            <div class="field" style="margin-bottom:0">
+              <label class="field-label" for="m-del-confirm">Escribí <code>BORRAR</code> para confirmar</label>
+              <input class="input input--mono" id="m-del-confirm" type="text" autocomplete="off" placeholder="BORRAR">
+              <span class="field-hint">El botón se habilita solo con la coincidencia exacta.</span>
+            </div>
+          </div>
+          <div class="modal__foot">
+            <button type="button" class="btn btn--ghost">Cancelar</button>
+            <button type="button" class="btn btn--danger" disabled>Borrar todo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ VALIDACIÓN · VACÍO · DEGRADADO · ÉXITO ═══════════ -->
+  <section class="doc-section" aria-labelledby="v-estados">
+    <span class="kicker kicker--dim">Estados</span>
+    <h2 id="v-estados">Validación rechazada, vacío, degradado y éxito</h2>
+
+    <div class="variant-grid">
+      <div class="panel">
+        <span class="kicker kicker--dim">Validación rechazada (N3 detectado)</span>
+        <div class="field" style="margin-bottom:var(--sp-2)">
+          <label class="field-label" for="mem-bad">Texto de memoria</label>
+          <textarea class="textarea is-invalid" id="mem-bad" rows="3" aria-invalid="true" aria-describedby="mem-bad-err">Usuario del ambiente TEST: lucia / clave=Andina2026!</textarea>
+          <span class="field-error" id="mem-bad-err"><svg width="13" height="13" aria-hidden="true"><use href="#i-alert"/></svg>No se puede guardar: esto parece una contraseña («clave=…»). La memoria no puede contener credenciales ni datos personales — se envía a un servicio de IA externo. Quitá ese dato y volvé a guardar.</span>
+        </div>
+        <p class="doc-caption" style="margin:0">Otras variantes del mismo patrón: dato personal (CI, teléfono, correo personal) y límite superado («te pasaste por ≈ 120 tokens — recortá antes de guardar»). El texto del usuario jamás se pierde.</p>
+      </div>
+
+      <div class="panel">
+        <span class="kicker kicker--dim">Vacío (memoria nueva)</span>
+        <div class="empty-state">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-brain"/></svg></span>
+          <p class="empty-state__title">Tu memoria está vacía</p>
+          <p class="empty-state__hint">Lo que escribas acá, los agentes lo van a recordar al iniciar cada conversación nueva.</p>
+          <button type="button" class="btn btn--secondary">Escribí tu primera nota</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <span class="kicker kicker--dim">Degradado (validador no disponible — fail-closed)</span>
+        <div class="error-card" role="alert">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">VALIDADOR_OFFLINE</p>
+            <p class="error-card__title">No pudimos validar tu memoria</p>
+            <p class="error-card__why">Sin validación no se guarda: es la protección contra credenciales y datos personales. Tu texto sigue acá — reintentá en un momento.</p>
+            <div class="error-card__actions"><button type="button" class="btn btn--secondary">Reintentar</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="toast-stack" style="position:static;width:min(360px,100%)">
+          <div class="toast toast--ok" role="status">
+            <span class="toast__icon"><svg aria-hidden="true"><use href="#i-check"/></svg></span>
+            <div>
+              <p class="toast__title">Memoria guardada — versión 8</p>
+              <p class="toast__msg">Se aplica desde tu próxima conversación.</p>
+            </div>
+          </div>
+        </div>
+        <p class="doc-caption">Éxito tras confirmar en el modal; el historial agrega la fila al instante.</p>
+        <div class="error-card error-card--warn" role="alert" style="margin-top:var(--sp-3)">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">VERSION_CONFLICTO</p>
+            <p class="error-card__title">Tu memoria cambió en otra pestaña (versión 8)</p>
+            <p class="error-card__why">Revisá antes de pisar. Nunca se mezcla en silencio.</p>
+            <div class="error-card__actions"><button type="button" class="btn btn--secondary">Ver diferencia</button><button type="button" class="btn btn--ghost">Recargar</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Micro-demo del contador de tokens (≈4 caracteres/token). Solo demo de mockup.
+  (function () {
+    var txt = document.getElementById('mem-txt');
+    var fill = document.getElementById('mem-fill');
+    var bar = document.getElementById('mem-bar');
+    var out = document.getElementById('mem-tokens');
+    var over = document.getElementById('mem-over');
+    var overTxt = document.getElementById('mem-over-txt');
+    var save = document.getElementById('mem-save');
+    var LIMIT = 1000;
+    function update() {
+      var tok = Math.round(txt.value.length / 4);
+      var pct = Math.min(100, (tok / LIMIT) * 100);
+      out.textContent = '≈ ' + tok.toLocaleString('es-BO');
+      fill.style.width = pct + '%';
+      bar.setAttribute('aria-valuenow', tok);
+      bar.classList.toggle('is-warn', tok >= LIMIT * 0.9 && tok <= LIMIT);
+      bar.classList.toggle('is-over', tok > LIMIT);
+      var isOver = tok > LIMIT;
+      over.hidden = !isOver;
+      if (isOver) { overTxt.textContent = 'Te pasaste por ≈ ' + (tok - LIMIT) + ' tokens — recortá antes de guardar.'; }
+      save.disabled = isOver;
+    }
+    txt.addEventListener('input', update);
+    update();
+  })();
+</script>
+</body>
+</html>

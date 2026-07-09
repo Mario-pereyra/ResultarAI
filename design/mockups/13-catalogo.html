@@ -1,0 +1,475 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13 · Catálogo de agentes — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  /* Andamiaje del documento de mockup (usa solo tokens) */
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  /* Frame = ventana de la app simulada */
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 520px; }
+  .sidebar { background: var(--bg-raised); border-right: 1px solid var(--line); padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .sidebar__brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2); }
+  .sidebar__brand .accent { color: var(--accent); }
+  .nav-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .nav-link.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+  .nav-link svg { width: 16px; height: 16px; flex: none; }
+  .nav-sep { height: 1px; background: var(--line); margin: var(--sp-2) var(--sp-4); border: 0; }
+  .nav-cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-1) var(--sp-4); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .topbar__ctx { font-family: var(--font-display); font-size: var(--fs-small); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-dim); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .topbar__user { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  /* Controles del catálogo */
+  .cat-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .cat-tools { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+  .cat-tools .field { margin-bottom: 0; }
+  .cat-tools .field--search { flex: 1 1 260px; }
+  .cat-tools .field--select { flex: 0 1 200px; }
+  .cat-count { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); margin: 0 0 var(--sp-4); }
+
+  /* Grilla y cards de agente (extiende .panel — anatomía en VISTAS/03-catalogo.md) */
+  .agent-grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .agent-card { display: flex; flex-direction: column; gap: var(--sp-2); }
+  .agent-card__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-2); }
+  .agent-card__desc { font-size: var(--fs-small); color: var(--ink-dim); margin: 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .agent-card__cases { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
+  .agent-card__cases li { display: flex; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-dim); }
+  .agent-card__cases svg { width: 13px; height: 13px; flex: none; margin-top: 3px; color: var(--ink-faint); }
+  .agent-card__tech { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); border-top: 1px dashed var(--line); padding-top: var(--sp-2); margin-top: auto; }
+  .agent-card__tech .money { font-size: 11px; }
+  .agent-card__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); border-top: 1px solid var(--line); padding-top: var(--sp-3); }
+  .agent-card__foot--no-tech { margin-top: auto; }
+  .agent-card__link { font-size: var(--fs-small); white-space: nowrap; }
+  .agent-card__reason { font-size: var(--fs-caption); color: var(--ink-faint); margin: 0; }
+  .agent-card.is-deprecated { border-style: dashed; }
+  .agent-card.is-deprecated .agent-card__desc,
+  .agent-card.is-deprecated h3 { color: var(--ink-dim); }
+  .tag .live-dot { width: 6px; height: 6px; }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; } /* en producto: drawer accesible vía botón ≡ del topbar */
+    .content { padding: var(--sp-4); }
+    .agent-grid { grid-template-columns: 1fr; }
+    .agent-card__foot { flex-wrap: wrap; }
+    .agent-card__foot .btn { flex: 1 1 100%; }
+    .agent-card__link { padding: var(--sp-3) 0; } /* objetivo táctil ≥44px */
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<!-- Sprite de íconos lucide (inline, sin librerías) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></symbol>
+    <symbol id="i-listchecks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+    <symbol id="i-chr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 13 · Módulo catálogo</span>
+    <h1>Catálogo de agentes</h1>
+    <p class="muted">Grilla de fichas filtrada por la matriz de visibilidad agente×rol. Spec: <code>docs/design/VISTAS/03-catalogo.md</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. «Triage CST» y «Consultas TDN v1» son ejemplos inventados para demostrar los estados Beta y Deprecado.</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — ADMIN (ve todo + capa técnica) ════════════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Admin — todos los agentes, capa técnica, «Ver como rol»</h2>
+    <p class="doc-caption">La búsqueda de este frame es un micro-demo funcional: probá escribir «valida» o «zzz».</p>
+
+    <div class="frame">
+      <div class="ai-banner"><svg aria-hidden="true"><use href="#i-alert"/></svg>Respuestas generadas por IA — verificá antes de aplicar en cliente</div>
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <span class="sidebar__brand">Resultar<span class="accent">·</span>Agents</span>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-msg"/></svg>Chat</a>
+          <a class="nav-link is-active" href="#" aria-current="page"><svg aria-hidden="true"><use href="#i-grid"/></svg>Catálogo</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-listchecks"/></svg>Workflows</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-shield"/></svg>Aprobaciones</a>
+          <hr class="nav-sep">
+          <span class="nav-cap">Administración</span>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-chart"/></svg>Telemetría</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-settings"/></svg>Consola admin</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Catálogo</span>
+            <div class="topbar__right">
+              <button class="notif-bell" aria-label="Notificaciones, 2 sin leer"><svg aria-hidden="true"><use href="#i-bell"/></svg><span class="notif-bell__count">2</span></button>
+              <span class="badge-rol badge-rol--admin">Admin</span>
+              <span class="topbar__user">mario</span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="cat-head">
+              <div>
+                <span class="kicker">Catálogo</span>
+                <h2 style="margin-bottom:var(--sp-1);">Agentes</h2>
+                <p class="muted" style="margin:0;">Elegí un agente para abrir un chat, o entrá a su ficha para ver qué hace y cómo empezar.</p>
+              </div>
+            </div>
+
+            <div class="cat-tools">
+              <div class="field field--search">
+                <label class="sr-only" for="a-search">Buscar agentes</label>
+                <input class="input" type="search" id="a-search" placeholder="Buscar por nombre, descripción o caso de uso…">
+              </div>
+              <div class="field field--select">
+                <label class="sr-only" for="a-estado">Filtrar por estado</label>
+                <select class="select" id="a-estado">
+                  <option>Estado: todos</option>
+                  <option>Activo</option>
+                  <option>Beta</option>
+                  <option>Próximamente</option>
+                  <option>Deprecado</option>
+                </select>
+              </div>
+              <div class="field field--select">
+                <label class="sr-only" for="a-vercomo">Previsualizar como rol</label>
+                <select class="select" id="a-vercomo">
+                  <option>Ver como: Admin</option>
+                  <option>Ver como: Técnico</option>
+                  <option>Ver como: Funcional</option>
+                </select>
+              </div>
+            </div>
+
+            <p class="cat-count" id="a-count" aria-live="polite">5 agentes · mostrando 5</p>
+
+            <div class="agent-grid" id="a-grid">
+
+              <!-- DocAgent — ACTIVO -->
+              <article class="panel agent-card" aria-labelledby="a-doc">
+                <div class="agent-card__head">
+                  <span class="kicker kicker--dim" style="margin:0;">Agente · Documental</span>
+                  <span class="tag tag--money"><span class="live-dot" aria-hidden="true"></span>Activo</span>
+                </div>
+                <h3 id="a-doc" style="margin:0;">DocAgent</h3>
+                <p class="agent-card__desc">Responde consultas sobre Protheus citando la documentación oficial (TDN) y la base de soporte (CST). Si no encuentra evidencia, se abstiene.</p>
+                <ul class="agent-card__cases">
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Parámetros MV_* de la localización Bolivia</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Documentación de rutinas (MATA010, MATA410…)</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Errores conocidos con evidencia de CST</li>
+                </ul>
+                <p class="agent-card__tech">docagent@12 · <span class="money">USD 0,0184</span>/ses · evals 94%</p>
+                <div class="agent-card__foot">
+                  <button class="btn btn--secondary btn--sm" type="button">Abrir chat</button>
+                  <a class="agent-card__link" href="./14-ficha-agente.html">Ver ficha →</a>
+                </div>
+              </article>
+
+              <!-- Triage CST — BETA (dato de ejemplo) -->
+              <article class="panel agent-card" aria-labelledby="a-cst">
+                <div class="agent-card__head">
+                  <span class="kicker kicker--dim" style="margin:0;">Agente · Experimental</span>
+                  <span class="tag tag--warn">Beta</span>
+                </div>
+                <h3 id="a-cst" style="margin:0;">Triage CST</h3>
+                <p class="agent-card__desc">Clasifica tickets de soporte TOTVS por módulo y urgencia, y sugiere si conviene escalarlos al CST o resolver internamente.</p>
+                <ul class="agent-card__cases">
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Priorizar la bandeja de tickets del día</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Detectar duplicados de casos ya resueltos</li>
+                </ul>
+                <p class="agent-card__tech">cst-triage@3 · <span class="money">USD 0,0092</span>/ses · evals 86%</p>
+                <div class="agent-card__foot">
+                  <button class="btn btn--secondary btn--sm" type="button">Abrir chat</button>
+                  <a class="agent-card__link" href="#">Ver ficha →</a>
+                </div>
+              </article>
+
+              <!-- ValidationAgent — PRÓXIMAMENTE F2 -->
+              <article class="panel agent-card" aria-labelledby="a-val">
+                <div class="agent-card__head">
+                  <span class="kicker kicker--dim" style="margin:0;">Agente · Validación</span>
+                  <span class="tag">Próximamente · Fase 2</span>
+                </div>
+                <h3 id="a-val" style="margin:0;">ValidationAgent</h3>
+                <p class="agent-card__desc">Valida la parametrización del ambiente de un cliente contra checklists por módulo. Toda escritura pasa por aprobación humana.</p>
+                <ul class="agent-card__cases">
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Checklist de localización BOL post-instalación</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Diferencias SX6 entre prod y validación</li>
+                </ul>
+                <p class="agent-card__tech">— sin versión publicada</p>
+                <div class="agent-card__foot">
+                  <div>
+                    <button class="btn btn--secondary btn--sm" type="button" disabled aria-describedby="a-val-r">Abrir chat</button>
+                    <p class="agent-card__reason" id="a-val-r">Disponible en Fase 2</p>
+                  </div>
+                  <a class="agent-card__link" href="#">Ver ficha →</a>
+                </div>
+              </article>
+
+              <!-- DevAgent — PRÓXIMAMENTE F3 -->
+              <article class="panel agent-card" aria-labelledby="a-dev">
+                <div class="agent-card__head">
+                  <span class="kicker kicker--dim" style="margin:0;">Agente · Desarrollo</span>
+                  <span class="tag">Próximamente · Fase 3</span>
+                </div>
+                <h3 id="a-dev" style="margin:0;">DevAgent</h3>
+                <p class="agent-card__desc">Asiste en desarrollo AdvPL/TLPP: propone código como sugerencia con diffs. Nunca aplica cambios por su cuenta.</p>
+                <ul class="agent-card__cases">
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Puntos de entrada y user functions</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Revisión de fuentes con sugerencias en diff</li>
+                </ul>
+                <p class="agent-card__tech">— sin versión publicada</p>
+                <div class="agent-card__foot">
+                  <div>
+                    <button class="btn btn--secondary btn--sm" type="button" disabled aria-describedby="a-dev-r">Abrir chat</button>
+                    <p class="agent-card__reason" id="a-dev-r">Disponible en Fase 3</p>
+                  </div>
+                  <a class="agent-card__link" href="#">Ver ficha →</a>
+                </div>
+              </article>
+
+              <!-- Consultas TDN v1 — DEPRECADO (dato de ejemplo, solo Admin) -->
+              <article class="panel agent-card is-deprecated" aria-labelledby="a-old">
+                <div class="agent-card__head">
+                  <span class="kicker kicker--dim" style="margin:0;">Agente · Documental</span>
+                  <span class="tag tag--outline"><svg width="12" height="12" aria-hidden="true"><use href="#i-archive"/></svg>Deprecado</span>
+                </div>
+                <h3 id="a-old" style="margin:0;">Consultas TDN v1</h3>
+                <p class="agent-card__desc">Primer prototipo de búsqueda documental. Reemplazado por DocAgent, que agrega citas obligatorias y abstención sin evidencia.</p>
+                <ul class="agent-card__cases">
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Sesiones históricas consultables desde el chat</li>
+                </ul>
+                <p class="agent-card__tech">tdn-v1@7 · retirado 02/06/2026</p>
+                <div class="agent-card__foot">
+                  <span class="agent-card__reason">No admite sesiones nuevas</span>
+                  <a class="agent-card__link" href="./14-ficha-agente.html">Ver reemplazo →</a>
+                </div>
+              </article>
+
+            </div>
+
+            <!-- Vacío de búsqueda inline (lo muestra el micro-demo si no hay matches) -->
+            <div class="empty-state" id="a-empty" hidden>
+              <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-search"/></svg></span>
+              <p class="empty-state__title">Sin resultados para «<span id="a-empty-q"></span>»</p>
+              <p class="empty-state__hint">Probá con otro término o limpiá los filtros.</p>
+              <button class="btn btn--secondary btn--sm" type="button" onclick="var i=document.getElementById('a-search');i.value='';i.dispatchEvent(new Event('input'));i.focus();">Limpiar filtros</button>
+              <a href="#" style="font-size:var(--fs-small);">¿Buscabas un workflow? Están en su propia sección →</a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — FUNCIONAL (2 agentes, sin capa técnica) ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Funcional — 2 agentes asignados, experiencia limpia</h2>
+    <p class="doc-caption">Sin capa técnica en las cards (ni versión de prompt, ni costo, ni evals), sin «Ver como», sidebar sin secciones de administración. Lo que el rol no tiene, no se renderiza (DESIGN-SYSTEM §9.7).</p>
+
+    <div class="frame">
+      <div class="ai-banner"><svg aria-hidden="true"><use href="#i-alert"/></svg>Respuestas generadas por IA — verificá antes de aplicar en cliente</div>
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <span class="sidebar__brand">Resultar<span class="accent">·</span>Agents</span>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-msg"/></svg>Chat</a>
+          <a class="nav-link is-active" href="#" aria-current="page"><svg aria-hidden="true"><use href="#i-grid"/></svg>Catálogo</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-listchecks"/></svg>Workflows</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Catálogo</span>
+            <div class="topbar__right">
+              <button class="notif-bell" aria-label="Notificaciones, sin novedades"><svg aria-hidden="true"><use href="#i-bell"/></svg></button>
+              <span class="badge-rol badge-rol--funcional">Funcional</span>
+              <span class="topbar__user">lucia</span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="cat-head">
+              <div>
+                <span class="kicker">Catálogo</span>
+                <h2 style="margin-bottom:var(--sp-1);">Agentes</h2>
+                <p class="muted" style="margin:0;">Elegí un agente para abrir un chat, o entrá a su ficha para ver qué hace y cómo empezar.</p>
+              </div>
+            </div>
+
+            <div class="cat-tools">
+              <div class="field field--search">
+                <label class="sr-only" for="f-search">Buscar agentes</label>
+                <input class="input" type="search" id="f-search" placeholder="Buscar por nombre, descripción o caso de uso…">
+              </div>
+              <div class="field field--select">
+                <label class="sr-only" for="f-estado">Filtrar por estado</label>
+                <select class="select" id="f-estado">
+                  <option>Estado: todos</option>
+                  <option>Activo</option>
+                  <option>Beta</option>
+                </select>
+              </div>
+            </div>
+
+            <p class="cat-count" aria-live="polite">2 agentes · mostrando 2</p>
+
+            <div class="agent-grid">
+              <article class="panel agent-card" aria-labelledby="f-doc">
+                <div class="agent-card__head">
+                  <span class="kicker kicker--dim" style="margin:0;">Agente · Documental</span>
+                  <span class="tag tag--money"><span class="live-dot" aria-hidden="true"></span>Activo</span>
+                </div>
+                <h3 id="f-doc" style="margin:0;">DocAgent</h3>
+                <p class="agent-card__desc">Responde consultas sobre Protheus citando la documentación oficial (TDN) y la base de soporte (CST). Si no encuentra evidencia, se abstiene.</p>
+                <ul class="agent-card__cases">
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Parámetros MV_* de la localización Bolivia</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Documentación de rutinas (MATA010, MATA410…)</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Errores conocidos con evidencia de CST</li>
+                </ul>
+                <div class="agent-card__foot agent-card__foot--no-tech">
+                  <button class="btn btn--secondary btn--sm" type="button">Abrir chat</button>
+                  <a class="agent-card__link" href="./14-ficha-agente.html">Ver ficha →</a>
+                </div>
+              </article>
+
+              <article class="panel agent-card" aria-labelledby="f-cst">
+                <div class="agent-card__head">
+                  <span class="kicker kicker--dim" style="margin:0;">Agente · Experimental</span>
+                  <span class="tag tag--warn">Beta</span>
+                </div>
+                <h3 id="f-cst" style="margin:0;">Triage CST</h3>
+                <p class="agent-card__desc">Clasifica tickets de soporte TOTVS por módulo y urgencia, y sugiere si conviene escalarlos al CST o resolver internamente.</p>
+                <ul class="agent-card__cases">
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Priorizar la bandeja de tickets del día</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Detectar duplicados de casos ya resueltos</li>
+                </ul>
+                <div class="agent-card__foot agent-card__foot--no-tech">
+                  <button class="btn btn--secondary btn--sm" type="button">Abrir chat</button>
+                  <a class="agent-card__link" href="#">Ver ficha →</a>
+                </div>
+              </article>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ ESTADOS: CARGA · VACÍO ROL · ERROR ════════════════ -->
+  <section class="doc-section" aria-labelledby="ve-t">
+    <span class="kicker kicker--dim">Estados</span>
+    <h2 id="ve-t">Carga · vacío de rol · error</h2>
+
+    <h3 style="margin-top:var(--sp-6);">Carga — skeleton con la silueta real de la card</h3>
+    <p class="doc-caption">Solo si la carga estimada supera 300 ms (DESIGN-SYSTEM §8.23). <code>aria-busy="true"</code> en la grilla.</p>
+    <div class="agent-grid" aria-busy="true" aria-label="Cargando catálogo">
+      <div class="panel agent-card">
+        <span class="skeleton" style="height:12px;width:42%;"></span>
+        <span class="skeleton skeleton--title"></span>
+        <span class="skeleton skeleton--text"></span>
+        <span class="skeleton skeleton--text" style="width:84%;"></span>
+        <span class="skeleton skeleton--text" style="width:64%;"></span>
+        <span class="skeleton" style="height:28px;width:96px;margin-top:var(--sp-2);"></span>
+      </div>
+      <div class="panel agent-card">
+        <span class="skeleton" style="height:12px;width:52%;"></span>
+        <span class="skeleton skeleton--title"></span>
+        <span class="skeleton skeleton--text"></span>
+        <span class="skeleton skeleton--text" style="width:76%;"></span>
+        <span class="skeleton skeleton--text" style="width:58%;"></span>
+        <span class="skeleton" style="height:28px;width:96px;margin-top:var(--sp-2);"></span>
+      </div>
+      <div class="panel agent-card">
+        <span class="skeleton" style="height:12px;width:38%;"></span>
+        <span class="skeleton skeleton--title"></span>
+        <span class="skeleton skeleton--text"></span>
+        <span class="skeleton skeleton--text" style="width:88%;"></span>
+        <span class="skeleton skeleton--text" style="width:70%;"></span>
+        <span class="skeleton" style="height:28px;width:96px;margin-top:var(--sp-2);"></span>
+      </div>
+    </div>
+
+    <h3 style="margin-top:var(--sp-7);">Vacío — el rol no tiene agentes asignados</h3>
+    <p class="doc-caption">Sin CTA: el usuario Funcional no puede resolverlo por su cuenta. La redacción dice qué es el lugar y cómo se destraba.</p>
+    <div class="empty-state" style="max-width:640px;">
+      <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-bot"/></svg></span>
+      <p class="empty-state__title">Tu rol todavía no tiene agentes asignados</p>
+      <p class="empty-state__hint">Cuando el administrador te habilite un agente, va a aparecer acá. Hablá con el administrador para pedir acceso.</p>
+    </div>
+
+    <h3 style="margin-top:var(--sp-7);">Error de carga — accionable (plantilla §9.6)</h3>
+    <p class="doc-caption">Para el rol Funcional, el código técnico pasa a segundo plano: «código para soporte: CATALOG_OFFLINE».</p>
+    <div class="error-card" role="alert" style="max-width:640px;">
+      <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+      <div>
+        <p class="error-card__code">CATALOG_OFFLINE</p>
+        <p class="error-card__title">No se pudo cargar el catálogo</p>
+        <p class="error-card__why">El servidor no respondió a tiempo. Tus sesiones de chat existentes no se ven afectadas.</p>
+        <div class="error-card__actions">
+          <button class="btn btn--secondary btn--sm" type="button">Reintentar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  /* Micro-demo trivial: búsqueda en cliente del frame Admin (vista 13).
+     En producto: debounce 200 ms + matriz de visibilidad servida del backend. */
+  (function () {
+    var input = document.getElementById('a-search');
+    var grid = document.getElementById('a-grid');
+    var count = document.getElementById('a-count');
+    var empty = document.getElementById('a-empty');
+    var emptyQ = document.getElementById('a-empty-q');
+    var cards = Array.prototype.slice.call(grid.querySelectorAll('.agent-card'));
+    input.addEventListener('input', function () {
+      var q = input.value.trim().toLowerCase();
+      var visible = 0;
+      cards.forEach(function (c) {
+        var hit = !q || c.textContent.toLowerCase().indexOf(q) !== -1;
+        c.hidden = !hit;
+        if (hit) visible++;
+      });
+      count.textContent = '5 agentes · mostrando ' + visible;
+      empty.hidden = visible !== 0;
+      grid.hidden = visible === 0;
+      if (visible === 0) emptyQ.textContent = input.value.trim();
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>18 · Workflow — resultado — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .frame__pad { padding: var(--sp-6); }
+
+  .res-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-5); }
+  .res-head__id { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-1); }
+  .res-head__meta { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .res-head__actions { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+  .sev-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .sev-tile { display: grid; gap: var(--sp-1); justify-items: start; padding: var(--sp-4); }
+  .sev-tile__n { font-family: var(--font-mono); font-size: var(--fs-display); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .res-totals { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); margin: 0 0 var(--sp-3); }
+  .res-exec { font-size: var(--fs-lead); line-height: var(--lh-loose); color: var(--ink-dim); max-width: 80ch; }
+
+  .ev { display: grid; gap: 2px; font-family: var(--font-mono); font-size: var(--fs-caption); }
+  .ev .act { color: var(--danger); }
+  .ev .exp { color: var(--money); }
+
+  .trace { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--sp-3) var(--sp-4); }
+  .trace dt { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-faint); font-family: var(--font-mono); margin: 0 0 2px; }
+  .trace dd { margin: 0; font-size: var(--fs-small); font-weight: 500; overflow-wrap: anywhere; }
+
+  .ok-panel { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-5); background: color-mix(in srgb, var(--money) 8%, var(--panel)); border: 1px solid color-mix(in srgb, var(--money) 40%, transparent); border-radius: var(--r-lg); }
+  .ok-panel svg { width: 24px; height: 24px; color: var(--money); flex: none; }
+
+  .partial-banner { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); background: color-mix(in srgb, var(--warn) 10%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); border-radius: var(--r-md); font-size: var(--fs-small); color: var(--ink-dim); margin-bottom: var(--sp-4); }
+  .partial-banner svg { width: 14px; height: 14px; color: var(--warn); flex: none; }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .sev-tiles { grid-template-columns: repeat(2, 1fr); }
+    .res-head__actions { width: 100%; }
+    .res-head__actions .btn { flex: 1 1 auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
+    <symbol id="i-retry" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 18 · Módulo workflows</span>
+    <h1>Resultado — informe GAP</h1>
+    <p class="muted">Artefacto de salida de <code>WF-2026-0347</code>: ejecutivo primero, detalle después, trazabilidad completa. Spec: <code>docs/design/VISTAS/04-workflows.md</code> §4.</p>
+    <p class="doc-caption">Datos 100% ficticios. Renderizado como rol Técnico (ve costo y tokens en la trazabilidad).</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — informe completo ════════════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Informe completo con hallazgos</h2>
+    <p class="doc-caption">Micro-demo: las tabs de severidad filtran la tabla de verdad.</p>
+
+    <div class="frame frame__pad">
+      <div class="res-head">
+        <div>
+          <div class="res-head__id">
+            <span class="tag tag--money">Completada</span>
+            <code>WF-2026-0347</code>
+          </div>
+          <h2 style="margin-bottom:var(--sp-1)">Informe GAP — Validación de módulo Facturación</h2>
+          <span class="res-head__meta">finalizada 11/06/2026 14:41 · Comercial Andina S.A. · <span class="tag tag--info">VAL</span></span>
+        </div>
+        <div class="res-head__actions">
+          <button type="button" class="btn btn--secondary"><svg aria-hidden="true"><use href="#i-download"/></svg>Exportar PDF</button>
+          <button type="button" class="btn btn--secondary"><svg aria-hidden="true"><use href="#i-download"/></svg>Exportar CSV</button>
+          <button type="button" class="btn btn--ghost"><svg aria-hidden="true"><use href="#i-retry"/></svg>Re-ejecutar</button>
+        </div>
+      </div>
+
+      <span class="kicker">Resumen ejecutivo</span>
+      <div class="sev-tiles">
+        <div class="panel sev-tile"><span class="sev-tile__n" style="color:var(--danger)">1</span><span class="tag tag--danger">Crítico</span></div>
+        <div class="panel sev-tile"><span class="sev-tile__n" style="color:var(--accent-alt)">3</span><span class="tag tag--alt">Alto</span></div>
+        <div class="panel sev-tile"><span class="sev-tile__n" style="color:var(--warn)">5</span><span class="tag tag--warn">Medio</span></div>
+        <div class="panel sev-tile"><span class="sev-tile__n">2</span><span class="tag">Bajo</span></div>
+        <div class="panel sev-tile"><span class="sev-tile__n" style="color:var(--money)">31</span><span class="tag tag--money">Cumplen</span></div>
+      </div>
+      <p class="res-totals">42 reglas evaluadas · 31 cumplen · 11 hallazgos</p>
+      <p class="res-exec">La parametrización de Facturación de Comercial Andina S.A. (ambiente VAL) presenta un hallazgo crítico: el parámetro de localización <code>MV_PAISLOC</code> está vacío, lo que bloquea la emisión de facturas con normativa boliviana. Los hallazgos altos se concentran en la configuración de impuestos (3 parámetros del bloque IVA difieren del checklist). El resto del módulo cumple en un 74% de las reglas evaluadas.</p>
+
+      <hr class="divider">
+
+      <div class="tabs" role="tablist" aria-label="Filtrar hallazgos por severidad" id="sev-tabs">
+        <button class="tab is-active" role="tab" aria-selected="true" data-sev="todos">Todos <span class="tag">11</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-sev="critico">Crítico <span class="tag tag--danger">1</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-sev="alto">Alto <span class="tag tag--alt">3</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-sev="medio">Medio <span class="tag tag--warn">5</span></button>
+        <button class="tab" role="tab" aria-selected="false" data-sev="bajo">Bajo <span class="tag">2</span></button>
+      </div>
+
+      <div class="table-wrap" style="margin-top:var(--sp-4)">
+        <table class="table" id="sev-table">
+          <caption class="sr-only">Hallazgos del informe GAP, ordenados por severidad descendente</caption>
+          <thead><tr><th scope="col">Regla</th><th scope="col">Evidencia</th><th scope="col">Severidad</th><th scope="col">Recomendación</th></tr></thead>
+          <tbody>
+            <tr data-sev="critico"><td><code>FAT-001</code> Localización país</td><td><div class="ev"><span class="act">actual: MV_PAISLOC = ""</span><span class="exp">esperado: "BOL"</span><span class="tag tag--outline">SX6</span></div></td><td><span class="tag tag--danger">Crítico</span></td><td>Configurá MV_PAISLOC=BOL en SX6 antes de emitir facturas.</td></tr>
+            <tr data-sev="alto"><td><code>FAT-007</code> Alícuota IVA</td><td><div class="ev"><span class="act">actual: MV_ALIQIVA = 14.94</span><span class="exp">esperado: 13.00</span><span class="tag tag--outline">SX6</span></div></td><td><span class="tag tag--alt">Alto</span></td><td>Ajustá MV_ALIQIVA a la alícuota vigente (13%).</td></tr>
+            <tr data-sev="alto"><td><code>FAT-009</code> Redondeo de impuestos</td><td><div class="ev"><span class="act">actual: MV_RNDIVA = "N"</span><span class="exp">esperado: "S"</span><span class="tag tag--outline">SX6</span></div></td><td><span class="tag tag--alt">Alto</span></td><td>Activá el redondeo por línea exigido por la localización BOL.</td></tr>
+            <tr data-sev="alto"><td><code>FAT-012</code> Serie de facturación</td><td><div class="ev"><span class="act">actual: serie sin autorización vigente</span><span class="exp">esperado: dosificación activa</span><span class="tag tag--outline">SX5</span></div></td><td><span class="tag tag--alt">Alto</span></td><td>Registrá la dosificación vigente para la serie en uso.</td></tr>
+            <tr data-sev="medio"><td><code>FAT-019</code> Tipo de saldo</td><td><div class="ev"><span class="act">actual: MV_TPSALDO = "2"</span><span class="exp">esperado: "1"</span><span class="tag tag--outline">SX6</span></div></td><td><span class="tag tag--warn">Medio</span></td><td>Revisá el tipo de saldo con el área contable antes de cambiarlo.</td></tr>
+            <tr data-sev="medio"><td><code>FAT-021</code> Símbolo de moneda 1</td><td><div class="ev"><span class="act">actual: MV_SIMB1 = "R$"</span><span class="exp">esperado: "Bs"</span><span class="tag tag--outline">SX6</span></div></td><td><span class="tag tag--warn">Medio</span></td><td>Corregí el símbolo de la moneda local a "Bs".</td></tr>
+            <tr data-sev="medio"><td><code>FAT-024</code> Decimales de precio</td><td><div class="ev"><span class="act">actual: campo D2_PRCVEN con 2 decimales</span><span class="exp">esperado: 4 decimales</span><span class="tag tag--outline">SX3</span></div></td><td><span class="tag tag--warn">Medio</span></td><td>Ampliá los decimales del campo en SX3 (impacta reportes).</td></tr>
+            <tr data-sev="medio"><td><code>FAT-027</code> Mensaje de pie de factura</td><td><div class="ev"><span class="act">actual: MV_MENFAT vacío</span><span class="exp">esperado: leyenda fiscal BOL</span><span class="tag tag--outline">SX6</span></div></td><td><span class="tag tag--warn">Medio</span></td><td>Cargá la leyenda fiscal exigida en el pie de factura.</td></tr>
+            <tr data-sev="medio"><td><code>FAT-031</code> Integración contable</td><td><div class="ev"><span class="act">actual: lote contable manual</span><span class="exp">esperado: en línea</span><span class="tag tag--outline">SX6</span></div></td><td><span class="tag tag--warn">Medio</span></td><td>Evaluá pasar la contabilización a en línea según el estándar del checklist.</td></tr>
+            <tr data-sev="bajo"><td><code>FAT-035</code> Descripción de TES</td><td><div class="ev"><span class="act">actual: 3 TES sin descripción</span><span class="exp">esperado: descripción completa</span><span class="tag tag--outline">SF4</span></div></td><td><span class="tag">Bajo</span></td><td>Completá las descripciones para facilitar auditorías.</td></tr>
+            <tr data-sev="bajo"><td><code>FAT-038</code> Días de vencimiento default</td><td><div class="ev"><span class="act">actual: MV_VENCTO = 0</span><span class="exp">esperado: 30</span><span class="tag tag--outline">SX6</span></div></td><td><span class="tag">Bajo</span></td><td>Definí el vencimiento default acordado con el cliente.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="divider">
+
+      <span class="kicker">Trazabilidad</span>
+      <dl class="trace" style="margin:var(--sp-3) 0 0">
+        <div><dt>Ejecutado por</dt><dd>lucia</dd></div>
+        <div><dt>Inicio / fin</dt><dd class="mono">11/06/2026 14:32 → 14:41</dd></div>
+        <div><dt>Duración</dt><dd class="mono">9 min 42 s</dd></div>
+        <div><dt>Cliente final</dt><dd>Comercial Andina S.A.</dd></div>
+        <div><dt>Ambiente</dt><dd><span class="tag tag--info">VAL</span></dd></div>
+        <div><dt>Checklist</dt><dd class="mono">checklist-fact-v3.xlsx · v3 · sha256 a41f…9c2e</dd></div>
+        <div><dt>Workflow</dt><dd class="mono">validacion-facturacion@1.4</dd></div>
+        <div><dt>Corrida</dt><dd class="mono">WF-2026-0347</dd></div>
+        <div><dt>Comentario</dt><dd>Segunda visita: revisar parámetros corregidos el 06/06.</dd></div>
+        <div><dt>Costo</dt><dd><span class="money">USD 0,21 · 84,2k tok</span> <span class="chip-cache chip-cache--hit">HIT · 61k</span></dd></div>
+      </dl>
+      <p class="faint" style="font-size:var(--fs-caption); margin-top:var(--sp-4)">Informe generado por IA — verificá cada hallazgo antes de aplicar cambios en el cliente.</p>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — 0 hallazgos ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Todo cumple (0 hallazgos)</h2>
+    <p class="doc-caption">El export sigue disponible: un informe «todo cumple» también se entrega al cliente.</p>
+    <div class="frame frame__pad" style="display:grid; gap:var(--sp-4)">
+      <div class="sev-tiles" style="margin:0">
+        <div class="panel sev-tile"><span class="sev-tile__n">0</span><span class="tag tag--danger">Crítico</span></div>
+        <div class="panel sev-tile"><span class="sev-tile__n">0</span><span class="tag tag--alt">Alto</span></div>
+        <div class="panel sev-tile"><span class="sev-tile__n">0</span><span class="tag tag--warn">Medio</span></div>
+        <div class="panel sev-tile"><span class="sev-tile__n">0</span><span class="tag">Bajo</span></div>
+        <div class="panel sev-tile"><span class="sev-tile__n" style="color:var(--money)">42</span><span class="tag tag--money">Cumplen</span></div>
+      </div>
+      <div class="ok-panel">
+        <svg aria-hidden="true"><use href="#i-check"/></svg>
+        <div>
+          <p style="margin:0; font-weight:600">La parametrización cumple las 42 reglas del checklist v3.</p>
+          <p class="muted" style="margin:0; font-size:var(--fs-small)">Exportá el informe como constancia de la visita.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE C — informe parcial ════════════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Corrida en error con hallazgos parciales</h2>
+    <div class="frame frame__pad">
+      <div class="partial-banner" role="status"><svg aria-hidden="true"><use href="#i-alert"/></svg>Informe parcial: la corrida no terminó (error en el paso 3). <a href="#" style="margin-left:var(--sp-1)">Ver la ejecución</a></div>
+      <div class="error-card" role="alert" style="max-width:560px">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <div>
+          <p class="error-card__code">BRIDGE_TIMEOUT</p>
+          <p class="error-card__title">La corrida WF-2026-0338 terminó en error</p>
+          <p class="error-card__why">Se evaluaron 21 de 42 reglas antes del corte. Los hallazgos parciales se listan debajo.</p>
+          <div class="error-card__actions">
+            <a class="btn btn--secondary btn--sm" href="#">Ver paso fallido</a>
+            <button type="button" class="btn btn--ghost btn--sm"><svg style="width:14px;height:14px" aria-hidden="true"><use href="#i-retry"/></svg>Re-ejecutar workflow</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Micro-demo: filtro client-side por severidad (solo demo de mockup)
+  (function () {
+    var tabs = document.querySelectorAll('#sev-tabs .tab');
+    var rows = document.querySelectorAll('#sev-table tbody tr');
+    tabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        tabs.forEach(function (t) { t.classList.remove('is-active'); t.setAttribute('aria-selected', 'false'); });
+        tab.classList.add('is-active'); tab.setAttribute('aria-selected', 'true');
+        var sev = tab.dataset.sev;
+        rows.forEach(function (r) { r.style.display = (sev === 'todos' || r.dataset.sev === sev) ? '' : 'none'; });
+      });
+    });
+  })();
+</script>
+</body>
+</html>

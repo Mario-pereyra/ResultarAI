@@ -1,0 +1,266 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>28 · Gestión de checklists — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .content { padding: var(--sp-6); }
+  .c-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .c-filters { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+  .c-filters .input { width: 220px; }
+  .c-filters .select { width: 170px; }
+  .cell-id { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .row-actions { display: flex; gap: var(--sp-1); white-space: nowrap; }
+  tr.is-converting td { background: color-mix(in srgb, var(--info) 4%, transparent); }
+  .conv-detail { font-size: var(--fs-caption); color: var(--danger); }
+
+  /* Dropzone del modal de subida */
+  .dropzone { display: grid; justify-items: center; gap: var(--sp-2); border: 2px dashed var(--line-strong); border-radius: var(--r-md); padding: var(--sp-6); text-align: center; color: var(--ink-dim); font-size: var(--fs-small); cursor: pointer; transition: border-color var(--dur-1) var(--ease-out); }
+  .dropzone:hover, .dropzone:focus-visible { border-color: var(--accent); color: var(--ink); outline: none; }
+  .dropzone svg { width: 28px; height: 28px; color: var(--ink-faint); }
+  .stage { background: var(--scrim); border-radius: var(--r-lg); padding: var(--sp-7) var(--sp-4); display: grid; place-items: center; }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .c-filters .input, .c-filters .select { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></symbol>
+  <symbol id="i-listchecks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></symbol>
+</defs></svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 28 · Módulo validación</span>
+    <h1>Gestión de checklists</h1>
+    <p class="muted">Lista versionada de checklists de parametrización para ValidationAgent. Técnico + Admin. Spec: <code>docs/design/VISTAS/05-hitl-validacion.md §5</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Versiones aprobadas = inmutables; «corregir» = subir versión nueva.</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — lista con todos los estados ════════════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Lista — aprobado activo, en revisión, borrador, conversión en curso y fallida</h2>
+
+    <div class="frame">
+      <div class="ai-banner"><svg aria-hidden="true"><use href="#i-alert"/></svg>Respuestas generadas por IA — verificá antes de aplicar en cliente</div>
+      <div class="content">
+        <div class="c-head">
+          <div>
+            <span class="kicker">Validación · Checklists</span>
+            <h2 style="margin:0">Checklists</h2>
+          </div>
+          <button class="btn btn--primary"><svg aria-hidden="true"><use href="#i-up"/></svg>Subir XLSX</button>
+        </div>
+
+        <form class="c-filters" role="search" aria-label="Filtrar checklists">
+          <label class="sr-only" for="c-q">Buscar checklist</label>
+          <input class="input" type="search" id="c-q" placeholder="Buscar por nombre o ID…">
+          <label class="sr-only" for="c-mod">Módulo</label>
+          <select class="select" id="c-mod"><option>Módulo: todos</option><option>SIGAFIN</option><option>SIGACOM</option><option>SIGAFAT</option></select>
+          <label class="sr-only" for="c-loc">Localización</label>
+          <select class="select" id="c-loc"><option>Localización: todas</option><option>BOL</option></select>
+          <label class="sr-only" for="c-est">Estado</label>
+          <select class="select" id="c-est"><option>Estado: todos</option><option>Aprobado</option><option>En revisión</option><option>Borrador</option></select>
+        </form>
+
+        <div class="table-wrap">
+          <table class="table">
+            <caption class="sr-only">Checklists versionados por módulo y localización</caption>
+            <thead><tr>
+              <th scope="col">Checklist</th><th scope="col">Módulo</th><th scope="col">Loc.</th><th scope="col">Ver.</th>
+              <th scope="col">Estado</th><th scope="col">Reglas</th><th scope="col">Owner</th><th scope="col">Actualizado</th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td>Parametrización fiscal<br><span class="cell-id">CHK-FIN-BOL</span></td>
+                <td class="mono">SIGAFIN</td><td class="mono">BOL</td><td class="mono">v3</td>
+                <td><span class="tag tag--money">Aprobado</span> <span class="tag tag--outline">activa</span></td>
+                <td class="num">34</td><td>rodrigo</td><td class="mono">10/06 18:20</td>
+                <td class="row-actions">
+                  <a class="btn btn--ghost btn--sm" href="#" aria-label="Descargar XLSX original de CHK-FIN-BOL v3"><svg aria-hidden="true"><use href="#i-down"/></svg>XLSX</a>
+                  <a class="btn btn--ghost btn--sm" href="./29-checklist-review.html">Ver</a>
+                </td>
+              </tr>
+              <tr>
+                <td>Parametrización fiscal<br><span class="cell-id">CHK-FIN-BOL</span></td>
+                <td class="mono">SIGAFIN</td><td class="mono">BOL</td><td class="mono">v4</td>
+                <td><span class="tag tag--info">En revisión</span></td>
+                <td class="num">34</td><td>rodrigo</td><td class="mono">11/06 09:15</td>
+                <td class="row-actions">
+                  <a class="btn btn--ghost btn--sm" href="#" aria-label="Descargar XLSX original de CHK-FIN-BOL v4"><svg aria-hidden="true"><use href="#i-down"/></svg>XLSX</a>
+                  <a class="btn btn--secondary btn--sm" href="./29-checklist-review.html">Revisar</a>
+                </td>
+              </tr>
+              <tr>
+                <td>Compras<br><span class="cell-id">CHK-COM-BOL</span></td>
+                <td class="mono">SIGACOM</td><td class="mono">BOL</td><td class="mono">v1</td>
+                <td><span class="tag">Borrador</span></td>
+                <td class="num faint">—</td><td>marco</td><td class="mono">09/06 11:02</td>
+                <td class="row-actions">
+                  <a class="btn btn--ghost btn--sm" href="#" aria-label="Descargar XLSX original de CHK-COM-BOL v1"><svg aria-hidden="true"><use href="#i-down"/></svg>XLSX</a>
+                  <button class="btn btn--ghost btn--sm">Descartar</button>
+                </td>
+              </tr>
+              <tr class="is-converting">
+                <td>Activos fijos<br><span class="cell-id">CHK-ATF-BOL</span></td>
+                <td class="mono">SIGAATF</td><td class="mono">BOL</td><td class="mono">v1</td>
+                <td><span class="tag tag--info">Convirtiendo…</span></td>
+                <td class="num faint">—</td><td>lucia</td><td class="mono">11/06 15:40</td>
+                <td class="row-actions"><button class="btn btn--ghost btn--sm btn--loading" aria-busy="true" aria-label="Conversión en curso">…</button></td>
+              </tr>
+              <tr>
+                <td>Facturación<br><span class="cell-id">CHK-FAT-BOL</span><br><span class="conv-detail">la hoja ‘Parámetros’ no tiene columna ‘valor esperado’</span></td>
+                <td class="mono">SIGAFAT</td><td class="mono">BOL</td><td class="mono">v2</td>
+                <td><span class="tag tag--danger">Conversión falló</span></td>
+                <td class="num faint">—</td><td>marco</td><td class="mono">11/06 08:12</td>
+                <td class="row-actions">
+                  <a class="btn btn--ghost btn--sm" href="#"><svg aria-hidden="true"><use href="#i-down"/></svg>XLSX</a>
+                  <button class="btn btn--secondary btn--sm"><svg aria-hidden="true"><use href="#i-refresh"/></svg>Reintentar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="doc-caption" style="margin-top:var(--sp-2)">Por (módulo, localización): 1 aprobada activa + aprobadas anteriores consultables + a lo sumo 1 borrador/en revisión. Admin puede descartar borradores ajenos; Técnico solo los propios.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — modal de subida + workflow de conversión ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Modal «Subir XLSX» + workflow de conversión</h2>
+
+    <div style="display:grid;gap:var(--sp-5);grid-template-columns:repeat(auto-fit,minmax(360px,1fr));align-items:start">
+      <div class="stage">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="up-t">
+          <div class="modal__head">
+            <h3 class="modal__title" id="up-t">Subir checklist (XLSX)</h3>
+            <button class="btn btn--ghost btn--sm" aria-label="Cerrar">✕</button>
+          </div>
+          <div class="modal__body">
+            <button type="button" class="dropzone" aria-label="Soltá el archivo XLSX acá o hacé click para elegirlo">
+              <svg aria-hidden="true"><use href="#i-up"/></svg>
+              <strong>Soltá el XLSX acá</strong>
+              <span class="faint">o hacé click para elegirlo · máx. 10 MB · solo .xlsx</span>
+            </button>
+            <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;margin:var(--sp-3) 0">
+              <span class="chip"><svg aria-hidden="true"><use href="#i-file"/></svg><span class="chip__name">plan-fiscal-bol-v4.xlsx</span><span class="chip__meta">412 KB</span><button class="chip__close" aria-label="Quitar adjunto plan-fiscal-bol-v4.xlsx">✕</button></span>
+              <span class="chip is-error"><svg aria-hidden="true"><use href="#i-file"/></svg><span class="chip__name">notas.docx</span><span class="chip__meta" data-tip="Solo se aceptan archivos .xlsx">tipo rechazado</span><button class="chip__close" aria-label="Quitar notas.docx">✕</button></span>
+            </div>
+            <div class="field">
+              <label class="field-label" for="up-mod">Módulo <span class="req" aria-hidden="true">*</span></label>
+              <select class="select" id="up-mod"><option>SIGAFIN</option><option>SIGACOM</option><option>SIGAFAT</option></select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="up-loc">Localización <span class="req" aria-hidden="true">*</span></label>
+              <select class="select" id="up-loc"><option>BOL</option></select>
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label class="field-label" for="up-base">Basado en</label>
+              <select class="select" id="up-base"><option>— ninguna —</option><option>CHK-FIN-BOL v3 (aprobada activa)</option></select>
+              <span class="field-hint">Opcional: hereda metadatos de una versión aprobada existente. <span class="req">*</span> obligatorio</span>
+            </div>
+            <div class="error-card error-card--warn" style="margin-top:var(--sp-3)">
+              <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+              <div>
+                <p class="error-card__title" style="font-size:var(--fs-small)">Ya existe v4 en revisión para SIGAFIN · BOL</p>
+                <p class="error-card__why" style="margin:0">Finalizala o descartala antes de subir otra versión.</p>
+              </div>
+            </div>
+          </div>
+          <div class="modal__foot">
+            <button class="btn btn--ghost">Cancelar</button>
+            <button class="btn btn--primary" disabled>Subir e iniciar conversión</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Workflow de conversión (tras subir)</h3>
+        <p class="doc-caption">Determinista: la fila nueva muestra esta timeline. Al terminar la conversión llega notificación (campana) y el estado pasa a «En revisión».</p>
+        <ol class="wf" style="list-style:none;padding:0;margin:0">
+          <li class="wf-step is-done"><span class="wf-step__dot" aria-hidden="true">✓</span><div><p class="wf-step__title">Subida</p><p class="wf-step__meta">plan-fiscal-bol-v4.xlsx · 11/06/2026 09:14</p></div></li>
+          <li class="wf-step is-active"><span class="wf-step__dot" aria-hidden="true">2</span><div><p class="wf-step__title">Conversión automática a YAML</p><p class="wf-step__meta">en curso · 34 filas detectadas</p></div></li>
+          <li class="wf-step"><span class="wf-step__dot" aria-hidden="true">3</span><div><p class="wf-step__title">Revisión humana</p><p class="wf-step__meta">regla por regla (vista 29)</p></div></li>
+          <li class="wf-step"><span class="wf-step__dot" aria-hidden="true">4</span><div><p class="wf-step__title">Versión aprobada</p><p class="wf-step__meta">inmutable · pasa a ser la activa</p></div></li>
+        </ol>
+        <div class="toast toast--ok" style="animation:none;margin-top:var(--sp-4)">
+          <span class="toast__icon"><svg width="16" height="16" aria-hidden="true"><use href="#i-up"/></svg></span>
+          <div><p class="toast__title">XLSX subido</p><p class="toast__msg">Conversión iniciada — te avisamos cuando esté lista para revisar.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE C — estados ════════════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Estados: vacío · carga · error · degradado (en cola)</h2>
+    <div style="display:grid;gap:var(--sp-5);grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <div class="panel">
+        <h3>Vacío — primera vez</h3>
+        <div class="empty-state">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-listchecks"/></svg></span>
+          <p class="empty-state__title">Todavía no hay checklists</p>
+          <p class="empty-state__hint">Subí el primer XLSX para que ValidationAgent pueda validar parametrizaciones.</p>
+          <button class="btn btn--primary btn--sm"><svg aria-hidden="true"><use href="#i-up"/></svg>Subir XLSX</button>
+        </div>
+      </div>
+      <div class="panel" aria-busy="true">
+        <h3>Carga</h3>
+        <span class="skeleton skeleton--text" style="margin-bottom:8px"></span>
+        <span class="skeleton skeleton--text" style="width:85%;margin-bottom:8px"></span>
+        <span class="skeleton skeleton--text" style="width:90%"></span>
+      </div>
+      <div class="panel">
+        <h3>Error de lista</h3>
+        <div class="error-card" role="alert">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">CHECKLISTS_FETCH_FAILED</p>
+            <p class="error-card__title">No se pudieron cargar los checklists</p>
+            <p class="error-card__why">El servicio no respondió.</p>
+            <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Degradado — convertidor sin conexión</h3>
+        <p><span class="tag tag--warn">En cola</span> <span class="faint" style="font-size:var(--fs-small)">— la subida no se pierde; la conversión arranca al reconectar.</span></p>
+        <p class="doc-caption" style="margin:var(--sp-3) 0 0">Móvil (⚠️ lectura): el botón «Subir XLSX» existe y funciona, pero el modal advierte «mejor en escritorio» sin bloquear.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

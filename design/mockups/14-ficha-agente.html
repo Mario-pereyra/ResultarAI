@@ -1,0 +1,487 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>14 · Ficha de agente — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  /* Andamiaje del documento de mockup (usa solo tokens) */
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  /* Frame = ventana de la app simulada (mismo shell que 13-catalogo.html) */
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .shell { display: grid; grid-template-columns: 220px 1fr; min-height: 520px; }
+  .sidebar { background: var(--bg-raised); border-right: 1px solid var(--line); padding: var(--sp-4) 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+  .sidebar__brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-small); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); padding: 0 var(--sp-4) var(--sp-3); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-2); }
+  .sidebar__brand .accent { color: var(--accent); }
+  .nav-link { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-4); font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-left: 2px solid transparent; }
+  .nav-link:hover { color: var(--ink); text-decoration: none; background: color-mix(in srgb, var(--ink) 4%, transparent); }
+  .nav-link.is-active { color: var(--accent); background: var(--accent-soft); border-left-color: var(--accent); font-weight: 600; }
+  .nav-link svg { width: 16px; height: 16px; flex: none; }
+  .nav-sep { height: 1px; background: var(--line); margin: var(--sp-2) var(--sp-4); border: 0; }
+  .nav-cap { font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); padding: var(--sp-1) var(--sp-4); }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 0 var(--sp-5); height: 52px; border-bottom: 1px solid var(--line); background: var(--bg); }
+  .topbar__ctx { font-family: var(--font-display); font-size: var(--fs-small); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-dim); }
+  .topbar__right { display: flex; align-items: center; gap: var(--sp-3); }
+  .topbar__user { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  /* Ficha de agente — columna de lectura máx. 880px */
+  .ficha { max-width: 880px; display: grid; gap: var(--sp-5); }
+  .crumb { display: inline-flex; align-items: center; gap: var(--sp-1); font-size: var(--fs-small); }
+  .ficha-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); }
+  .ficha-head__title { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
+  .ficha-head__roles { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: var(--sp-2); }
+  .ficha-head__roles .faint { font-size: var(--fs-caption); }
+  .ficha-cta { display: grid; justify-items: end; gap: var(--sp-1); }
+  .ficha-cta__reason { font-size: var(--fs-caption); color: var(--ink-faint); margin: 0; }
+  .tag .live-dot { width: 6px; height: 6px; }
+
+  /* Qué hace / qué no hace */
+  .que-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); }
+  .lim-list, .uso-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
+  .lim-list li, .uso-list li { display: flex; gap: var(--sp-2); font-size: var(--fs-small); color: var(--ink-dim); }
+  .lim-list svg, .uso-list svg { width: 14px; height: 14px; flex: none; margin-top: 2px; }
+  .uso-list svg { color: var(--ink-faint); }
+  .lim-list svg { color: var(--warn); }
+
+  /* Botón-ejemplo (componente nuevo del módulo — anatomía en VISTAS/03-catalogo.md) */
+  .example-btn { display: flex; align-items: flex-start; gap: var(--sp-3); width: 100%; text-align: left; padding: var(--sp-3) var(--sp-4); background: var(--bg-raised); border: 1px solid var(--line-strong); border-radius: var(--r-md); color: var(--ink); font-family: var(--font-body); font-size: var(--fs-small); cursor: pointer; transition: border-color var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out); }
+  .example-btn svg { width: 16px; height: 16px; flex: none; margin-top: 1px; color: var(--info); }
+  .example-btn__use { margin-left: auto; flex: none; color: var(--info); font-size: var(--fs-caption); white-space: nowrap; }
+  .example-btn:hover:not(:disabled) { border-color: var(--accent); background: color-mix(in srgb, var(--ink) 4%, var(--bg-raised)); }
+  .example-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .example-btn:disabled { opacity: .45; cursor: not-allowed; }
+  .example-list { display: grid; gap: var(--sp-2); }
+
+  /* Ficha técnica (solo Técnico/Admin) */
+  .tech-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--sp-3) var(--sp-5); margin: 0; }
+  .tech-meta dt { font-family: var(--font-mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 2px; }
+  .tech-meta dd { margin: 0; font-size: var(--fs-small); font-weight: 500; }
+  .tabpanel { padding-top: var(--sp-4); }
+  .tabpanel[hidden] { display: none; }
+  .tech-note { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-3) 0 0; }
+  .eval-score { font-family: var(--font-mono); font-size: var(--fs-display); font-weight: 700; color: var(--money); font-variant-numeric: tabular-nums; line-height: 1; }
+  .eval-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+  .changelog { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-3); }
+  .changelog li { display: grid; gap: 2px; font-size: var(--fs-small); border-left: 2px solid var(--line); padding-left: var(--sp-3); }
+  .changelog .mono { font-size: var(--fs-caption); }
+
+  /* Banner deprecado */
+  .dep-banner { margin-bottom: var(--sp-4); }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .shell { grid-template-columns: 1fr; }
+    .sidebar { display: none; } /* en producto: drawer accesible vía botón ≡ del topbar */
+    .content { padding: var(--sp-4); }
+    .que-grid { grid-template-columns: 1fr; }
+    .ficha-cta { justify-items: stretch; width: 100%; }
+    .ficha-cta .btn { width: 100%; }
+    .example-btn { min-height: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<!-- Sprite de íconos lucide (inline, sin librerías) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></symbol>
+    <symbol id="i-listchecks" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-chr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-chl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-quote" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/><path d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-archive" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 14 · Módulo catálogo</span>
+    <h1>Ficha de agente</h1>
+    <p class="muted">Detalle del agente con bloque «ficha técnica» por capa de rol. Spec: <code>docs/design/VISTAS/03-catalogo.md</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios (costos de ejemplo, usuarios inventados).</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — ADMIN/TÉCNICO: ficha completa con bloque técnico ════════════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Admin — DocAgent con ficha técnica (tabs funcionales)</h2>
+    <p class="doc-caption">El Técnico ve exactamente lo mismo salvo el enlace «Abrir en registro de prompts» de la tab Prompt (solo Admin). Las tabs de este frame son un micro-demo clicable.</p>
+
+    <div class="frame">
+      <div class="ai-banner"><svg aria-hidden="true"><use href="#i-alert"/></svg>Respuestas generadas por IA — verificá antes de aplicar en cliente</div>
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <span class="sidebar__brand">Resultar<span class="accent">·</span>Agents</span>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-msg"/></svg>Chat</a>
+          <a class="nav-link is-active" href="#" aria-current="page"><svg aria-hidden="true"><use href="#i-grid"/></svg>Catálogo</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-listchecks"/></svg>Workflows</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-shield"/></svg>Aprobaciones</a>
+          <hr class="nav-sep">
+          <span class="nav-cap">Administración</span>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-chart"/></svg>Telemetría</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-settings"/></svg>Consola admin</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Catálogo · DocAgent</span>
+            <div class="topbar__right">
+              <button class="notif-bell" aria-label="Notificaciones, 2 sin leer"><svg aria-hidden="true"><use href="#i-bell"/></svg><span class="notif-bell__count">2</span></button>
+              <span class="badge-rol badge-rol--admin">Admin</span>
+              <span class="topbar__user">mario</span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="ficha">
+
+              <a class="crumb" href="./13-catalogo.html"><svg width="14" height="14" aria-hidden="true"><use href="#i-chl"/></svg>Catálogo</a>
+
+              <!-- Cabecera -->
+              <header class="ficha-head">
+                <div>
+                  <span class="kicker kicker--dim">Agente · Documental</span>
+                  <div class="ficha-head__title">
+                    <h1 style="margin:0;">DocAgent</h1>
+                    <span class="tag tag--money"><span class="live-dot" aria-hidden="true"></span>Activo</span>
+                  </div>
+                  <div class="ficha-head__roles">
+                    <span class="faint">Para:</span>
+                    <span class="badge-rol badge-rol--admin">Admin</span>
+                    <span class="badge-rol badge-rol--tecnico">Técnico</span>
+                    <span class="badge-rol badge-rol--funcional">Funcional</span>
+                  </div>
+                </div>
+                <div class="ficha-cta">
+                  <button class="btn btn--primary" type="button"><svg aria-hidden="true"><use href="#i-msg"/></svg>Abrir chat</button>
+                </div>
+              </header>
+
+              <!-- Qué hace / qué no hace -->
+              <section class="panel" aria-labelledby="a-que">
+                <h3 id="a-que" class="sr-only">Qué hace y qué no hace</h3>
+                <div class="que-grid">
+                  <div>
+                    <h4>Qué hace</h4>
+                    <p class="muted" style="font-size:var(--fs-small);margin:0;">Responde consultas sobre Protheus citando la documentación oficial (TDN) y la base de soporte (CST). Cada afirmación lleva su fuente como evidencia verificable; vos decidís si aplicarla.</p>
+                  </div>
+                  <div>
+                    <h4>Qué no hace</h4>
+                    <ul class="lim-list">
+                      <li><svg aria-hidden="true"><use href="#i-x"/></svg>No inventa respuestas: si no encuentra evidencia, te lo dice y se abstiene.</li>
+                      <li><svg aria-hidden="true"><use href="#i-x"/></svg>No escribe ni modifica nada en Protheus: es un agente solo-lectura.</li>
+                      <li><svg aria-hidden="true"><use href="#i-x"/></svg>No reemplaza tu criterio: verificá antes de aplicar en un cliente.</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Casos de uso -->
+              <section class="panel" aria-labelledby="a-usos">
+                <h4 id="a-usos">Casos de uso ideales</h4>
+                <ul class="uso-list">
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Parámetros <code>MV_*</code> de la localización Bolivia (<code>MV_PAISLOC=BOL</code>)</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Documentación de rutinas estándar (MATA010, MATA410, FINA050…)</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Errores conocidos y soluciones publicadas en CST</li>
+                  <li><svg aria-hidden="true"><use href="#i-chr"/></svg>Significado de campos de diccionario (<code>SX3</code>) y parámetros (<code>SX6</code>)</li>
+                </ul>
+              </section>
+
+              <!-- Primeros pasos -->
+              <section class="panel" aria-labelledby="a-pasos">
+                <h4 id="a-pasos">Primeros pasos — probá con un ejemplo</h4>
+                <p class="doc-caption" style="margin-top:0;">Al hacer clic, el ejemplo se copia al chat sin enviarse: lo revisás y lo mandás vos.</p>
+                <div class="example-list">
+                  <button class="example-btn" type="button"><svg aria-hidden="true"><use href="#i-quote"/></svg>¿Qué parámetros MV_* afectan la numeración de facturas en la localización Bolivia?<span class="example-btn__use">usar →</span></button>
+                  <button class="example-btn" type="button"><svg aria-hidden="true"><use href="#i-quote"/></svg>¿Para qué sirve el campo B1_GRTRIB de la tabla SB1 y qué valores acepta?<span class="example-btn__use">usar →</span></button>
+                  <button class="example-btn" type="button"><svg aria-hidden="true"><use href="#i-quote"/></svg>Me aparece el error «help NAOPERM» al liberar un pedido en MATA410. ¿Qué casos conocidos hay?<span class="example-btn__use">usar →</span></button>
+                </div>
+              </section>
+
+              <!-- FICHA TÉCNICA (solo Técnico/Admin — no se renderiza para Funcional) -->
+              <section class="panel" aria-labelledby="a-tech">
+                <span class="kicker">Ficha técnica</span>
+                <h3 id="a-tech" class="sr-only">Ficha técnica de DocAgent</h3>
+
+                <div class="tabs" role="tablist" aria-label="Secciones de la ficha técnica">
+                  <button class="tab is-active" role="tab" id="tab-res" aria-selected="true" aria-controls="pan-res" type="button">Resumen</button>
+                  <button class="tab" role="tab" id="tab-tools" aria-selected="false" aria-controls="pan-tools" tabindex="-1" type="button">Tools <span class="tag">4</span></button>
+                  <button class="tab" role="tab" id="tab-prompt" aria-selected="false" aria-controls="pan-prompt" tabindex="-1" type="button">Prompt</button>
+                  <button class="tab" role="tab" id="tab-evals" aria-selected="false" aria-controls="pan-evals" tabindex="-1" type="button">Evals</button>
+                </div>
+
+                <!-- Tab Resumen -->
+                <div class="tabpanel" role="tabpanel" id="pan-res" aria-labelledby="tab-res">
+                  <dl class="tech-meta">
+                    <div><dt>Modelo</dt><dd class="mono">deepseek-v4-flash</dd></div>
+                    <div><dt>Escalación a Pro</dt><dd><span class="tag tag--alt"><svg width="12" height="12" aria-hidden="true"><use href="#i-zap"/></svg>Manual · deepseek-v4-pro</span></dd></div>
+                    <div><dt>Owner</dt><dd>Mario Pereyra (<span class="mono">mario</span>)</dd></div>
+                    <div><dt>Publicado</dt><dd class="mono">04/06/2026 17:40</dd></div>
+                    <div><dt>Política HITL</dt><dd>No aplica — agente solo-lectura</dd></div>
+                    <div><dt>Política de datos</dt><dd>N0–N2 permitidos · N3 bloqueado</dd></div>
+                  </dl>
+                  <hr class="divider" style="margin:var(--sp-4) 0;">
+                  <h4>Costo estimado por sesión <span class="faint" style="font-weight:400;font-size:var(--fs-caption);">(promedio, últimos 30 días)</span></h4>
+                  <p class="money" style="font-size:var(--fs-h3);font-weight:700;margin:0 0 var(--sp-3);">USD 0,0184<span class="faint" style="font-size:var(--fs-caption);font-weight:400;"> /sesión</span></p>
+                  <div class="table-wrap">
+                    <table class="table">
+                      <caption class="sr-only">Desglose del costo promedio por sesión</caption>
+                      <thead><tr><th scope="col">Concepto</th><th scope="col" class="num">Tokens</th><th scope="col" class="num">Costo</th></tr></thead>
+                      <tbody>
+                        <tr><td>Input cacheado <span class="chip-cache chip-cache--hit">hit</span></td><td class="num">38,4k</td><td class="num money">USD 0,0031</td></tr>
+                        <tr><td>Input nuevo <span class="chip-cache chip-cache--miss">miss</span></td><td class="num">5,2k</td><td class="num money">USD 0,0083</td></tr>
+                        <tr><td>Output</td><td class="num">2,9k</td><td class="num money">USD 0,0070</td></tr>
+                        <tr><td><strong>Ahorro por cache</strong></td><td class="num">—</td><td class="num money"><strong>≈58%</strong></td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Tab Tools -->
+                <div class="tabpanel" role="tabpanel" id="pan-tools" aria-labelledby="tab-tools" hidden>
+                  <div class="table-wrap">
+                    <table class="table">
+                      <caption class="sr-only">Tools permitidas del agente</caption>
+                      <thead><tr><th scope="col">Tool</th><th scope="col">Tipo</th><th scope="col">Alcance</th></tr></thead>
+                      <tbody>
+                        <tr><td class="mono">tdn_search</td><td><span class="tag tag--info">Lectura</span></td><td>Búsqueda en el portal de documentación TDN</td></tr>
+                        <tr><td class="mono">tdn_get_page</td><td><span class="tag tag--info">Lectura</span></td><td>Recuperación de páginas TDN completas</td></tr>
+                        <tr><td class="mono">cst_search</td><td><span class="tag tag--info">Lectura</span></td><td>Búsqueda en la base de tickets de soporte CST</td></tr>
+                        <tr><td class="mono">sx_describe</td><td><span class="tag tag--info">Lectura</span></td><td>Metadatos de diccionario SX3/SX6 (solo INBOLSA)</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p class="tech-note">Toolset completo y fijo por versión de agente (cache-first, ADR-0001). Este agente no tiene tools de escritura: nada de lo que hace requiere aprobación HITL.</p>
+                </div>
+
+                <!-- Tab Prompt -->
+                <div class="tabpanel" role="tabpanel" id="pan-prompt" aria-labelledby="tab-prompt" hidden>
+                  <dl class="tech-meta">
+                    <div><dt>Versión activa</dt><dd class="mono">docagent@12</dd></div>
+                    <div><dt>Publicada por</dt><dd>Mario Pereyra · <span class="mono">04/06/2026 17:40</span></dd></div>
+                    <div><dt>Estado de evals</dt><dd><span class="tag tag--money">Evals verdes</span></dd></div>
+                  </dl>
+                  <hr class="divider" style="margin:var(--sp-4) 0;">
+                  <h4>Cambios recientes</h4>
+                  <ol class="changelog">
+                    <li><span class="mono">docagent@12 · 04/06/2026</span><span class="muted">Refuerza la abstención cuando TDN y CST se contradicen; cita ambas fuentes.</span></li>
+                    <li><span class="mono">docagent@11 · 28/05/2026</span><span class="muted">Formato de citas numeradas [1][2] referenciadas desde el texto.</span></li>
+                    <li><span class="mono">docagent@10 · 19/05/2026</span><span class="muted">Glosario BOL ampliado (MV_PAISLOC, SIGAFIS local).</span></li>
+                  </ol>
+                  <p style="margin:var(--sp-4) 0 0;"><a href="#">Abrir en registro de prompts →</a> <span class="faint" style="font-size:var(--fs-caption);">(solo Admin)</span></p>
+                </div>
+
+                <!-- Tab Evals -->
+                <div class="tabpanel" role="tabpanel" id="pan-evals" aria-labelledby="tab-evals" hidden>
+                  <div class="eval-head">
+                    <span class="eval-score">94%</span>
+                    <span class="muted" style="font-size:var(--fs-small);">47 casos · safety <span class="mono">6/6</span> (hard-fail individual)</span>
+                    <span class="faint mono" style="font-size:var(--fs-caption);">última corrida: 10/06/2026 23:10</span>
+                  </div>
+                  <div class="table-wrap">
+                    <table class="table table--dense">
+                      <caption class="sr-only">Resultados de evals por categoría</caption>
+                      <thead><tr><th scope="col">Categoría</th><th scope="col" class="num">Casos</th><th scope="col" class="num">Score</th></tr></thead>
+                      <tbody>
+                        <tr><td>Citas correctas</td><td class="num">18</td><td class="num money">96%</td></tr>
+                        <tr><td>Abstención sin evidencia</td><td class="num">12</td><td class="num money">92%</td></tr>
+                        <tr><td>Formato de respuesta</td><td class="num">11</td><td class="num money">91%</td></tr>
+                        <tr><td>Safety</td><td class="num">6</td><td class="num money">100%</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <p class="tech-note">Gate de publicación: score ≥80% y safety 100% (CI). Esta vista solo informa; el bloqueo lo aplica el sistema.</p>
+                </div>
+              </section>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — FUNCIONAL: sin bloque técnico ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Funcional — misma ficha, sin bloque técnico</h2>
+    <p class="doc-caption">El bloque «Ficha técnica» no se renderiza (ni colapsado, ni deshabilitado — DESIGN-SYSTEM §9.7). La zona común es idéntica para todos los roles y no usa jerga técnica.</p>
+
+    <div class="frame">
+      <div class="ai-banner"><svg aria-hidden="true"><use href="#i-alert"/></svg>Respuestas generadas por IA — verificá antes de aplicar en cliente</div>
+      <div class="shell">
+        <nav class="sidebar" aria-label="Navegación principal">
+          <span class="sidebar__brand">Resultar<span class="accent">·</span>Agents</span>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-msg"/></svg>Chat</a>
+          <a class="nav-link is-active" href="#" aria-current="page"><svg aria-hidden="true"><use href="#i-grid"/></svg>Catálogo</a>
+          <a class="nav-link" href="#"><svg aria-hidden="true"><use href="#i-listchecks"/></svg>Workflows</a>
+        </nav>
+        <div>
+          <div class="topbar">
+            <span class="topbar__ctx">Catálogo · DocAgent</span>
+            <div class="topbar__right">
+              <button class="notif-bell" aria-label="Notificaciones, sin novedades"><svg aria-hidden="true"><use href="#i-bell"/></svg></button>
+              <span class="badge-rol badge-rol--funcional">Funcional</span>
+              <span class="topbar__user">lucia</span>
+            </div>
+          </div>
+          <div class="content">
+            <div class="ficha">
+              <a class="crumb" href="./13-catalogo.html"><svg width="14" height="14" aria-hidden="true"><use href="#i-chl"/></svg>Catálogo</a>
+              <header class="ficha-head">
+                <div>
+                  <span class="kicker kicker--dim">Agente · Documental</span>
+                  <div class="ficha-head__title">
+                    <h1 style="margin:0;">DocAgent</h1>
+                    <span class="tag tag--money"><span class="live-dot" aria-hidden="true"></span>Activo</span>
+                  </div>
+                </div>
+                <div class="ficha-cta">
+                  <button class="btn btn--primary" type="button"><svg aria-hidden="true"><use href="#i-msg"/></svg>Abrir chat</button>
+                </div>
+              </header>
+
+              <section class="panel">
+                <div class="que-grid">
+                  <div>
+                    <h4>Qué hace</h4>
+                    <p class="muted" style="font-size:var(--fs-small);margin:0;">Responde consultas sobre Protheus citando la documentación oficial (TDN) y la base de soporte (CST). Cada afirmación lleva su fuente; vos decidís si aplicarla.</p>
+                  </div>
+                  <div>
+                    <h4>Qué no hace</h4>
+                    <ul class="lim-list">
+                      <li><svg aria-hidden="true"><use href="#i-x"/></svg>No inventa respuestas: si no encuentra evidencia, te lo dice.</li>
+                      <li><svg aria-hidden="true"><use href="#i-x"/></svg>No modifica nada en los sistemas de los clientes.</li>
+                    </ul>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel">
+                <h4>Primeros pasos — probá con un ejemplo</h4>
+                <div class="example-list">
+                  <button class="example-btn" type="button"><svg aria-hidden="true"><use href="#i-quote"/></svg>¿Qué parámetros MV_* afectan la numeración de facturas en la localización Bolivia?<span class="example-btn__use">usar →</span></button>
+                  <button class="example-btn" type="button"><svg aria-hidden="true"><use href="#i-quote"/></svg>¿Para qué sirve el campo B1_GRTRIB de la tabla SB1 y qué valores acepta?<span class="example-btn__use">usar →</span></button>
+                  <button class="example-btn" type="button"><svg aria-hidden="true"><use href="#i-quote"/></svg>Me aparece el error «help NAOPERM» al liberar un pedido en MATA410. ¿Qué casos conocidos hay?<span class="example-btn__use">usar →</span></button>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ ESTADOS Y CASOS BORDE ════════════════ -->
+  <section class="doc-section" aria-labelledby="ve-t">
+    <span class="kicker kicker--dim">Estados</span>
+    <h2 id="ve-t">Próximamente · deprecado · no disponible · degradado</h2>
+
+    <h3 style="margin-top:var(--sp-6);">Próximamente — CTA y ejemplos deshabilitados con motivo</h3>
+    <p class="doc-caption">Los ejemplos se leen igual (generan expectativa correcta) pero no son operables. <code>disabled</code> + motivo adyacente (§9.7).</p>
+    <div class="panel" style="max-width:720px;">
+      <span class="kicker kicker--dim">Agente · Validación</span>
+      <div class="ficha-head__title">
+        <h3 style="margin:0;">ValidationAgent</h3>
+        <span class="tag">Próximamente · Fase 2</span>
+      </div>
+      <p class="muted" style="font-size:var(--fs-small);">Valida la parametrización del ambiente de un cliente contra checklists por módulo. Toda escritura pasa por aprobación humana.</p>
+      <div style="display:flex;align-items:center;gap:var(--sp-3);margin-bottom:var(--sp-4);">
+        <button class="btn btn--primary" type="button" disabled aria-describedby="val-reason">Abrir chat</button>
+        <p class="ficha-cta__reason" id="val-reason" style="margin:0;">Disponible en Fase 2</p>
+      </div>
+      <div class="example-list">
+        <button class="example-btn" type="button" disabled aria-disabled="true"><svg aria-hidden="true"><use href="#i-quote"/></svg>Corré el checklist de localización BOL contra el ambiente de prueba de Comercial Andina S.A.</button>
+        <button class="example-btn" type="button" disabled aria-disabled="true"><svg aria-hidden="true"><use href="#i-quote"/></svg>Compará los parámetros SX6 entre producción y validación y mostrame las diferencias.</button>
+      </div>
+      <p class="tech-note">Ficha técnica (Téc/Admin): campos sin valor en «—» (sin versión de prompt activa, sin evals); las tools previstas sí se listan.</p>
+    </div>
+
+    <h3 style="margin-top:var(--sp-7);">Deprecado — banner con reemplazo (solo Admin)</h3>
+    <div class="error-card error-card--warn dep-banner" style="max-width:720px;">
+      <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-archive"/></svg></span>
+      <div>
+        <p class="error-card__title">Este agente fue reemplazado por DocAgent</p>
+        <p class="error-card__why">No admite sesiones nuevas. Las sesiones históricas siguen consultables desde el historial de chat.</p>
+        <div class="error-card__actions">
+          <a class="btn btn--secondary btn--sm" href="#">Ver DocAgent →</a>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:var(--sp-7);">No disponible — deep-link fuera de la matriz del rol (o slug inexistente)</h3>
+    <p class="doc-caption">No se distingue «no existe» de «sin permiso» (no filtrar existencia). Jamás un error de permisos crudo.</p>
+    <div class="empty-state" style="max-width:640px;">
+      <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-bot"/></svg></span>
+      <p class="empty-state__title">Este agente no está disponible</p>
+      <p class="empty-state__hint">Puede que no exista o que tu rol no tenga acceso. Hablá con el administrador si creés que deberías verlo.</p>
+      <a class="btn btn--secondary btn--sm" href="./13-catalogo.html">Volver al catálogo</a>
+    </div>
+
+    <h3 style="margin-top:var(--sp-7);">Degradado — telemetría diferida y evals viejas</h3>
+    <p class="doc-caption">Convención del taxímetro (§8.12): «~» antes del monto cuando Langfuse no responde; «—» cuando no hay datos todavía.</p>
+    <div class="panel" style="max-width:720px;">
+      <dl class="tech-meta">
+        <div><dt>Costo por sesión</dt><dd class="mono money" data-tip="Costo estimado, telemetría diferida" tabindex="0">~USD 0,0184</dd></div>
+        <div><dt>Última corrida de evals</dt><dd><span class="tag tag--warn" data-tip="Sin corrida en los últimos 7 días" tabindex="0">01/06/2026</span></dd></div>
+        <div><dt>Costo (agente nuevo)</dt><dd class="mono">— <span class="faint">sin datos todavía</span></dd></div>
+      </dl>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  /* Micro-demo trivial: tabs WAI-ARIA de la ficha técnica (variante A).
+     En producto: roving tabindex + persistencia efímera de la tab activa. */
+  (function () {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+    function activate(tab) {
+      tabs.forEach(function (t) {
+        var sel = t === tab;
+        t.classList.toggle('is-active', sel);
+        t.setAttribute('aria-selected', sel ? 'true' : 'false');
+        t.tabIndex = sel ? 0 : -1;
+        document.getElementById(t.getAttribute('aria-controls')).hidden = !sel;
+      });
+      tab.focus();
+    }
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { activate(tab); });
+      tab.addEventListener('keydown', function (e) {
+        var next = null;
+        if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+        if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+        if (next) { e.preventDefault(); activate(next); }
+      });
+    });
+  })();
+</script>
+
+</body>
+</html>

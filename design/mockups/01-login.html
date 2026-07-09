@@ -1,0 +1,248 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Login — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .mock-section { max-width: 1280px; margin: 0 auto; padding: var(--sp-8) var(--sp-6); }
+  .mock-h { margin-bottom: var(--sp-5); }
+  .mock-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--sp-6); align-items: start; }
+  .login-card { max-width: 400px; margin: 0 auto; }
+  .login-head { display: grid; justify-items: center; gap: var(--sp-2); margin-bottom: var(--sp-5); text-align: center; }
+  .login-logo {
+    width: 48px; height: 48px; border-radius: var(--r-md);
+    display: grid; place-items: center;
+    background: var(--accent-soft); color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    font-family: var(--font-display); font-weight: 700; font-size: var(--fs-h3);
+  }
+  .pw-wrap { position: relative; }
+  .pw-wrap .input { padding-right: 44px; }
+  .pw-toggle {
+    position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; display: grid; place-items: center;
+    background: none; border: 0; color: var(--ink-faint); cursor: pointer; border-radius: var(--r-xs);
+  }
+  .pw-toggle:hover { color: var(--ink); }
+  .pw-toggle:focus-visible { outline: 2px solid var(--focus-ring); }
+  .pw-toggle svg { width: 16px; height: 16px; }
+  .login-note {
+    display: flex; gap: var(--sp-2); align-items: flex-start;
+    margin-top: var(--sp-5); padding-top: var(--sp-4);
+    border-top: 1px solid var(--line);
+    font-size: var(--fs-caption); color: var(--ink-dim);
+  }
+  .login-note svg { width: 14px; height: 14px; flex: none; margin-top: 2px; color: var(--info); }
+  .login-foot { text-align: center; margin-top: var(--sp-4); font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .totp-boxes { display: flex; gap: var(--sp-2); justify-content: center; margin: var(--sp-4) 0; }
+  .totp-boxes .input { width: 42px; height: 48px; text-align: center; padding: 0; font-family: var(--font-mono); font-size: var(--fs-h4); }
+  .brand-frame { border: 1px dashed var(--line-strong); border-radius: var(--r-xl); padding: var(--sp-6); }
+  .totvs-vars { /* fuerza brand totvs en su columna, solo para mostrar ambos lado a lado */ }
+</style>
+</head>
+<body>
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<main class="mock-section">
+  <header class="mock-h">
+    <span class="kicker">Acceso · vista 01</span>
+    <h1>Login por instancia</h1>
+    <p class="muted">Sin registro público: las cuentas las crea el administrador. TOTP como segundo paso (Admin siempre). Usá el switcher (arriba a la derecha) para ver la marca «totvs» y el tema claro.</p>
+  </header>
+
+  <!-- ───────────── Estado base ───────────── -->
+  <section class="mock-grid" aria-label="Estados del login">
+    <div>
+      <span class="kicker kicker--dim">Estado base</span>
+      <div class="panel panel--raised login-card">
+        <div class="login-head">
+          <div class="login-logo" aria-hidden="true">R</div>
+          <span class="kicker" style="margin:0">Resultar Bolivia</span>
+        </div>
+        <h2 style="font-size:var(--fs-h3); text-align:center;">Iniciar sesión</h2>
+        <form onsubmit="return false">
+          <div class="field">
+            <label class="field-label" for="u1">Usuario</label>
+            <input class="input" id="u1" name="username" autocomplete="username" placeholder="tu usuario">
+          </div>
+          <div class="field">
+            <label class="field-label" for="p1">Contraseña</label>
+            <div class="pw-wrap">
+              <input class="input" id="p1" type="password" autocomplete="current-password">
+              <button type="button" class="pw-toggle" aria-label="Mostrar contraseña" aria-pressed="false"
+                onclick="var i=document.getElementById('p1');var s=i.type==='password';i.type=s?'text':'password';this.setAttribute('aria-pressed',s);">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+          <button class="btn btn--primary btn--lg btn--block" type="submit">Ingresar</button>
+        </form>
+        <p class="login-note">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          <span>Las cuentas las crea el administrador de tu organización. Si olvidaste tu contraseña, pedile que la restablezca.</span>
+        </p>
+      </div>
+      <p class="login-foot">Resultar Agents Platform v1.0 · es-BO</p>
+    </div>
+
+    <!-- ───────────── Error de credenciales ───────────── -->
+    <div>
+      <span class="kicker kicker--dim">Error · credenciales inválidas</span>
+      <div class="panel panel--raised login-card">
+        <div class="login-head">
+          <div class="login-logo" aria-hidden="true">R</div>
+          <span class="kicker" style="margin:0">Resultar Bolivia</span>
+        </div>
+        <h2 style="font-size:var(--fs-h3); text-align:center;">Iniciar sesión</h2>
+        <div class="error-card" role="alert" style="margin-bottom:var(--sp-4)">
+          <span class="error-card__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg></span>
+          <div>
+            <p class="error-card__title">Usuario o contraseña incorrectos</p>
+            <p class="error-card__why" style="margin:0">Revisá los datos e intentá de nuevo.</p>
+          </div>
+        </div>
+        <form onsubmit="return false">
+          <div class="field">
+            <label class="field-label" for="u2">Usuario</label>
+            <input class="input" id="u2" value="lucia" autocomplete="username">
+          </div>
+          <div class="field">
+            <label class="field-label" for="p2">Contraseña</label>
+            <input class="input is-invalid" id="p2" type="password" aria-invalid="true" aria-describedby="p2e">
+            <span class="field-error" id="p2e">Verificá tu contraseña</span>
+          </div>
+          <button class="btn btn--primary btn--lg btn--block" type="submit">Ingresar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ───────────── Cuenta bloqueada ───────────── -->
+    <div>
+      <span class="kicker kicker--dim">Error · cuenta bloqueada</span>
+      <div class="panel panel--raised login-card">
+        <div class="login-head">
+          <div class="login-logo" aria-hidden="true">R</div>
+          <span class="kicker" style="margin:0">Resultar Bolivia</span>
+        </div>
+        <h2 style="font-size:var(--fs-h3); text-align:center;">Iniciar sesión</h2>
+        <div class="error-card" role="alert" style="margin-bottom:var(--sp-4)">
+          <span class="error-card__icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+          <div>
+            <p class="error-card__code">ACCOUNT_LOCKED</p>
+            <p class="error-card__title">Cuenta bloqueada temporalmente</p>
+            <p class="error-card__why">Demasiados intentos fallidos. Se desbloquea en <span class="mono">15 min</span> o pedile al administrador que la libere.</p>
+            <div class="error-card__actions">
+              <button class="btn btn--secondary btn--sm" type="button">Reintentar más tarde</button>
+            </div>
+          </div>
+        </div>
+        <form onsubmit="return false">
+          <div class="field">
+            <label class="field-label" for="u3">Usuario</label>
+            <input class="input" id="u3" value="lucia" disabled>
+          </div>
+          <div class="field">
+            <label class="field-label" for="p3">Contraseña</label>
+            <input class="input" id="p3" type="password" disabled>
+          </div>
+          <button class="btn btn--primary btn--lg btn--block" type="submit" disabled>Ingresar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ───────────── Paso 2: TOTP ───────────── -->
+    <div>
+      <span class="kicker kicker--dim">Paso 2 · verificación TOTP</span>
+      <div class="panel panel--raised login-card">
+        <div class="login-head">
+          <div class="login-logo" aria-hidden="true">R</div>
+          <span class="kicker" style="margin:0">Resultar Bolivia</span>
+        </div>
+        <h2 style="font-size:var(--fs-h3); text-align:center;">Verificación en dos pasos</h2>
+        <p class="muted" style="text-align:center; font-size:var(--fs-small)">Ingresá el código de tu app de autenticación para <strong class="mono">marcos</strong> <span class="badge-rol badge-rol--admin">Admin</span></p>
+        <form onsubmit="return false">
+          <fieldset style="border:0; padding:0; margin:0">
+            <legend class="sr-only">Código de verificación de 6 dígitos</legend>
+            <div class="totp-boxes">
+              <input class="input" inputmode="numeric" maxlength="1" aria-label="Dígito 1" value="4">
+              <input class="input" inputmode="numeric" maxlength="1" aria-label="Dígito 2" value="8">
+              <input class="input" inputmode="numeric" maxlength="1" aria-label="Dígito 3" value="2">
+              <input class="input" inputmode="numeric" maxlength="1" aria-label="Dígito 4">
+              <input class="input" inputmode="numeric" maxlength="1" aria-label="Dígito 5">
+              <input class="input" inputmode="numeric" maxlength="1" aria-label="Dígito 6">
+            </div>
+          </fieldset>
+          <p class="field-hint" style="text-align:center; margin-bottom:var(--sp-4)">Los códigos rotan cada 30 s</p>
+          <button class="btn btn--primary btn--lg btn--block" type="submit">Verificar</button>
+          <button class="btn btn--ghost btn--block" type="button" style="margin-top:var(--sp-2)">← Volver</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- ───────────── Variantes de marca lado a lado ───────────── -->
+  <section aria-label="Variantes de marca">
+    <span class="kicker kicker--dim">Variante de marca · instancia con brand «totvs»</span>
+    <p class="muted" style="max-width:70ch">El brand es configuración de instancia (no del usuario): mismo layout, mismos componentes; cambian solo los tokens. Abajo, la misma card renderizada dentro de un frame con <code>data-brand="totvs"</code> (en producción el atributo vive en <code>&lt;html&gt;</code>).</p>
+    <div class="mock-grid" style="margin-top:var(--sp-4)">
+      <div class="brand-frame">
+        <span class="kicker kicker--dim">brand: default</span>
+        <div class="panel panel--raised login-card">
+          <div class="login-head">
+            <div class="login-logo" aria-hidden="true">R</div>
+            <span class="kicker" style="margin:0">Resultar Bolivia</span>
+          </div>
+          <h2 style="font-size:var(--fs-h3); text-align:center;">Iniciar sesión</h2>
+          <div class="field"><label class="field-label" for="ub1">Usuario</label><input class="input" id="ub1"></div>
+          <div class="field"><label class="field-label" for="pb1">Contraseña</label><input class="input" id="pb1" type="password"></div>
+          <button class="btn btn--primary btn--lg btn--block" type="button">Ingresar</button>
+        </div>
+      </div>
+      <div class="brand-frame" id="totvs-demo">
+        <span class="kicker kicker--dim">brand: totvs (demo embebida)</span>
+        <div class="panel panel--raised login-card">
+          <div class="login-head">
+            <div class="login-logo" aria-hidden="true">A</div>
+            <span class="kicker" style="margin:0">Andes Consulting</span>
+          </div>
+          <h2 style="font-size:var(--fs-h3); text-align:center;">Iniciar sesión</h2>
+          <div class="field"><label class="field-label" for="ub2">Usuario</label><input class="input" id="ub2"></div>
+          <div class="field"><label class="field-label" for="pb2">Contraseña</label><input class="input" id="pb2" type="password"></div>
+          <button class="btn btn--primary btn--lg btn--block" type="button">Ingresar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  // Demo trivial: tinta el frame "totvs" con los tokens del brand totvs según el tema activo,
+  // para mostrar ambas marcas lado a lado sin tocar <html data-brand>.
+  (function () {
+    var frame = document.getElementById('totvs-demo');
+    var dark = { '--bg':'#0b1020','--bg-raised':'#101a2e','--panel':'#0e2030','--line':'#1f3346','--line-strong':'#2f4a61','--ink':'#eef3f8','--ink-dim':'#9fb2c4','--ink-faint':'#74879b','--accent':'#00dbff','--accent-fill':'#00dbff','--accent-ink':'#002233','--accent-soft':'rgba(0,219,255,.12)','--focus-ring':'#00dbff' };
+    var light = { '--bg':'#f2f5f8','--bg-raised':'#f8fafc','--panel':'#ffffff','--line':'#d7dee5','--line-strong':'#b3c0cb','--ink':'#002233','--ink-dim':'#3c5666','--ink-faint':'#5d7382','--accent':'#0a46ea','--accent-fill':'#0a46ea','--accent-ink':'#ffffff','--accent-soft':'rgba(0,219,255,.22)','--focus-ring':'#0a46ea' };
+    function apply() {
+      var t = document.documentElement.dataset.theme === 'light' ? light : dark;
+      for (var k in t) frame.style.setProperty(k, t[k]);
+      frame.style.background = 'var(--bg)';
+    }
+    new MutationObserver(apply).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    apply();
+  })();
+</script>
+</body>
+</html>

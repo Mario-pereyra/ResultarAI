@@ -1,0 +1,685 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>00 · Styleguide — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  /* Estilos locales SOLO de andamiaje del showcase (usan tokens) */
+  .sg-page { max-width: 1100px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .sg-section { margin-top: var(--sp-9); }
+  .sg-section > h2 { border-bottom: 1px solid var(--line); padding-bottom: var(--sp-2); }
+  .sg-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+  .sg-row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; margin-bottom: var(--sp-4); }
+  .sg-grid { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  .sg-grid--wide { grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); }
+  .sg-label { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); letter-spacing: .05em; display: block; margin-bottom: var(--sp-1); }
+  .sg-swatches { display: grid; gap: var(--sp-2); grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .sg-swatch { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; background: var(--panel); }
+  .sg-swatch__chip { height: 52px; border-bottom: 1px solid var(--line); }
+  .sg-swatch__body { padding: var(--sp-2) var(--sp-3); }
+  .sg-swatch__name { font-family: var(--font-mono); font-size: 11px; color: var(--ink); display: block; }
+  .sg-swatch__val { font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint); }
+  .sg-type-row { display: grid; grid-template-columns: 130px 1fr; gap: var(--sp-4); align-items: baseline; padding: var(--sp-2) 0; border-bottom: 1px dashed var(--line); }
+  .sg-bar { height: 14px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); border-radius: var(--r-xs); }
+  .sg-radius-box { width: 72px; height: 48px; background: var(--bg-raised); border: 1px solid var(--line-strong); display: grid; place-items: center; font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint); }
+  .sg-focus { outline: 2px solid var(--focus-ring); outline-offset: 2px; } /* simula :focus-visible para documentar el estado */
+  .sg-modal-frame { background: var(--scrim); border-radius: var(--r-lg); padding: var(--sp-7); display: grid; place-items: center; }
+  .sg-chat-meta { display: flex; align-items: center; gap: var(--sp-2); font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .sg-notif-panel { width: min(330px, 100%); }
+  .sg-notif-item { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-3); padding: var(--sp-3); border-bottom: 1px solid var(--line); }
+  .sg-notif-item:last-child { border-bottom: 0; }
+  .sg-notif-item svg { width: 16px; height: 16px; margin-top: 2px; }
+  @media (max-width: 768px) { .sg-page { padding: var(--sp-6) var(--sp-4) var(--sp-9); } .sg-type-row { grid-template-columns: 1fr; gap: var(--sp-1); } }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<!-- Sprite de íconos lucide (inline, sin librerías externas) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></symbol>
+    <symbol id="i-quote" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/><path d="M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-wifioff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h.01"/><path d="M8.5 16.4a5 5 0 0 1 7 0"/><path d="M5 12.9a10 10 0 0 1 5.17-2.7"/><path d="M19 12.9a10 10 0 0 0-2-1.6"/><path d="M2 8.8a15 15 0 0 1 4.18-2.64"/><path d="M22 8.8A15 15 0 0 0 10.7 5.05"/><path d="m2 2 20 20"/></symbol>
+    <symbol id="i-unplug" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m19 5 3-3"/><path d="m2 22 3-3"/><path d="M6.3 20.3a2.4 2.4 0 0 0 3.4 0L12 18l-6-6-2.3 2.3a2.4 2.4 0 0 0 0 3.4Z"/><path d="M7.5 13.5 10 11"/><path d="M10.5 16.5 13 14"/><path d="m12 6 6 6 2.3-2.3a2.4 2.4 0 0 0 0-3.4l-2.6-2.6a2.4 2.4 0 0 0-3.4 0Z"/></symbol>
+    <symbol id="i-cloudoff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 2 20 20"/><path d="M5.78 5.78A7 7 0 0 0 9 19h8.5a4.5 4.5 0 0 0 1.3-.2"/><path d="M21.53 16.5A4.5 4.5 0 0 0 17.5 10h-1.79A7 7 0 0 0 10 5.07"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></symbol>
+    <symbol id="i-chl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-chr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></symbol>
+    <symbol id="i-branch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></symbol>
+    <symbol id="i-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></symbol>
+  </defs>
+</svg>
+
+<main class="sg-page">
+
+  <header>
+    <span class="kicker">Sistema de diseño · v1.0</span>
+    <h1>Resultar Agents Platform — Styleguide</h1>
+    <p class="muted">Página de validación de <code>tokens.css</code>. Probá las 4 combinaciones con el switcher (arriba a la derecha).
+    Combinación activa: <span class="tag tag--accent mono" id="sg-combo">dark · default</span></p>
+    <p class="sg-caption">Todos los datos son ficticios (Comercial Andina S.A., usuaria «lucia», montos de ejemplo). Documento de diseño, no producción.</p>
+  </header>
+
+  <!-- ───────────────────────── 1. Tokens de color ───────────────────────── -->
+  <section class="sg-section" id="colores">
+    <span class="kicker kicker--dim">01</span>
+    <h2>Tokens de color</h2>
+    <p class="sg-caption">Valores computados de la combinación activa — se actualizan al cambiar tema/marca.</p>
+    <div class="sg-swatches" id="sg-swatches"></div>
+  </section>
+
+  <!-- ───────────────────────── 2. Tipografía ───────────────────────── -->
+  <section class="sg-section" id="tipografia">
+    <span class="kicker kicker--dim">02</span>
+    <h2>Tipografía</h2>
+    <div class="sg-type-row"><span class="sg-label">display · Chakra Petch</span><span style="font-family:var(--font-display);font-size:var(--fs-h2);font-weight:600;">Validación de parametrización</span></div>
+    <div class="sg-type-row"><span class="sg-label">body · Saira</span><span style="font-size:var(--fs-lead);">El agente encontró 3 diferencias contra el checklist de localización Bolivia.</span></div>
+    <div class="sg-type-row"><span class="sg-label">mono · JetBrains Mono</span><span class="mono">MV_PAISLOC = "BOL" · SX6 · USD 0,0042 · docagent@12</span></div>
+    <div class="sg-type-row"><span class="sg-label">--fs-display 32</span><span class="money" style="font-size:var(--fs-display);font-weight:700;">USD 18,42</span></div>
+    <div class="sg-type-row"><span class="sg-label">--fs-h1 28</span><span style="font-family:var(--font-display);font-size:var(--fs-h1);font-weight:600;">Título de página</span></div>
+    <div class="sg-type-row"><span class="sg-label">--fs-h2 24</span><span style="font-family:var(--font-display);font-size:var(--fs-h2);font-weight:600;">Título secundario</span></div>
+    <div class="sg-type-row"><span class="sg-label">--fs-h3 20</span><span style="font-size:var(--fs-h3);font-weight:600;">Título de sección</span></div>
+    <div class="sg-type-row"><span class="sg-label">--fs-h4 18</span><span style="font-size:var(--fs-h4);font-weight:600;">Título de card</span></div>
+    <div class="sg-type-row"><span class="sg-label">--fs-lead 16</span><span style="font-size:var(--fs-lead);">Párrafo destacado y mensajes de chat.</span></div>
+    <div class="sg-type-row"><span class="sg-label">--fs-body 14</span><span>Texto base de la interfaz.</span></div>
+    <div class="sg-type-row"><span class="sg-label">--fs-small 13</span><span style="font-size:var(--fs-small);">Botones, tablas densas, mensajes secundarios.</span></div>
+    <div class="sg-type-row"><span class="sg-label">--fs-caption 12</span><span class="faint" style="font-size:var(--fs-caption);">Metadatos, captions, hints de formulario.</span></div>
+  </section>
+
+  <!-- ───────────────────────── 3. Espaciado y radios ───────────────────────── -->
+  <section class="sg-section" id="espaciado">
+    <span class="kicker kicker--dim">03</span>
+    <h2>Espaciado y radios</h2>
+    <div class="sg-grid">
+      <div>
+        <span class="sg-label">escala de espaciado (4px)</span>
+        <div style="display:grid;gap:6px;">
+          <div class="sg-bar" style="width:4px"></div><div class="sg-bar" style="width:8px"></div>
+          <div class="sg-bar" style="width:12px"></div><div class="sg-bar" style="width:16px"></div>
+          <div class="sg-bar" style="width:24px"></div><div class="sg-bar" style="width:32px"></div>
+          <div class="sg-bar" style="width:48px"></div><div class="sg-bar" style="width:64px"></div>
+        </div>
+      </div>
+      <div>
+        <span class="sg-label">radios</span>
+        <div class="sg-row">
+          <div class="sg-radius-box" style="border-radius:var(--r-xs)">xs 2</div>
+          <div class="sg-radius-box" style="border-radius:var(--r-sm)">sm 4</div>
+          <div class="sg-radius-box" style="border-radius:var(--r-md)">md 6</div>
+          <div class="sg-radius-box" style="border-radius:var(--r-lg)">lg 10</div>
+          <div class="sg-radius-box" style="border-radius:var(--r-pill)">pill</div>
+        </div>
+        <span class="sg-label" style="margin-top:var(--sp-3)">sombras</span>
+        <div class="sg-row">
+          <div class="sg-radius-box" style="box-shadow:var(--shadow-1);border-radius:var(--r-md)">sh-1</div>
+          <div class="sg-radius-box" style="box-shadow:var(--shadow-2);border-radius:var(--r-md)">sh-2</div>
+          <div class="sg-radius-box" style="box-shadow:var(--shadow-3);border-radius:var(--r-md)">sh-3</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 4. Botones ───────────────────────── -->
+  <section class="sg-section" id="botones">
+    <span class="kicker kicker--dim">04</span>
+    <h2>Botones</h2>
+    <p class="sg-caption">Variantes × estados. El hover es real (pasá el mouse); el foco se simula con la clase de documentación <code>.sg-focus</code>.</p>
+    <span class="sg-label">default</span>
+    <div class="sg-row">
+      <button class="btn btn--primary">Aprobar escritura</button>
+      <button class="btn btn--secondary">Ver evidencia</button>
+      <button class="btn btn--danger">Eliminar usuario</button>
+      <button class="btn btn--ghost">Cancelar</button>
+    </div>
+    <span class="sg-label">focus-visible (simulado)</span>
+    <div class="sg-row">
+      <button class="btn btn--primary sg-focus">Aprobar escritura</button>
+      <button class="btn btn--secondary sg-focus">Ver evidencia</button>
+      <button class="btn btn--danger sg-focus">Eliminar usuario</button>
+      <button class="btn btn--ghost sg-focus">Cancelar</button>
+    </div>
+    <span class="sg-label">disabled</span>
+    <div class="sg-row">
+      <button class="btn btn--primary" disabled>Aprobar escritura</button>
+      <button class="btn btn--secondary" disabled>Ver evidencia</button>
+      <button class="btn btn--danger" disabled>Eliminar usuario</button>
+      <button class="btn btn--ghost" disabled>Cancelar</button>
+    </div>
+    <span class="sg-label">loading (aria-busy)</span>
+    <div class="sg-row">
+      <button class="btn btn--primary btn--loading" aria-busy="true">Aprobar escritura</button>
+      <button class="btn btn--secondary btn--loading" aria-busy="true">Ver evidencia</button>
+      <button class="btn btn--danger btn--loading" aria-busy="true">Eliminar usuario</button>
+    </div>
+    <span class="sg-label">tamaños e ícono</span>
+    <div class="sg-row">
+      <button class="btn btn--primary btn--sm">Pequeño</button>
+      <button class="btn btn--primary">Estándar</button>
+      <button class="btn btn--primary btn--lg">Grande</button>
+      <button class="btn btn--secondary"><svg aria-hidden="true"><use href="#i-zap"/></svg>Escalar a Pro</button>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 5. Tags y badges ───────────────────────── -->
+  <section class="sg-section" id="tags">
+    <span class="kicker kicker--dim">05</span>
+    <h2>Tags y badges de rol</h2>
+    <span class="sg-label">tags semánticos</span>
+    <div class="sg-row">
+      <span class="tag">neutral</span>
+      <span class="tag tag--accent">activo</span>
+      <span class="tag tag--money">eval 92%</span>
+      <span class="tag tag--info">modelo alterno</span>
+      <span class="tag tag--warn">truncado</span>
+      <span class="tag tag--danger">bloqueado</span>
+      <span class="tag tag--alt">needs_pro</span>
+      <span class="tag tag--outline">v1.3.0</span>
+    </div>
+    <span class="sg-label">riesgo HITL (siempre con palabra, nunca solo color)</span>
+    <div class="sg-row">
+      <span class="tag tag--money">riesgo bajo</span>
+      <span class="tag tag--warn">riesgo medio</span>
+      <span class="tag tag--alt">riesgo alto</span>
+      <span class="tag tag--danger">riesgo crítico</span>
+    </div>
+    <span class="sg-label">badges de rol</span>
+    <div class="sg-row">
+      <span class="badge-rol badge-rol--admin">Admin</span>
+      <span class="badge-rol badge-rol--tecnico">Técnico</span>
+      <span class="badge-rol badge-rol--funcional">Funcional</span>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 6. Formularios ───────────────────────── -->
+  <section class="sg-section" id="formularios">
+    <span class="kicker kicker--dim">06</span>
+    <h2>Formularios</h2>
+    <div class="sg-grid sg-grid--wide">
+      <div class="panel">
+        <div class="field">
+          <label class="field-label" for="f1">Nombre del cliente final <span class="req" aria-hidden="true">*</span></label>
+          <input class="input" id="f1" type="text" placeholder="Comercial Andina S.A.">
+          <span class="field-hint">Como figura en el contrato de servicio.</span>
+        </div>
+        <div class="field">
+          <label class="field-label" for="f2">Parámetro</label>
+          <input class="input input--mono sg-focus" id="f2" type="text" value="MV_PAISLOC">
+          <span class="field-hint">Estado focus simulado.</span>
+        </div>
+        <div class="field">
+          <label class="field-label" for="f3">Correo de la usuaria</label>
+          <input class="input is-invalid" id="f3" type="email" value="lucia@resultar" aria-invalid="true" aria-describedby="f3-err">
+          <span class="field-error" id="f3-err"><svg width="13" height="13" aria-hidden="true"><use href="#i-alert"/></svg>Ingresá un correo válido, p. ej. lucia@resultar.bo</span>
+        </div>
+        <div class="field">
+          <label class="field-label" for="f4">Campo deshabilitado</label>
+          <input class="input" id="f4" type="text" value="Solo lectura para tu rol" disabled>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="field">
+          <label class="field-label" for="s1">Ambiente <span class="req" aria-hidden="true">*</span></label>
+          <select class="select" id="s1">
+            <option>Seleccioná un ambiente…</option>
+            <option>TEST — Comercial Andina S.A.</option>
+            <option>PROD — Comercial Andina S.A.</option>
+          </select>
+          <span class="field-hint">Las escrituras en PROD requieren aprobación.</span>
+        </div>
+        <div class="field">
+          <label class="field-label" for="t1">Comentario de aprobación <span class="req" aria-hidden="true">*</span></label>
+          <textarea class="textarea" id="t1" placeholder="Obligatorio en riesgo crítico…"></textarea>
+        </div>
+        <label class="check-row" for="c1">
+          <input class="checkbox" type="checkbox" id="c1" checked>
+          <span>Acepto el acuerdo de uso: las respuestas son generadas por IA y debo verificarlas antes de aplicarlas en un cliente.</span>
+        </label>
+        <label class="check-row" for="c2" style="margin-top:var(--sp-2)">
+          <input class="checkbox" type="checkbox" id="c2" disabled>
+          <span class="faint">Opción deshabilitada</span>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 7. Tabla de datos ───────────────────────── -->
+  <section class="sg-section" id="tabla">
+    <span class="kicker kicker--dim">07</span>
+    <h2>Tabla de datos</h2>
+    <p class="sg-caption">Headers en mono uppercase, números a la derecha con <code>tabular-nums</code>, fila seleccionada con <code>--accent-soft</code>.</p>
+    <div class="table-wrap">
+      <table class="table">
+        <caption class="sr-only">Validación de parámetros en Comercial Andina S.A. — ambiente TEST</caption>
+        <thead>
+          <tr><th scope="col">Parámetro</th><th scope="col">Descripción</th><th scope="col">Esperado</th><th scope="col">Encontrado</th><th scope="col">Estado</th><th scope="col" style="text-align:right">Costo</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">MV_PAISLOC</td><td>Localización del país</td><td class="mono">BOL</td><td class="mono">BOL</td><td><span class="tag tag--money">ok</span></td><td class="num">USD 0,0008</td></tr>
+          <tr class="is-selected"><td class="mono">MV_TIMBRE</td><td>Timbrado fiscal vigente</td><td class="mono">2026-1</td><td class="mono">2025-2</td><td><span class="tag tag--danger">difiere</span></td><td class="num">USD 0,0011</td></tr>
+          <tr><td class="mono">MV_SIMB1</td><td>Símbolo de moneda 1</td><td class="mono">Bs</td><td class="mono">Bs</td><td><span class="tag tag--money">ok</span></td><td class="num">USD 0,0007</td></tr>
+          <tr><td class="mono">MV_RELACAO</td><td>Relación de monedas</td><td class="mono">—</td><td class="mono faint">sin datos</td><td><span class="tag tag--warn">revisar</span></td><td class="num">USD 0,0009</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="sg-caption" style="margin-top:var(--sp-3)">Estado de carga de tabla:</p>
+    <div class="table-wrap" aria-busy="true">
+      <table class="table">
+        <thead><tr><th scope="col">Parámetro</th><th scope="col">Descripción</th><th scope="col">Estado</th></tr></thead>
+        <tbody>
+          <tr><td><span class="skeleton skeleton--text" style="width:90px">&nbsp;</span></td><td><span class="skeleton skeleton--text" style="width:75%">&nbsp;</span></td><td><span class="skeleton skeleton--text" style="width:48px">&nbsp;</span></td></tr>
+          <tr><td><span class="skeleton skeleton--text" style="width:110px">&nbsp;</span></td><td><span class="skeleton skeleton--text" style="width:60%">&nbsp;</span></td><td><span class="skeleton skeleton--text" style="width:48px">&nbsp;</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 8. Cuotas ───────────────────────── -->
+  <section class="sg-section" id="cuotas">
+    <span class="kicker kicker--dim">08</span>
+    <h2>Barras de cuota</h2>
+    <div class="sg-grid">
+      <div class="panel">
+        <div class="quota-row"><span>Cuota mensual · lucia</span><span class="num">USD 4,52 / 10,00</span></div>
+        <div class="quota-bar" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" aria-label="Cuota mensual: 45% utilizada"><span class="quota-bar__fill" style="width:45%"></span></div>
+      </div>
+      <div class="panel">
+        <div class="quota-row"><span>Cuota mensual · lucia</span><span class="num">USD 8,21 / 10,00</span></div>
+        <div class="quota-bar is-warn" role="progressbar" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100" aria-label="Cuota mensual: 82% utilizada"><span class="quota-bar__fill" style="width:82%"></span></div>
+        <p class="sg-caption" style="margin:var(--sp-2) 0 0">Aviso al 80%: «Te queda ~20% de tu cuota mensual.»</p>
+      </div>
+      <div class="panel">
+        <div class="quota-row"><span>Cuota mensual · lucia</span><span class="num">USD 10,00 / 10,00</span></div>
+        <div class="quota-bar is-over" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" aria-label="Cuota mensual: 100% utilizada, bloqueada"><span class="quota-bar__fill" style="width:100%"></span></div>
+        <div class="sg-row" style="margin:var(--sp-3) 0 0"><button class="btn btn--secondary btn--sm">Solicitar liberación</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 9. Taxímetro y cache ───────────────────────── -->
+  <section class="sg-section" id="taximetro">
+    <span class="kicker kicker--dim">09</span>
+    <h2>Taxímetro y chips de cache <span class="tag tag--info" style="vertical-align:middle">solo Técnico/Admin</span></h2>
+    <div class="sg-row">
+      <span class="taximeter" aria-label="Costo de la sesión: 0,0418 dólares, 12.400 tokens">
+        <span class="taximeter__label">Sesión</span>
+        <span class="taximeter__value">USD 0,0418</span>
+        <span class="taximeter__detail">12,4k tok</span>
+      </span>
+      <span class="taximeter" aria-label="Costo estimado, telemetría diferida">
+        <span class="taximeter__label">Sesión</span>
+        <span class="taximeter__value">~USD 0,0021</span>
+        <span class="taximeter__detail" data-tip="Costo estimado: telemetría diferida">est.</span>
+      </span>
+    </div>
+    <span class="sg-label">chips de cache por turno</span>
+    <div class="sg-row">
+      <span class="chip-cache chip-cache--hit" aria-label="Cache hit: 8.200 tokens cacheados">hit · 8,2k</span>
+      <span class="chip-cache chip-cache--miss" aria-label="Cache miss">miss</span>
+      <span class="chip-cache chip-cache--write" aria-label="Cache write: 9.100 tokens escritos">write · 9,1k</span>
+    </div>
+    <span class="sg-label">metadatos de turno (chat, capa Técnico/Admin)</span>
+    <div class="sg-chat-meta">
+      <span>14:32</span><span>·</span>
+      <span class="chip-cache chip-cache--hit">hit · 8,2k</span>
+      <span>1,9 s</span><span>·</span>
+      <span class="mono">deepseek-v4-flash</span>
+      <span class="tag tag--info">modelo alterno</span>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 10. Tarjeta HITL ───────────────────────── -->
+  <section class="sg-section" id="hitl">
+    <span class="kicker kicker--dim">10</span>
+    <h2>Tarjeta HITL — aprobación de escritura</h2>
+    <p class="sg-caption">Variantes no mostradas: crítica (comentario obligatorio + escribir-para-confirmar), irreversible (segunda aprobación), resuelta y expirada — ver DESIGN-SYSTEM §8.14.</p>
+    <section class="hitl-card" aria-labelledby="hitl-t1" style="max-width:680px">
+      <div class="hitl-card__head"><svg aria-hidden="true"><use href="#i-shield"/></svg><span id="hitl-t1">Aprobación requerida</span></div>
+      <div class="hitl-card__body">
+        <p style="margin:0">ValidationAgent quiere <strong>actualizar el parámetro MV_TIMBRE</strong> vía API REST oficial.</p>
+        <dl class="hitl-card__meta">
+          <div><dt>Cliente final</dt><dd>Comercial Andina S.A.</dd></div>
+          <div><dt>Ambiente</dt><dd>TEST</dd></div>
+          <div><dt>Solicitante</dt><dd>lucia</dd></div>
+          <div><dt>Riesgo</dt><dd><span class="tag tag--warn">riesgo medio</span></dd></div>
+        </dl>
+        <pre class="hitl-card__payload">PUT /api/framework/v1/parameters/MV_TIMBRE
+{
+  "value_old": "2025-2",
+  "value_new": "2026-1",
+  "environment": "TEST",
+  "reason": "timbrado fiscal desactualizado"
+}</pre>
+        <div class="field" style="margin:0">
+          <label class="field-label" for="hitl-c">Comentario</label>
+          <textarea class="textarea" id="hitl-c" style="min-height:56px" placeholder="Opcional en riesgo medio; obligatorio en crítico."></textarea>
+        </div>
+        <span class="hitl-card__expire"><svg width="13" height="13" aria-hidden="true"><use href="#i-clock"/></svg>Expira en 23 h 12 min (12/06/2026 13:44)</span>
+      </div>
+      <div class="hitl-card__foot">
+        <button class="btn btn--secondary">Rechazar</button>
+        <button class="btn btn--primary">Aprobar escritura</button>
+      </div>
+    </section>
+  </section>
+
+  <!-- ───────────────────────── 11. Escalación ───────────────────────── -->
+  <section class="sg-section" id="escalacion">
+    <span class="kicker kicker--dim">11</span>
+    <h2>Tarjeta de escalación — <code>&lt;&lt;&lt;NEEDS_PRO&gt;&gt;&gt;</code></h2>
+    <div class="escalate-card" style="max-width:680px">
+      <span class="escalate-card__icon"><svg aria-hidden="true"><use href="#i-zap"/></svg></span>
+      <div>
+        <p class="escalate-card__title">Este caso amerita el modelo Pro</p>
+        <p class="escalate-card__msg">El razonamiento requerido supera al modelo estándar. Escalar abre una <strong>conversación nueva</strong> (rama) con mayor costo por turno. La decisión es tuya.</p>
+        <div class="escalate-card__actions">
+          <button class="btn btn--primary btn--sm">Escalar a Pro</button>
+          <button class="btn btn--ghost btn--sm">Seguir con Flash</button>
+          <span class="tag tag--outline">deepseek-v4-pro</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 12. ErrorCards ───────────────────────── -->
+  <section class="sg-section" id="errores">
+    <span class="kicker kicker--dim">12</span>
+    <h2>ErrorCards — errores accionables</h2>
+    <p class="sg-caption">Plantilla: qué pasó · por qué · qué hacer. Código copiable. Texto sin jerga para rol Funcional.</p>
+    <div class="sg-grid sg-grid--wide">
+      <div class="error-card" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-gauge"/></svg></span>
+        <div>
+          <div class="error-card__code">QUOTA</div>
+          <p class="error-card__title">Alcanzaste tu cuota mensual</p>
+          <p class="error-card__why">Tu límite de uso (USD 10,00) se completó hoy a las 11:20.</p>
+          <div class="error-card__actions"><button class="btn btn--primary btn--sm">Solicitar liberación</button><button class="btn btn--ghost btn--sm">Ver consumo</button></div>
+        </div>
+      </div>
+      <div class="error-card" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-wifioff"/></svg></span>
+        <div>
+          <div class="error-card__code">VPN_OFFLINE</div>
+          <p class="error-card__title">Sin conexión al ambiente del cliente</p>
+          <p class="error-card__why">La VPN hacia Comercial Andina S.A. no responde desde hace 2 min.</p>
+          <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button><button class="btn btn--ghost btn--sm">Guía de VPN</button></div>
+        </div>
+      </div>
+      <div class="error-card" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-unplug"/></svg></span>
+        <div>
+          <div class="error-card__code">BRIDGE_OFFLINE</div>
+          <p class="error-card__title">El conector local no responde</p>
+          <p class="error-card__why">El bridge del ambiente TEST está desconectado o sin permisos.</p>
+          <div class="error-card__actions"><button class="btn btn--secondary btn--sm btn--loading" aria-busy="true">Reintentar</button><button class="btn btn--ghost btn--sm">Estado del bridge</button></div>
+        </div>
+      </div>
+      <div class="error-card" role="alert">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-cloudoff"/></svg></span>
+        <div>
+          <div class="error-card__code">GATEWAY_OFFLINE</div>
+          <p class="error-card__title">El asistente no está disponible</p>
+          <p class="error-card__why">Estamos reintentando con proveedores alternativos.</p>
+          <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button></div>
+        </div>
+      </div>
+    </div>
+    <p class="sg-caption" style="margin-top:var(--sp-4)">Variante degradado (<code>--warn</code>): el sistema sigue funcionando con limitaciones.</p>
+    <div class="error-card error-card--warn" style="max-width:680px">
+      <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-info"/></svg></span>
+      <div>
+        <div class="error-card__code">FALLBACK_ACTIVE</div>
+        <p class="error-card__title">Respondiendo con modelo alterno</p>
+        <p class="error-card__why">El proveedor principal está saturado; esta sesión continúa en Kimi K2.6.</p>
+        <div class="error-card__actions"><span class="tag tag--info">modelo alterno</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 13. Toasts ───────────────────────── -->
+  <section class="sg-section" id="toasts">
+    <span class="kicker kicker--dim">13</span>
+    <h2>Toasts</h2>
+    <p class="sg-caption">En producto van apilados abajo-derecha (<code>.toast-stack</code>, fijo). Info/ok se auto-cierran a los 6 s; warn/danger persisten.</p>
+    <div class="sg-grid sg-grid--wide">
+      <div class="toast"><span class="toast__icon"><svg aria-hidden="true"><use href="#i-info"/></svg></span><div><p class="toast__title">Sesión exportada</p><p class="toast__msg">El enlace se copió al portapapeles.</p></div></div>
+      <div class="toast toast--ok"><span class="toast__icon"><svg aria-hidden="true"><use href="#i-check"/></svg></span><div><p class="toast__title">Escritura aprobada</p><p class="toast__msg">MV_TIMBRE actualizado en TEST por lucia.</p></div></div>
+      <div class="toast toast--warn"><span class="toast__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span><div><p class="toast__title">Cuota al 82%</p><p class="toast__msg">Te queda ~20% de tu cuota mensual.</p></div></div>
+      <div class="toast toast--danger"><span class="toast__icon"><svg aria-hidden="true"><use href="#i-x"/></svg></span><div><p class="toast__title">La aprobación expiró</p><p class="toast__msg">Reabrí la solicitud para volver a intentarlo.</p></div></div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 14. Tooltips y tabs ───────────────────────── -->
+  <section class="sg-section" id="tooltips-tabs">
+    <span class="kicker kicker--dim">14</span>
+    <h2>Tooltips y tabs</h2>
+    <div class="sg-row">
+      <button class="btn btn--secondary" data-tip="Prefijo servido desde cache: ahorro ~90%">Tooltip al hover/focus</button>
+      <span class="chip-cache chip-cache--hit" data-tip="8.200 tokens cacheados" tabindex="0">hit · 8,2k</span>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Ficha técnica del agente" style="margin-top:var(--sp-4)">
+      <button class="tab is-active" role="tab" aria-selected="true" onclick="sgTab(this)">Resumen</button>
+      <button class="tab" role="tab" aria-selected="false" onclick="sgTab(this)">Tools</button>
+      <button class="tab" role="tab" aria-selected="false" onclick="sgTab(this)">Prompt <span class="tag tag--outline">docagent@12</span></button>
+      <button class="tab" role="tab" aria-selected="false" onclick="sgTab(this)">Evals <span class="tag tag--money">92%</span></button>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 15. Modal ───────────────────────── -->
+  <section class="sg-section" id="modal">
+    <span class="kicker kicker--dim">15</span>
+    <h2>Modal — confirmación destructiva (escribir-para-confirmar)</h2>
+    <div class="sg-modal-frame">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="m-t">
+        <div class="modal__head">
+          <h3 class="modal__title" id="m-t" style="color:var(--danger)">Eliminar usuario</h3>
+          <button class="btn btn--ghost btn--sm" aria-label="Cerrar"><svg aria-hidden="true"><use href="#i-x"/></svg></button>
+        </div>
+        <div class="modal__body">
+          <p>Vas a eliminar la cuenta de <strong>lucia</strong>. Sus sesiones se conservan en el audit, pero la usuaria pierde el acceso de inmediato. Esta acción no se puede deshacer.</p>
+          <div class="field" style="margin-bottom:0">
+            <label class="field-label" for="m-conf">Escribí <code>lucia</code> para confirmar</label>
+            <input class="input input--mono" id="m-conf" type="text" placeholder="lucia">
+          </div>
+        </div>
+        <div class="modal__foot">
+          <button class="btn btn--ghost">Cancelar</button>
+          <button class="btn btn--danger" disabled>Eliminar usuario</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 16. Chips de adjunto ───────────────────────── -->
+  <section class="sg-section" id="adjuntos">
+    <span class="kicker kicker--dim">16</span>
+    <h2>Chips de archivo adjunto</h2>
+    <p class="sg-caption">La meta muestra tokens estimados (transparencia de presupuesto). Pipeline en ANEXO-ATTACHMENTS.</p>
+    <div class="sg-row">
+      <span class="chip"><svg aria-hidden="true"><use href="#i-file"/></svg><span class="chip__name">MIT-044-parametrizacion.docx</span><span class="chip__meta">≈3,1k tok</span><button class="chip__close" aria-label="Quitar adjunto MIT-044-parametrizacion.docx"><svg width="12" height="12" aria-hidden="true"><use href="#i-x"/></svg></button></span>
+      <span class="chip is-loading"><svg aria-hidden="true"><use href="#i-file"/></svg><span class="chip__name">plan-cuentas.xlsx</span><span class="chip__meta">extrayendo…</span></span>
+      <span class="chip is-error" data-tip="XLSM con macros: formato rechazado por seguridad" tabindex="0"><svg aria-hidden="true"><use href="#i-alert"/></svg><span class="chip__name">reporte.xlsm</span><span class="chip__meta">rechazado</span><button class="chip__close" aria-label="Quitar adjunto reporte.xlsm"><svg width="12" height="12" aria-hidden="true"><use href="#i-x"/></svg></button></span>
+      <span class="chip"><svg aria-hidden="true"><use href="#i-file"/></svg><span class="chip__name">log-error-compras.txt</span><span class="chip__meta">≈0,8k tok</span><span class="tag tag--warn">truncado</span></span>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 17. Citas / evidencia ───────────────────────── -->
+  <section class="sg-section" id="citas">
+    <span class="kicker kicker--dim">17</span>
+    <h2>Citas y evidencia (DocAgent)</h2>
+    <div style="display:grid;gap:var(--sp-3);max-width:680px">
+      <blockquote class="cite" cite="https://tdn.example/MATA010">
+        <p class="cite__quote">«El parámetro MV_PAISLOC define la localización fiscal y debe configurarse antes de la carga inicial de la tabla SX6.»</p>
+        <a class="cite__src" href="#"><svg aria-hidden="true"><use href="#i-ext"/></svg>TDN · MATA010 — Parámetros de localización BOL</a>
+      </blockquote>
+      <div class="empty-state" style="padding:var(--sp-6)">
+        <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-quote"/></svg></span>
+        <p class="empty-state__title">Sin evidencia suficiente</p>
+        <p class="empty-state__hint">No encontré respaldo en TDN/CST para responder esto con confianza. Probá reformular o adjuntá el documento del proyecto.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 18. Timeline de workflow ───────────────────────── -->
+  <section class="sg-section" id="workflow">
+    <span class="kicker kicker--dim">18</span>
+    <h2>Timeline de workflow</h2>
+    <div class="sg-grid sg-grid--wide">
+      <div class="panel">
+        <ol class="wf" style="list-style:none;margin:0;padding:0">
+          <li class="wf-step is-done" aria-label="Paso 1 de 4, completado"><span class="wf-step__dot"><svg aria-hidden="true"><use href="#i-check"/></svg></span><div><p class="wf-step__title">Leer checklist de localización</p><span class="wf-step__meta">3 s · USD 0,0004</span></div></li>
+          <li class="wf-step is-done" aria-label="Paso 2 de 4, completado"><span class="wf-step__dot"><svg aria-hidden="true"><use href="#i-check"/></svg></span><div><p class="wf-step__title">Consultar parámetros del ambiente</p><span class="wf-step__meta">12 s · USD 0,0018</span></div></li>
+          <li class="wf-step is-active" aria-label="Paso 3 de 4, en curso"><span class="wf-step__dot">3</span><div><p class="wf-step__title">Comparar contra valores esperados</p><span class="wf-step__meta">en curso…</span></div></li>
+          <li class="wf-step" aria-label="Paso 4 de 4, pendiente"><span class="wf-step__dot">4</span><div><p class="wf-step__title">Generar informe de diferencias</p><span class="wf-step__meta">pendiente</span></div></li>
+        </ol>
+      </div>
+      <div class="panel">
+        <ol class="wf" style="list-style:none;margin:0;padding:0">
+          <li class="wf-step is-done" aria-label="Paso 1 de 2, completado"><span class="wf-step__dot"><svg aria-hidden="true"><use href="#i-check"/></svg></span><div><p class="wf-step__title">Preparar payload de actualización</p><span class="wf-step__meta">2 s</span></div></li>
+          <li class="wf-step is-error" aria-label="Paso 2 de 2, con error"><span class="wf-step__dot"><svg aria-hidden="true"><use href="#i-x"/></svg></span><div><p class="wf-step__title">Escribir vía API REST</p><span class="wf-step__meta">BRIDGE_OFFLINE</span><div style="margin-top:var(--sp-2)"><button class="btn btn--secondary btn--sm">Reintentar paso</button></div></div></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 19. Rama y campana ───────────────────────── -->
+  <section class="sg-section" id="rama-campana">
+    <span class="kicker kicker--dim">19</span>
+    <h2>Selector de rama y notificaciones</h2>
+    <span class="sg-label">selector «versión 1/2» — editar = rama nueva, jamás se reescribe historia</span>
+    <div class="sg-row">
+      <span class="branch-sel" aria-label="Versión 2 de 3 de este mensaje">
+        <button class="branch-sel__btn" aria-label="Versión anterior"><svg aria-hidden="true"><use href="#i-chl"/></svg></button>
+        <span class="branch-sel__label">2/3</span>
+        <button class="branch-sel__btn" aria-label="Versión siguiente"><svg aria-hidden="true"><use href="#i-chr"/></svg></button>
+      </span>
+      <span class="branch-sel" aria-label="Versión 1 de 1">
+        <button class="branch-sel__btn" disabled aria-label="Versión anterior"><svg aria-hidden="true"><use href="#i-chl"/></svg></button>
+        <span class="branch-sel__label">1/1</span>
+        <button class="branch-sel__btn" disabled aria-label="Versión siguiente"><svg aria-hidden="true"><use href="#i-chr"/></svg></button>
+      </span>
+      <span class="sg-chat-meta"><svg width="13" height="13" aria-hidden="true"><use href="#i-branch"/></svg>rama con modelo distinto → <span class="tag tag--info">modelo alterno</span></span>
+    </div>
+    <span class="sg-label" style="margin-top:var(--sp-4)">campana con contador + panel</span>
+    <div class="sg-row" style="align-items:flex-start">
+      <button class="notif-bell" aria-label="Notificaciones, 3 sin leer"><svg aria-hidden="true"><use href="#i-bell"/></svg><span class="notif-bell__count">3</span></button>
+      <div class="panel panel--flush sg-notif-panel">
+        <div class="sg-notif-item"><svg style="color:var(--warn)" aria-hidden="true"><use href="#i-shield"/></svg><div><p style="margin:0;font-size:var(--fs-small);font-weight:600">Aprobación pendiente</p><p class="sg-caption" style="margin:0">MV_TIMBRE en Comercial Andina S.A. · hace 5 min</p></div></div>
+        <div class="sg-notif-item"><svg style="color:var(--money)" aria-hidden="true"><use href="#i-check"/></svg><div><p style="margin:0;font-size:var(--fs-small);font-weight:600">Workflow completado</p><p class="sg-caption" style="margin:0">Validación contable TEST · hace 1 h</p></div></div>
+        <div class="sg-notif-item"><svg style="color:var(--danger)" aria-hidden="true"><use href="#i-gauge"/></svg><div><p style="margin:0;font-size:var(--fs-small);font-weight:600">Cuota del grupo al 100%</p><p class="sg-caption" style="margin:0">Consultoría funcional · hace 2 h</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 20. Empty states y skeletons ───────────────────────── -->
+  <section class="sg-section" id="vacios">
+    <span class="kicker kicker--dim">20</span>
+    <h2>Empty states y skeletons</h2>
+    <div class="sg-grid sg-grid--wide">
+      <div class="empty-state">
+        <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-inbox"/></svg></span>
+        <p class="empty-state__title">Sin aprobaciones pendientes</p>
+        <p class="empty-state__hint">Cuando un agente necesite escribir en Protheus, la solicitud va a aparecer acá.</p>
+      </div>
+      <div class="empty-state">
+        <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-bot"/></svg></span>
+        <p class="empty-state__title">Empezá una conversación</p>
+        <p class="empty-state__hint">Elegí un agente del catálogo o retomá una sesión reciente.</p>
+        <button class="btn btn--primary btn--sm">Abrir catálogo</button>
+      </div>
+      <div class="panel" aria-busy="true">
+        <span class="skeleton skeleton--title">&nbsp;</span>
+        <div style="display:grid;gap:var(--sp-2);margin-top:var(--sp-3)">
+          <span class="skeleton skeleton--text" style="width:100%">&nbsp;</span>
+          <span class="skeleton skeleton--text" style="width:82%">&nbsp;</span>
+          <span class="skeleton skeleton--text" style="width:91%">&nbsp;</span>
+        </div>
+        <span class="skeleton skeleton--block" style="margin-top:var(--sp-4)">&nbsp;</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────────────────── 21. Live dots y banner IA ───────────────────────── -->
+  <section class="sg-section" id="estado-vivo">
+    <span class="kicker kicker--dim">21</span>
+    <h2>Live dots y banner permanente</h2>
+    <div class="sg-row">
+      <span><span class="live-dot" aria-hidden="true"></span> <span class="mono" style="font-size:var(--fs-caption)">gateway operativo</span></span>
+      <span><span class="live-dot live-dot--warn" aria-hidden="true"></span> <span class="mono" style="font-size:var(--fs-caption)">VPN inestable</span></span>
+      <span><span class="live-dot live-dot--danger" aria-hidden="true"></span> <span class="mono" style="font-size:var(--fs-caption)">bridge caído</span></span>
+      <span><span class="live-dot live-dot--off" aria-hidden="true"></span> <span class="mono" style="font-size:var(--fs-caption)">ambiente sin conectar</span></span>
+    </div>
+    <div class="ai-banner" role="note" style="margin-top:var(--sp-4);border-radius:var(--r-sm);border:1px solid color-mix(in srgb, var(--warn) 30%, transparent)">
+      <svg aria-hidden="true"><use href="#i-alert"/></svg>
+      Respuestas generadas por IA — verificá antes de aplicar en un cliente.
+    </div>
+  </section>
+
+  <footer class="sg-section" style="border-top:1px solid var(--line);padding-top:var(--sp-4)">
+    <p class="sg-caption">Resultar Agents Platform · sistema de diseño v1.0 · tokens en <code>tokens.css</code> · reglas en <code>DESIGN-SYSTEM.md</code>. Mockup de documentación — no es código de producción.</p>
+  </footer>
+
+</main>
+
+<script>
+  // Micro-demos del styleguide (sin librerías)
+  (function () {
+    var TOKENS = [
+      '--bg', '--bg-raised', '--panel', '--line', '--line-strong',
+      '--ink', '--ink-dim', '--ink-faint',
+      '--accent', '--accent-fill', '--accent-ink', '--accent-alt',
+      '--money', '--info', '--warn', '--danger', '--focus-ring'
+    ];
+    var grid = document.getElementById('sg-swatches');
+    var combo = document.getElementById('sg-combo');
+
+    function render() {
+      var cs = getComputedStyle(document.documentElement);
+      combo.textContent = document.documentElement.dataset.theme + ' · ' + document.documentElement.dataset.brand;
+      grid.innerHTML = '';
+      TOKENS.forEach(function (t) {
+        var v = cs.getPropertyValue(t).trim();
+        var el = document.createElement('div');
+        el.className = 'sg-swatch';
+        el.innerHTML = '<div class="sg-swatch__chip" style="background:var(' + t + ')"></div>' +
+          '<div class="sg-swatch__body"><span class="sg-swatch__name">' + t + '</span>' +
+          '<span class="sg-swatch__val">' + v + '</span></div>';
+        grid.appendChild(el);
+      });
+    }
+    new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-brand'] });
+    render();
+  })();
+
+  function sgTab(el) {
+    var tabs = el.parentElement.querySelectorAll('.tab');
+    tabs.forEach(function (t) { t.classList.remove('is-active'); t.setAttribute('aria-selected', 'false'); });
+    el.classList.add('is-active');
+    el.setAttribute('aria-selected', 'true');
+  }
+</script>
+</body>
+</html>

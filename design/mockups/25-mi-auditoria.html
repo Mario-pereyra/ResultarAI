@@ -1,0 +1,223 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>25 · Mi auditoría — Mi espacio — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); }
+  .content { padding: var(--sp-6) var(--sp-6) var(--sp-8); }
+
+  .space-tabs { display: flex; gap: var(--sp-1); border-bottom: 1px solid var(--line); margin-bottom: var(--sp-5); overflow-x: auto; }
+  .space-tab { padding: var(--sp-2) var(--sp-3); margin-bottom: -1px; font-size: var(--fs-small); font-weight: 500; color: var(--ink-dim); border-bottom: 2px solid transparent; white-space: nowrap; }
+  .space-tab:hover { color: var(--ink); text-decoration: none; }
+  .space-tab[aria-current="page"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+  /* Nota de inmutabilidad */
+  .immutable-note { display: flex; gap: var(--sp-2); align-items: flex-start; background: color-mix(in srgb, var(--ink) 4%, var(--panel)); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-small); color: var(--ink-dim); margin-bottom: var(--sp-4); }
+  .immutable-note svg { width: 16px; height: 16px; color: var(--accent); flex: none; margin-top: 2px; }
+  .immutable-note strong { color: var(--ink); }
+
+  .audit-tools { display: flex; align-items: end; justify-content: space-between; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-3); }
+  .audit-tools .field { margin-bottom: 0; flex: 0 1 220px; }
+  .audit-count { font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+
+  .audit-ctx { color: var(--ink-faint); font-family: var(--font-mono); font-size: var(--fs-caption); }
+  .audit-pager { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: var(--fs-caption); color: var(--ink-faint); }
+  .audit-pager__btns { display: flex; gap: var(--sp-2); }
+  .audit-foot { font-size: var(--fs-caption); color: var(--ink-faint); margin-top: var(--sp-3); }
+
+  .variant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-5); align-items: start; }
+  @media (max-width: 1024px) { .variant-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .content { padding: var(--sp-4); }
+    .audit-tools .field { flex: 1 1 100%; }
+    .audit-ctx-col { display: none; } /* en 380px, CONTEXTO se funde como 2ª línea de DETALLE */
+    .audit-ctx-inline { display: block !important; }
+    .audit-pager { flex-wrap: wrap; }
+    .audit-pager .btn { height: 44px; flex: 1; }
+  }
+  .audit-ctx-inline { display: none; }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-scroll" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 25 · Mi espacio</span>
+    <h1>Mi auditoría</h1>
+    <p class="muted">Transparencia personal: todas tus acciones registradas, solo lectura, con filtro por tipo y paginación clásica. El registro es <strong>inmutable</strong>. Spec: <code>docs/design/VISTAS/06-mi-espacio.md</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Vista idéntica para todos los roles, siempre sobre los eventos propios (el log global vive en la consola Admin).</p>
+  </header>
+
+  <!-- ═══════════ ESTADO NORMAL ═══════════ -->
+  <section class="doc-section" aria-labelledby="v-base">
+    <span class="kicker kicker--dim">Estado normal</span>
+    <h2 id="v-base">Registro con filtro por tipo</h2>
+    <p class="doc-caption">Micro-demo: el filtro de tipo oculta filas en vivo (en producto re-consulta server-side y resetea a página 1).</p>
+
+    <div class="frame">
+      <div class="content">
+        <nav class="space-tabs" aria-label="Secciones de Mi espacio">
+          <a class="space-tab" href="#">Mi consumo</a>
+          <a class="space-tab" href="#">Mi memoria</a>
+          <a class="space-tab" href="#" aria-current="page">Mi auditoría</a>
+          <a class="space-tab" href="#">Configuración</a>
+        </nav>
+
+        <div class="immutable-note">
+          <svg aria-hidden="true"><use href="#i-lock"/></svg>
+          <span><strong>Este registro es inmutable:</strong> ni vos ni el Admin pueden editarlo ni borrarlo. Cada aprobación que diste, cada inicio de sesión y cada cambio de memoria quedan acá tal como ocurrieron.</span>
+        </div>
+
+        <div class="audit-tools">
+          <div class="field">
+            <label class="field-label" for="audit-filter">Tipo de evento</label>
+            <select class="select" id="audit-filter">
+              <option value="">Todos</option>
+              <option value="login">Login</option>
+              <option value="aprobacion">Aprobación</option>
+              <option value="memoria">Memoria</option>
+              <option value="cuota">Cuota</option>
+              <option value="archivo">Archivo</option>
+              <option value="seguridad">Seguridad</option>
+            </select>
+          </div>
+          <span class="audit-count" id="audit-count">142 eventos</span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table" id="audit-table">
+            <thead><tr><th scope="col">Fecha y hora</th><th scope="col">Tipo</th><th scope="col">Detalle</th><th scope="col" class="audit-ctx-col">Contexto</th></tr></thead>
+            <tbody>
+              <tr data-tipo="aprobacion"><td class="mono">11/06/2026 14:02</td><td><span class="tag tag--warn">Aprobación</span></td><td>Aprobaste la escritura «Actualizar MV_CAMBIO» — riesgo medio. <a href="#">Ver tarjeta resuelta</a><span class="audit-ctx-inline audit-ctx">Comercial Andina S.A. / TEST</span></td><td class="audit-ctx audit-ctx-col">Comercial Andina S.A. / TEST</td></tr>
+              <tr data-tipo="login"><td class="mono">11/06/2026 08:55</td><td><span class="tag">Login</span></td><td>Inicio de sesión<span class="audit-ctx-inline audit-ctx">Windows · Chrome · 181.114.x.x</span></td><td class="audit-ctx audit-ctx-col">Windows · Chrome · 181.114.x.x</td></tr>
+              <tr data-tipo="memoria"><td class="mono">09/06/2026 18:21</td><td><span class="tag tag--info">Memoria</span></td><td>Editaste tu memoria (versión 6 → 7)<span class="audit-ctx-inline audit-ctx">—</span></td><td class="audit-ctx audit-ctx-col">—</td></tr>
+              <tr data-tipo="cuota"><td class="mono">08/06/2026 16:30</td><td><span class="tag tag--accent">Cuota</span></td><td>Solicitaste liberación de cuota diaria (USD 2,00) — concedida por el Admin<span class="audit-ctx-inline audit-ctx">—</span></td><td class="audit-ctx audit-ctx-col">—</td></tr>
+              <tr data-tipo="archivo"><td class="mono">08/06/2026 10:12</td><td><span class="tag">Archivo</span></td><td>Subiste manual-activos.pdf (2,1 MB) a una conversación<span class="audit-ctx-inline audit-ctx">DocAgent</span></td><td class="audit-ctx audit-ctx-col">DocAgent</td></tr>
+              <tr data-tipo="aprobacion"><td class="mono">06/06/2026 15:44</td><td><span class="tag tag--warn">Aprobación</span></td><td>Rechazaste la escritura «Crear parámetro MV_XTASA» — comentario: «falta validar con el cliente». <a href="#">Ver tarjeta resuelta</a><span class="audit-ctx-inline audit-ctx">Ferretera del Sur Ltda. / TEST</span></td><td class="audit-ctx audit-ctx-col">Ferretera del Sur Ltda. / TEST</td></tr>
+              <tr data-tipo="seguridad"><td class="mono">03/06/2026 09:30</td><td><span class="tag tag--info">Seguridad</span></td><td>Activaste la verificación en dos pasos (TOTP)<span class="audit-ctx-inline audit-ctx">Windows · Chrome · 181.114.x.x</span></td><td class="audit-ctx audit-ctx-col">Windows · Chrome · 181.114.x.x</td></tr>
+              <tr data-tipo="login"><td class="mono">02/06/2026 21:17</td><td><span class="tag tag--danger">Login</span></td><td>Intento de inicio de sesión fallido (contraseña incorrecta)<span class="audit-ctx-inline audit-ctx">Android · navegador · 200.87.x.x</span></td><td class="audit-ctx audit-ctx-col">Android · navegador · 200.87.x.x</td></tr>
+              <tr data-tipo="memoria"><td class="mono">02/06/2026 10:05</td><td><span class="tag tag--info">Memoria</span></td><td>Aceptaste una propuesta del agente para tu memoria (versión 5 → 6)<span class="audit-ctx-inline audit-ctx">—</span></td><td class="audit-ctx audit-ctx-col">—</td></tr>
+              <tr data-tipo="seguridad"><td class="mono">12/05/2026 08:00</td><td><span class="tag tag--info">Seguridad</span></td><td>Aceptaste el acuerdo de uso (primer inicio de sesión)<span class="audit-ctx-inline audit-ctx">Windows · Chrome · 181.114.x.x</span></td><td class="audit-ctx audit-ctx-col">Windows · Chrome · 181.114.x.x</td></tr>
+            </tbody>
+          </table>
+          <div class="audit-pager">
+            <span id="audit-range">mostrando 1–10 de 142</span>
+            <div class="audit-pager__btns">
+              <button type="button" class="btn btn--secondary btn--sm" disabled>‹ Anterior</button>
+              <button type="button" class="btn btn--secondary btn--sm">Siguiente ›</button>
+            </div>
+          </div>
+        </div>
+        <p class="audit-foot">Horas en GMT−4 · La Paz (hora del servidor).</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ ESTADOS ═══════════ -->
+  <section class="doc-section" aria-labelledby="v-estados">
+    <span class="kicker kicker--dim">Estados</span>
+    <h2 id="v-estados">Carga, vacíos y error</h2>
+
+    <div class="variant-grid">
+      <div class="panel" aria-busy="true" aria-label="Cargando registro">
+        <span class="kicker kicker--dim">Carga (skeleton)</span>
+        <span class="skeleton skeleton--text" style="width:95%;margin-bottom:var(--sp-3)">…</span>
+        <span class="skeleton skeleton--text" style="width:82%;margin-bottom:var(--sp-3)">…</span>
+        <span class="skeleton skeleton--text" style="width:90%;margin-bottom:var(--sp-3)">…</span>
+        <span class="skeleton skeleton--text" style="width:76%;margin-bottom:var(--sp-3)">…</span>
+        <span class="skeleton skeleton--text" style="width:88%">…</span>
+      </div>
+
+      <div class="panel">
+        <span class="kicker kicker--dim">Vacío (cuenta nueva)</span>
+        <div class="empty-state">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-scroll"/></svg></span>
+          <p class="empty-state__title">Todavía no hay actividad registrada</p>
+          <p class="empty-state__hint">Tus inicios de sesión, aprobaciones y cambios van a aparecer acá.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <span class="kicker kicker--dim">Vacío (filtro sin resultados)</span>
+        <div class="empty-state">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-scroll"/></svg></span>
+          <p class="empty-state__title">Sin eventos de tipo CUOTA en este período</p>
+          <button type="button" class="btn btn--secondary">Limpiar filtro</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <span class="kicker kicker--dim">Error de carga</span>
+        <div class="error-card" role="alert">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">AUDITORIA_NO_DISPONIBLE</p>
+            <p class="error-card__title">No pudimos cargar tu registro</p>
+            <p class="error-card__why">El origen de auditoría no respondió. Nada se perdió: el registro es persistente e inmutable.</p>
+            <div class="error-card__actions"><button type="button" class="btn btn--secondary">Reintentar</button></div>
+          </div>
+        </div>
+        <div class="error-card error-card--warn" role="alert" style="margin-top:var(--sp-3)">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">CARGA_PARCIAL</p>
+            <p class="error-card__title">Registro parcialmente cargado</p>
+            <p class="error-card__why">Se muestra lo recibido — reintentá para completar la página.</p>
+            <div class="error-card__actions"><button type="button" class="btn btn--secondary">Reintentar</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Micro-demo del filtro por tipo (en producto: re-consulta server-side, página 1).
+  (function () {
+    var sel = document.getElementById('audit-filter');
+    var rows = document.querySelectorAll('#audit-table tbody tr');
+    var count = document.getElementById('audit-count');
+    var range = document.getElementById('audit-range');
+    sel.addEventListener('change', function () {
+      var v = sel.value, shown = 0;
+      rows.forEach(function (r) {
+        var show = !v || r.dataset.tipo === v;
+        r.hidden = !show;
+        if (show) shown++;
+      });
+      count.textContent = v ? shown + ' eventos (filtrados)' : '142 eventos';
+      range.textContent = v ? 'mostrando 1–' + shown + ' de ' + shown : 'mostrando 1–10 de 142';
+    });
+  })();
+</script>
+</body>
+</html>

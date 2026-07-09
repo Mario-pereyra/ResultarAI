@@ -1,0 +1,290 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>27 · Selector de cliente y ambiente — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+  .stage { background: var(--scrim); border-radius: var(--r-lg); padding: var(--sp-7) var(--sp-4); display: grid; place-items: center; }
+  .modal--wide { width: min(640px, 100%); }
+
+  /* Acordeón de clientes */
+  .cli { border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; }
+  .cli + .cli { margin-top: var(--sp-2); }
+  .cli__head { display: flex; align-items: center; gap: var(--sp-2); width: 100%; background: var(--bg-raised); border: 0; padding: var(--sp-3) var(--sp-4); font-family: var(--font-body); font-size: var(--fs-body); font-weight: 600; color: var(--ink); cursor: pointer; text-align: left; }
+  .cli__head:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+  .cli__head .chev { margin-left: auto; color: var(--ink-faint); transition: transform var(--dur-2) var(--ease-out); }
+  .cli.is-open .cli__head .chev { transform: rotate(90deg); }
+  .cli__meta { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); font-weight: 400; }
+  .cli__body { border-top: 1px solid var(--line); }
+
+  /* Fila de ambiente */
+  .env { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); padding: var(--sp-3) var(--sp-4); border-bottom: 1px solid var(--line); min-height: 44px; }
+  .env:last-child { border-bottom: 0; }
+  .env.is-selected { background: var(--accent-soft); }
+  .env.is-off { opacity: .75; }
+  .env input[type="radio"] { accent-color: var(--accent-fill); width: 16px; height: 16px; margin: 0; }
+  .env input[type="radio"]:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .env__name { font-weight: 600; min-width: 48px; }
+  .env__status { display: flex; flex-wrap: wrap; gap: var(--sp-3); font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); margin-left: auto; }
+  .env__status .st { display: inline-flex; align-items: center; gap: 5px; }
+  .env__diag { flex-basis: 100%; padding-left: 28px; }
+
+  /* Panel de nivel de datos */
+  .ndata { border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-small); display: flex; gap: var(--sp-2); align-items: flex-start; margin-top: var(--sp-4); }
+  .ndata svg { width: 16px; height: 16px; flex: none; margin-top: 2px; }
+  .ndata--n1 { background: color-mix(in srgb, var(--money) 8%, transparent); border: 1px solid color-mix(in srgb, var(--money) 30%, transparent); }
+  .ndata--n1 svg { color: var(--money); }
+  .ndata--n2 { background: color-mix(in srgb, var(--warn) 10%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent); }
+  .ndata--n2 svg { color: var(--warn); }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .stage { padding: var(--sp-4) var(--sp-2); }
+    .modal__foot { flex-direction: column-reverse; }
+    .modal__foot .btn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-cable" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a1 1 0 0 1-1-1v-1a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1v2"/><path d="M19 15V6.5a1 1 0 0 0-7 0v11a1 1 0 0 1-7 0V9"/><path d="M21 21v-2h-4"/><path d="M3 5h4V3"/><path d="M7 5a1 1 0 0 1 1 1v1a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1V3"/></symbol>
+</defs></svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 27 · Módulo aprobaciones HITL / validación</span>
+    <h1>Selector de cliente y ambiente</h1>
+    <p class="muted">Compuerta obligatoria al iniciar ValidationAgent o un workflow con ambiente. Sin selección no hay sesión. Spec: <code>docs/design/VISTAS/05-hitl-validacion.md §4</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Todos los roles lo ven (Funcional incluido).</p>
+  </header>
+
+  <!-- ════════════════ VARIANTE A — VAL seleccionado (N1) + un ambiente offline ════════════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Selección VAL (N1) — DEV offline con diagnóstico — vista Técnico/Admin</h2>
+    <p class="doc-caption">Micro-demo: cambiá el radio entre VAL y PROD para ver el panel de nivel de datos reaccionar (aria-live).</p>
+
+    <div class="stage">
+      <div class="modal modal--wide" role="dialog" aria-modal="true" aria-labelledby="sel-t">
+        <div class="modal__head">
+          <h3 class="modal__title" id="sel-t">Seleccioná cliente y ambiente</h3>
+          <button class="btn btn--ghost btn--sm" aria-label="Cancelar y no iniciar la sesión">✕</button>
+        </div>
+        <div class="modal__body">
+          <p class="muted" style="margin-bottom:var(--sp-4)">El agente va a leer (y proponer escrituras) <strong>solo</strong> contra el ambiente que elijas. Cambiar de ambiente después = sesión nueva.</p>
+
+          <!-- Cliente 1: abierto, última elección -->
+          <div class="cli is-open">
+            <button class="cli__head" aria-expanded="true">
+              Comercial Andina S.A.
+              <span class="tag tag--accent tag--outline">Última elección</span>
+              <span class="cli__meta">3 ambientes · último uso hace 1 d</span>
+              <svg class="chev" width="14" height="14" aria-hidden="true"><use href="#i-chev"/></svg>
+            </button>
+            <div class="cli__body" role="radiogroup" aria-label="Ambientes de Comercial Andina S.A.">
+              <label class="env is-selected" id="env-val">
+                <input type="radio" name="amb" value="val" checked aria-describedby="ndata-panel">
+                <span class="env__name">VAL</span> <span class="tag tag--info">VAL</span>
+                <span class="env__status">
+                  <span class="st"><span class="live-dot" aria-hidden="true"></span>VPN online · 38 ms</span>
+                  <span class="st"><svg width="13" height="13" aria-hidden="true"><use href="#i-cable"/></svg>bridge online · v1.4.2</span>
+                </span>
+              </label>
+              <label class="env" id="env-prod">
+                <input type="radio" name="amb" value="prod">
+                <span class="env__name">PROD</span> <span class="tag tag--danger">PROD</span>
+                <span class="env__status">
+                  <span class="st"><span class="live-dot" aria-hidden="true"></span>VPN online · 41 ms</span>
+                  <span class="st"><svg width="13" height="13" aria-hidden="true"><use href="#i-cable"/></svg>bridge online · v1.4.2</span>
+                </span>
+              </label>
+              <div class="env is-off">
+                <input type="radio" name="amb" value="dev" disabled aria-describedby="dev-diag">
+                <span class="env__name">DEV</span> <span class="tag">DEV</span>
+                <span class="env__status"><span class="st"><span class="live-dot live-dot--off" aria-hidden="true"></span>VPN offline desde 09:12</span></span>
+                <div class="env__diag" id="dev-diag">
+                  <div class="error-card error-card--warn" style="padding:var(--sp-2) var(--sp-3)">
+                    <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+                    <div>
+                      <p class="error-card__code">VPN_OFFLINE</p>
+                      <p class="error-card__title" style="font-size:var(--fs-small)">Sin conexión al ambiente del cliente</p>
+                      <p class="error-card__why">El túnel hacia COMANDINA-DEV no responde. No se puede iniciar sesión contra este ambiente.</p>
+                      <div class="error-card__actions">
+                        <button class="btn btn--secondary btn--sm">Reintentar</button>
+                        <button class="btn btn--ghost btn--sm">Guía de VPN</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clientes colapsados -->
+          <div class="cli">
+            <button class="cli__head" aria-expanded="false">
+              Distribuidora Altiplano SRL
+              <span class="cli__meta">2 ambientes · último uso hace 5 d</span>
+              <svg class="chev" width="14" height="14" aria-hidden="true"><use href="#i-chev"/></svg>
+            </button>
+          </div>
+          <div class="cli">
+            <button class="cli__head" aria-expanded="false">
+              Agroindustrias del Sur S.A.
+              <span class="cli__meta">1 ambiente</span>
+              <svg class="chev" width="14" height="14" aria-hidden="true"><use href="#i-chev"/></svg>
+            </button>
+          </div>
+
+          <!-- Panel reactivo de nivel de datos -->
+          <div id="ndata-panel" aria-live="polite">
+            <div class="ndata ndata--n1" id="ndata-n1">
+              <svg aria-hidden="true"><use href="#i-check"/></svg>
+              <span><strong>Nivel de datos resultante: N1 — datos de prueba.</strong> Ambiente de validación con datos compartidos de prueba.</span>
+            </div>
+            <div class="ndata ndata--n2" id="ndata-n2" hidden>
+              <svg aria-hidden="true"><use href="#i-alert"/></svg>
+              <span><strong>Nivel de datos resultante: N2 — vas a operar contra datos reales del cliente.</strong> No pegues datos personales ni credenciales (N3): no se envían al modelo. Toda escritura requerirá aprobación.</span>
+            </div>
+          </div>
+
+          <label class="check-row" style="margin-top:var(--sp-4)">
+            <input type="checkbox" class="checkbox" checked>
+            Recordar esta elección para la próxima sesión
+          </label>
+        </div>
+        <div class="modal__foot">
+          <button class="btn btn--ghost">Cancelar</button>
+          <button class="btn btn--primary" id="go-btn">Iniciar con Comercial Andina · VAL</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Micro-demo: panel N1/N2 + label del primario reaccionan a la selección
+      (function () {
+        var n1 = document.getElementById('ndata-n1'), n2 = document.getElementById('ndata-n2'), go = document.getElementById('go-btn');
+        document.querySelectorAll('input[name="amb"]').forEach(function (r) {
+          r.addEventListener('change', function () {
+            var prod = r.value === 'prod';
+            n1.hidden = prod; n2.hidden = !prod;
+            go.textContent = 'Iniciar con Comercial Andina · ' + (prod ? 'PROD' : 'VAL');
+            document.getElementById('env-val').classList.toggle('is-selected', !prod);
+            document.getElementById('env-prod').classList.toggle('is-selected', prod);
+          });
+        });
+      })();
+    </script>
+  </section>
+
+  <!-- ════════════════ VARIANTE B — estados ════════════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Estados: carga · vacío · error total · degradado · rol Funcional</h2>
+
+    <div style="display:grid;gap:var(--sp-5);grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+      <div class="panel" aria-busy="true">
+        <h3>Carga — sondeando clientes</h3>
+        <span class="skeleton" style="height:44px;margin-bottom:8px"></span>
+        <span class="skeleton" style="height:44px;margin-bottom:8px"></span>
+        <span class="skeleton" style="height:44px"></span>
+      </div>
+
+      <div class="panel">
+        <h3>Vacío — sin clientes asignados</h3>
+        <div class="empty-state">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-cable"/></svg></span>
+          <p class="empty-state__title">No tenés clientes asignados</p>
+          <p class="empty-state__hint">Pedile al Admin acceso a un cliente final para usar este agente.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Error total</h3>
+        <div class="error-card" role="alert">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">CLIENTS_FETCH_FAILED</p>
+            <p class="error-card__title">No se pudo cargar la lista de clientes</p>
+            <p class="error-card__why">El servicio de configuración no respondió.</p>
+            <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Degradado — estados de conexión con caché</h3>
+        <p><span class="tag tag--warn">Estado de hace 5 min</span></p>
+        <p class="muted" style="font-size:var(--fs-small)">El sondeo en vivo no respondió; se muestran los últimos estados conocidos.</p>
+        <button class="btn btn--secondary btn--sm">Actualizar estados</button>
+      </div>
+
+      <div class="panel" style="grid-column:1/-1">
+        <h3>Rol Funcional — mismo flujo, sin jerga técnica</h3>
+        <p class="doc-caption">Sin latencias ni versión de bridge (capa Técnico/Admin). Panel N2 en lenguaje llano.</p>
+        <label class="env is-selected" style="border:1px solid var(--line);border-radius:var(--r-md)">
+          <input type="radio" checked name="amb-f">
+          <span class="env__name">PROD</span> <span class="tag tag--danger">PROD</span>
+          <span class="env__status"><span class="st"><span class="live-dot" aria-hidden="true"></span>conectado</span></span>
+        </label>
+        <div class="ndata ndata--n2">
+          <svg aria-hidden="true"><use href="#i-alert"/></svg>
+          <span><strong>Vas a trabajar con datos reales del cliente — tratalos con cuidado.</strong> No pegues datos personales ni contraseñas. Cualquier cambio va a necesitar aprobación de un responsable.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ VARIANTE C — elección recordada pero offline ════════════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Elección recordada offline — preseleccionada pero deshabilitada</h2>
+    <p class="doc-caption">El primario queda deshabilitado hasta elegir otro ambiente; el diagnóstico viene abierto. Recordar ≠ saltarse el modal: confirmar siempre es explícito.</p>
+
+    <div class="panel" style="max-width:640px">
+      <div class="env is-off" style="border:1px solid var(--line);border-radius:var(--r-md)">
+        <input type="radio" checked disabled aria-describedby="rec-diag">
+        <span class="env__name">VAL</span> <span class="tag tag--info">VAL</span> <span class="tag tag--accent tag--outline">Última elección</span>
+        <span class="env__status"><span class="st"><span class="live-dot live-dot--danger" aria-hidden="true"></span>bridge offline</span></span>
+        <div class="env__diag" id="rec-diag">
+          <div class="error-card error-card--warn" style="padding:var(--sp-2) var(--sp-3)">
+            <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+            <div>
+              <p class="error-card__code">BRIDGE_OFFLINE</p>
+              <p class="error-card__title" style="font-size:var(--fs-small)">El conector local no responde</p>
+              <p class="error-card__why">tat-mcp no reporta desde 11/06/2026 13:02.</p>
+              <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button><button class="btn btn--ghost btn--sm">Estado del bridge</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:var(--sp-2);margin-top:var(--sp-4)">
+        <button class="btn btn--ghost">Cancelar</button>
+        <button class="btn btn--primary" disabled data-tip="Elegí un ambiente disponible para iniciar">Iniciar sesión</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

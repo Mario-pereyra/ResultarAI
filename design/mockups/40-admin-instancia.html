@@ -1,0 +1,259 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>40 · Configuración de instancia — Consola admin — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  .cfg { display: grid; grid-template-columns: minmax(0, 560px) 1fr; gap: var(--sp-6); align-items: start; }
+  .dirty-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); background: color-mix(in srgb, var(--warn) 9%, var(--panel)); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); border-radius: var(--r-md); padding: var(--sp-2) var(--sp-4); margin-bottom: var(--sp-4); font-size: var(--fs-small); }
+
+  /* Radio-cards de brand */
+  .brand-cards { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+  .brand-card { display: block; border: 1px solid var(--line-strong); border-radius: var(--r-md); padding: var(--sp-3); cursor: pointer; background: var(--bg-raised); }
+  .brand-card input { position: absolute; opacity: 0; }
+  .brand-card.is-selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .brand-card input:focus-visible ~ .brand-card__name { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  .brand-card__name { font-weight: 600; font-size: var(--fs-small); display: block; margin-bottom: var(--sp-2); }
+  .swatches { display: flex; gap: var(--sp-1); }
+  .sw { width: 22px; height: 22px; border-radius: var(--r-xs); border: 1px solid var(--line); }
+
+  /* Mini-shell de preview */
+  .mini-shell { border: 1px solid var(--line-strong); border-radius: var(--r-md); overflow: hidden; }
+  .mini-shell__bar { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); font-family: var(--font-display); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid; }
+  .mini-shell__logo { width: 18px; height: 18px; border-radius: var(--r-xs); display: grid; place-items: center; font-size: 9px; font-weight: 700; }
+  .mini-shell__body { display: grid; grid-template-columns: 64px 1fr; min-height: 84px; }
+  .mini-shell--dark { background: #0a0d13; color: #e8edf5; }
+  .mini-shell--dark .mini-shell__bar { border-color: #222b3c; }
+  .mini-shell--dark .mini-shell__side { background: #10151f; border-right: 1px solid #222b3c; }
+  .mini-shell--dark .mini-shell__logo { background: #ffb000; color: #181102; }
+  .mini-shell--light { background: #f2efe8; color: #1b2130; }
+  .mini-shell--light .mini-shell__bar { border-color: #ddd6c6; }
+  .mini-shell--light .mini-shell__side { background: #f8f6f0; border-right: 1px solid #ddd6c6; }
+  .mini-shell--light .mini-shell__logo { background: #ffb000; color: #181102; }
+
+  .hist td { vertical-align: middle; }
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .cfg { grid-template-columns: 1fr; }
+    .brand-cards { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></symbol>
+    <symbol id="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 40 · Consola admin · Gobernanza</span>
+    <h1>Configuración de instancia</h1>
+    <p class="muted">Identidad, brand, tema/idioma default, acuerdo de uso versionado, regional y licenciatario. Spec: <code>docs/design/VISTAS/08-admin-gobernanza.md §8.5</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Solo Admin. En &lt;768 px: «editá la configuración de instancia desde escritorio».</p>
+  </header>
+
+  <!-- ════════ VARIANTE A — Formulario completo ════════ -->
+  <section class="doc-section" aria-labelledby="va-t">
+    <span class="kicker kicker--dim">Variante A</span>
+    <h2 id="va-t">Formulario seccionado con previews</h2>
+
+    <div class="dirty-bar" role="status">
+      <span><strong>Cambios sin guardar</strong> — si navegás ahora se te va a pedir confirmación.</span>
+      <button class="btn btn--primary btn--sm">Guardar cambios</button>
+    </div>
+
+    <div class="cfg">
+      <form onsubmit="return false">
+        <span class="kicker">Identidad</span>
+        <div class="field">
+          <label class="field-label" for="inst-name">Nombre de la instancia <span class="req" aria-hidden="true">*</span></label>
+          <input class="input" id="inst-name" value="Resultar Bolivia">
+        </div>
+        <div class="field">
+          <label class="field-label" for="inst-logo">Logo (claro y oscuro)</label>
+          <input class="input" type="file" id="inst-logo" accept=".png,.svg" style="padding-top:6px;">
+          <span class="field-hint">PNG/SVG · ≤512 KB. Subí versión clara y oscura, o marcá «sirve para ambos».</span>
+        </div>
+        <label class="check-row" style="margin-bottom:var(--sp-5);"><input type="checkbox" class="checkbox" checked><span>El mismo logo sirve para tema claro y oscuro</span></label>
+
+        <span class="kicker">Apariencia</span>
+        <div class="field">
+          <span class="field-label" id="brand-lbl">Brand de la instancia</span>
+          <div class="brand-cards" role="radiogroup" aria-labelledby="brand-lbl">
+            <label class="brand-card is-selected"><input type="radio" name="brand" checked>
+              <span class="brand-card__name">default — «sala de control»</span>
+              <span class="swatches" aria-hidden="true"><span class="sw" style="background:#0a0d13;"></span><span class="sw" style="background:#ffb000;"></span><span class="sw" style="background:#3ddc97;"></span><span class="sw" style="background:#58aeff;"></span></span>
+            </label>
+            <label class="brand-card"><input type="radio" name="brand">
+              <span class="brand-card__name">totvs — azul oficial</span>
+              <span class="swatches" aria-hidden="true"><span class="sw" style="background:#002233;"></span><span class="sw" style="background:#00dbff;"></span><span class="sw" style="background:#ff8900;"></span><span class="sw" style="background:#0a46ea;"></span></span>
+            </label>
+          </div>
+          <span class="field-hint">El usuario puede alternar su tema; el brand es de la instancia (§2.1). Cambiar brand aplica a todos al recargar; los temas personales se conservan.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
+          <div class="field"><label class="field-label" for="theme-def">Tema default</label>
+            <select class="select" id="theme-def"><option selected>Oscuro (dark)</option><option>Claro (light)</option></select></div>
+          <div class="field"><label class="field-label" for="lang-def">Idioma default</label>
+            <select class="select" id="lang-def"><option selected>es-BO — Español (Bolivia)</option><option>pt-BR — Português (preparado)</option></select>
+            <span class="field-hint">Solo afecta usuarios nuevos o sin preferencia.</span></div>
+        </div>
+
+        <span class="kicker">Acuerdo de uso</span>
+        <p style="font-size:var(--fs-small);"><span class="tag tag--money">v3 vigente</span> publicada 02/05/2026 · <span class="tag tag--info">BORRADOR sin publicar</span></p>
+        <div class="field">
+          <label class="field-label" for="agree-txt">Texto del acuerdo</label>
+          <textarea class="textarea" id="agree-txt" style="min-height:120px;">Las respuestas de los agentes son generadas por IA y deben verificarse antes de aplicarse en ambientes de clientes. El usuario se compromete a no ingresar datos personales ni credenciales (nivel N3)…</textarea>
+          <span class="field-hint">Al publicar una nueva versión, todos los usuarios deberán re-aceptarla en su próximo inicio de sesión (checkbox auditado).</span>
+        </div>
+        <button class="btn btn--secondary btn--sm" style="margin-bottom:var(--sp-5);">Publicar como v4…</button>
+
+        <span class="kicker">Regional</span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
+          <div class="field"><label class="field-label" for="tz">Zona horaria</label>
+            <select class="select" id="tz"><option selected>America/La_Paz</option><option>America/Sao_Paulo</option></select></div>
+          <div class="field"><label class="field-label" for="cur">Formato de moneda</label>
+            <select class="select" id="cur"><option selected>USD · es-BO</option><option>BRL · pt-BR</option></select>
+            <span class="field-hint">Ejemplo vivo: <span class="mono">USD 1.284,50</span></span></div>
+        </div>
+
+        <span class="kicker">Licenciatario</span>
+        <div class="field"><label class="field-label" for="lic-rs">Razón social</label><input class="input" id="lic-rs" value="Resultar Bolivia S.R.L."></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);">
+          <div class="field"><label class="field-label" for="lic-nit">NIT</label><input class="input input--mono" id="lic-nit" value="102837465"></div>
+          <div class="field"><label class="field-label" for="lic-mail">Contacto</label><input class="input" id="lic-mail" type="email" value="admin@resultar.example"></div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="lic-id">Instancia-id (solo lectura)</label>
+          <input class="input input--mono" id="lic-id" value="inst_rstr_bo_7f3a" readonly>
+        </div>
+        <button class="btn btn--primary">Guardar cambios</button>
+      </form>
+
+      <!-- Previews -->
+      <aside aria-label="Vistas previas">
+        <div class="panel" style="margin-bottom:var(--sp-4);">
+          <span class="kicker kicker--dim">Preview del shell — dark</span>
+          <div class="mini-shell mini-shell--dark" role="img" aria-label="Vista previa del logo y nombre en tema oscuro">
+            <div class="mini-shell__bar"><span class="mini-shell__logo">RB</span>Resultar Bolivia</div>
+            <div class="mini-shell__body"><div class="mini-shell__side"></div><div></div></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-bottom:var(--sp-4);">
+          <span class="kicker kicker--dim">Preview del shell — light</span>
+          <div class="mini-shell mini-shell--light" role="img" aria-label="Vista previa del logo y nombre en tema claro">
+            <div class="mini-shell__bar"><span class="mini-shell__logo">RB</span>Resultar Bolivia</div>
+            <div class="mini-shell__body"><div class="mini-shell__side"></div><div></div></div>
+          </div>
+          <p class="doc-caption" style="margin-top:var(--sp-2);">Logo sin subir → placeholder con iniciales del nombre.</p>
+        </div>
+        <div class="panel panel--flush">
+          <div class="table-wrap" style="border:0;">
+            <table class="table table--dense hist">
+              <caption style="text-align:left;padding:var(--sp-3) var(--sp-3) 0;font-family:var(--font-display);font-weight:600;">Historial del acuerdo de uso</caption>
+              <thead><tr><th scope="col">Versión</th><th scope="col">Publicada</th><th scope="col">Por</th><th scope="col" class="num">Re-aceptaron</th></tr></thead>
+              <tbody>
+                <tr><td class="mono">v3 <span class="tag tag--money">vigente</span></td><td class="mono">02/05/2026</td><td>mperez</td><td class="num">31/32</td></tr>
+                <tr><td class="mono">v2</td><td class="mono">10/02/2026</td><td>mperez</td><td class="num">32/32</td></tr>
+                <tr><td class="mono">v1</td><td class="mono">15/01/2026</td><td>mperez</td><td class="num">28/28</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ════════ VARIANTE B — Modal crítica de publicación del acuerdo ════════ -->
+  <section class="doc-section" aria-labelledby="vb-t">
+    <span class="kicker kicker--dim">Variante B</span>
+    <h2 id="vb-t">Publicar acuerdo v4 — escribir-para-confirmar (crítico)</h2>
+    <div class="panel" role="dialog" aria-labelledby="pub-title" style="max-width:560px;box-shadow:var(--shadow-3);">
+      <h4 class="modal__title" id="pub-title" style="margin-bottom:var(--sp-3);">Publicar acuerdo de uso v4</h4>
+      <div class="error-card error-card--warn" style="margin-bottom:var(--sp-4);">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <div><p class="error-card__title">Alcance: 32 usuarios deberán re-aceptar</p>
+        <p class="error-card__why" style="margin:0;">En su próximo inicio de sesión, antes de poder usar la plataforma. La v3 queda en historial, inmutable.</p></div>
+      </div>
+      <p class="field-label" style="margin-bottom:var(--sp-1);">Diff vs v3 (vigente)</p>
+      <pre style="font-family:var(--font-mono);font-size:var(--fs-caption);line-height:1.7;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--sp-3);margin:0 0 var(--sp-4);overflow-x:auto;"><span style="color:var(--danger);">- El usuario se compromete a no ingresar datos personales…</span>
+<span style="color:var(--money);">+ El usuario se compromete a no ingresar datos personales ni
++ credenciales (nivel N3); su incumplimiento queda auditado.</span></pre>
+      <div class="field">
+        <label class="field-label" for="pub-confirm">Escribí <code>PUBLICAR</code> para confirmar</label>
+        <input class="input input--mono" id="pub-confirm" oninput="document.getElementById('pub-btn').disabled=this.value!=='PUBLICAR'" placeholder="PUBLICAR">
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:var(--sp-2);">
+        <button class="btn btn--ghost">Cancelar</button>
+        <button class="btn btn--danger" id="pub-btn" disabled>Publicar v4</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ VARIANTE C — Estados ════════ -->
+  <section class="doc-section" aria-labelledby="vc-t">
+    <span class="kicker kicker--dim">Variante C</span>
+    <h2 id="vc-t">Estados — carga, error de logo y error de guardado</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--sp-4);">
+      <div class="panel" aria-busy="true">
+        <span class="kicker kicker--dim">Carga</span>
+        <span class="skeleton skeleton--title" style="margin-bottom:var(--sp-3);"></span>
+        <span class="skeleton skeleton--text" style="margin-bottom:var(--sp-2);"></span>
+        <span class="skeleton skeleton--block"></span>
+      </div>
+      <div class="panel">
+        <span class="kicker kicker--dim">Logo inválido (inline, el resto del form intacto)</span>
+        <div class="field" style="margin-bottom:0;">
+          <label class="field-label" for="logo-err">Logo</label>
+          <input class="input is-invalid" type="file" id="logo-err" aria-describedby="logo-err-msg" style="padding-top:6px;">
+          <span class="field-error" id="logo-err-msg"><svg style="width:13px;height:13px;" aria-hidden="true"><use href="#i-alert"/></svg>El archivo pesa 1,8 MB — máximo 512 KB (PNG/SVG).</span>
+        </div>
+      </div>
+      <div class="panel">
+        <span class="kicker kicker--dim">Guardado fallido (datos intactos, §9.1)</span>
+        <div class="error-card">
+          <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div>
+            <p class="error-card__code">SAVE_FAILED</p>
+            <p class="error-card__title">No se pudo guardar la configuración</p>
+            <p class="error-card__why">Tus cambios siguen en el formulario.</p>
+            <div class="error-card__actions"><button class="btn btn--secondary btn--sm">Reintentar</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="toast-stack" aria-live="polite">
+    <div class="toast toast--ok">
+      <span class="toast__icon"><svg aria-hidden="true"><use href="#i-ok"/></svg></span>
+      <div><p class="toast__title">Configuración guardada</p><p class="toast__msg">Los cambios de brand aplican al recargar</p></div>
+    </div>
+  </div>
+
+</main>
+</body>
+</html>

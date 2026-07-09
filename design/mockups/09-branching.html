@@ -1,0 +1,239 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 · Edición y ramas — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1080px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+  .frame { border: 1px solid var(--line-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: var(--shadow-2); background: var(--bg); padding: var(--sp-5); }
+  .col { max-width: 760px; margin: 0 auto; display: grid; gap: var(--sp-5); }
+
+  .msg-user { display: grid; justify-items: end; gap: var(--sp-1); position: relative; }
+  .msg-user__row { display: flex; align-items: center; gap: var(--sp-2); max-width: 85%; }
+  .msg-user__bubble { background: var(--bg-raised); border: 1px solid var(--line); border-radius: var(--r-lg) var(--r-lg) var(--r-xs) var(--r-lg); padding: var(--sp-3) var(--sp-4); font-size: var(--fs-lead); }
+  .msg-agent { display: grid; grid-template-columns: 30px 1fr; gap: var(--sp-3); }
+  .msg-agent__avatar { width: 30px; height: 30px; display: grid; place-items: center; border-radius: var(--r-md); background: var(--accent-soft); color: var(--accent); }
+  .msg-agent__avatar svg { width: 16px; height: 16px; }
+  .msg-agent__body { font-size: var(--fs-lead); line-height: var(--lh-loose); }
+  .msg-agent__body p { margin: 0 0 var(--sp-2); }
+  .is-dimmed { opacity: .55; }
+
+  .edit-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: 0; background: none; color: var(--ink-faint); border-radius: var(--r-xs); cursor: pointer; }
+  .edit-btn:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 8%, transparent); }
+  .edit-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+  .edit-btn svg { width: 14px; height: 14px; }
+
+  /* Editor inline */
+  .edit-box { width: min(100%, 560px); display: grid; gap: var(--sp-2); background: var(--panel); border: 1px solid var(--accent); border-radius: var(--r-md); padding: var(--sp-3); }
+  .edit-warn { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-caption); color: var(--warn); }
+  .edit-warn svg { width: 13px; height: 13px; flex: none; }
+  .edit-actions { display: flex; justify-content: flex-end; gap: var(--sp-2); }
+
+  .meta-line { display: flex; align-items: center; gap: var(--sp-2); font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+    .branch-sel__btn { width: 34px; height: 34px; } /* objetivo táctil con padding */
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-bot" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+  <symbol id="i-chl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+</defs></svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 09 · Módulo chat</span>
+    <h1>Edición y ramas — branch-never-rewrite</h1>
+    <p class="muted">Editar un mensaje crea una rama nueva navegable con «versión 1/2». La historia jamás se reescribe. Spec: <code>docs/design/VISTAS/02-chat.md §5</code>.</p>
+    <p class="doc-caption">El selector ‹ n/m › es un micro-demo funcional en la sección C: probá las flechas.</p>
+  </header>
+
+  <!-- ════════ A — Hover con acción Editar ════════ -->
+  <section class="doc-section" aria-labelledby="a-t">
+    <span class="kicker kicker--dim">A</span>
+    <h2 id="a-t">Reposo — «Editar» aparece en hover y focus del mensaje propio</h2>
+    <div class="frame">
+      <div class="col">
+        <div class="msg-user">
+          <div class="msg-user__row">
+            <button type="button" class="edit-btn" aria-label="Editar mensaje (crea una rama nueva)" data-tip="Editar (crea rama)"><svg aria-hidden="true"><use href="#i-pencil"/></svg></button>
+            <div class="msg-user__bubble">¿Cómo configuro MV_AGENTE para retenciones?</div>
+          </div>
+        </div>
+        <article class="msg-agent">
+          <span class="msg-agent__avatar" aria-hidden="true"><svg><use href="#i-bot"/></svg></span>
+          <div class="msg-agent__body"><p>El parámetro <code>MV_AGENTE</code> indica si la empresa actúa como agente de retención…</p></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ B — Editando: textarea + aviso de re-proceso ════════ -->
+  <section class="doc-section" aria-labelledby="b-t">
+    <span class="kicker kicker--dim">B</span>
+    <h2 id="b-t">Editando — aviso de re-proceso si el mensaje está lejos</h2>
+    <p class="doc-caption">El aviso aparece solo si hay ≥3 mensajes posteriores. Funcional ve solo el conteo; Técnico/Admin ven además la estimación de costo. El resto del hilo se atenúa (señala el punto de corte). Esc cancela; el texto editado nunca se pierde.</p>
+    <div class="frame">
+      <div class="col">
+        <div class="msg-user">
+          <div class="edit-box">
+            <label class="sr-only" for="e1">Editar mensaje</label>
+            <textarea id="e1" class="textarea" rows="2">¿Cómo configuro MV_AGENTE para retenciones de IT en Bolivia?</textarea>
+            <p class="edit-warn"><svg aria-hidden="true"><use href="#i-alert"/></svg>Crear una rama acá reprocesa 6 mensajes <span class="faint mono">(≈ USD 0,01 — visible solo Técnico/Admin)</span></p>
+            <div class="edit-actions">
+              <button type="button" class="btn btn--secondary btn--sm">Cancelar</button>
+              <button type="button" class="btn btn--primary btn--sm">Crear rama</button>
+            </div>
+          </div>
+        </div>
+        <article class="msg-agent is-dimmed" aria-hidden="true">
+          <span class="msg-agent__avatar"><svg><use href="#i-bot"/></svg></span>
+          <div class="msg-agent__body"><p>El parámetro <code>MV_AGENTE</code> indica si la empresa actúa como agente de retención…</p></div>
+        </article>
+        <div class="msg-user is-dimmed" aria-hidden="true">
+          <div class="msg-user__row"><div class="msg-user__bubble">¿Y dónde lo veo en el Configurador?</div></div>
+        </div>
+        <article class="msg-agent is-dimmed" aria-hidden="true">
+          <span class="msg-agent__avatar"><svg><use href="#i-bot"/></svg></span>
+          <div class="msg-agent__body"><p>En Configurador → Ambiente → Parámetros, filtrá por <code>MV_AGENTE</code>…</p></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ C — Rama creada: selector versión 1/2 (micro-demo) ════════ -->
+  <section class="doc-section" aria-labelledby="c-t">
+    <span class="kicker kicker--dim">C</span>
+    <h2 id="c-t">Rama creada — selector «versión 1/2» y re-render de lo posterior</h2>
+    <p class="doc-caption">Cambiar de versión re-renderiza todo lo posterior con fade; el scroll queda anclado al mensaje ramificado. La versión 1 sigue intacta a un ‹ de distancia.</p>
+    <div class="frame">
+      <div class="col" id="demo">
+        <div class="msg-user">
+          <div class="msg-user__row">
+            <button type="button" class="edit-btn" aria-label="Editar mensaje (crea una rama nueva)"><svg aria-hidden="true"><use href="#i-pencil"/></svg></button>
+            <div class="msg-user__bubble" id="d-user">¿Cómo configuro MV_AGENTE para retenciones de IT en Bolivia?</div>
+          </div>
+          <div class="branch-sel" role="group" aria-label="Versiones de este mensaje" aria-live="polite">
+            <button type="button" class="branch-sel__btn" id="d-prev" aria-label="Versión anterior"><svg aria-hidden="true"><use href="#i-chl"/></svg></button>
+            <span class="branch-sel__label" id="d-label" aria-label="versión 2 de 2 de este mensaje">2/2</span>
+            <button type="button" class="branch-sel__btn" id="d-next" aria-label="Versión siguiente" disabled><svg aria-hidden="true"><use href="#i-chr"/></svg></button>
+          </div>
+        </div>
+        <article class="msg-agent" id="d-resp" style="transition: opacity var(--dur-2) var(--ease-in-out);">
+          <span class="msg-agent__avatar" aria-hidden="true"><svg><use href="#i-bot"/></svg></span>
+          <div>
+            <div class="msg-agent__body"><p id="d-resp-txt">Para retenciones de IT en Bolivia, además de <code>MV_AGENTE=S</code>, verificá <code>MV_PAISLOC=BOL</code> y la alícuota en <code>MV_ALIQIT</code>…</p></div>
+            <div class="meta-line"><span>hace 1 min</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+    <script>
+      (function () {
+        var v = 2, total = 2;
+        var label = document.getElementById('d-label'), prev = document.getElementById('d-prev'), next = document.getElementById('d-next');
+        var user = document.getElementById('d-user'), resp = document.getElementById('d-resp'), txt = document.getElementById('d-resp-txt');
+        var users = [null, '¿Cómo configuro MV_AGENTE para retenciones?', '¿Cómo configuro MV_AGENTE para retenciones de IT en Bolivia?'];
+        var resps = [null, 'El parámetro MV_AGENTE indica si la empresa actúa como agente de retención. Se configura con valor S o N…', 'Para retenciones de IT en Bolivia, además de MV_AGENTE=S, verificá MV_PAISLOC=BOL y la alícuota en MV_ALIQIT…'];
+        function render() {
+          label.textContent = v + '/' + total;
+          label.setAttribute('aria-label', 'versión ' + v + ' de ' + total + ' de este mensaje');
+          prev.disabled = v <= 1; next.disabled = v >= total;
+          user.textContent = users[v];
+          resp.style.opacity = '0';
+          setTimeout(function () { txt.textContent = resps[v]; resp.style.opacity = '1'; }, 180);
+        }
+        prev.addEventListener('click', function () { if (v > 1) { v--; render(); } });
+        next.addEventListener('click', function () { if (v < total) { v++; render(); } });
+      })();
+    </script>
+  </section>
+
+  <!-- ════════ D — Rama en modelo alterno + regeneración de respuesta ════════ -->
+  <section class="doc-section" aria-labelledby="d-t">
+    <span class="kicker kicker--dim">D</span>
+    <h2 id="d-t">Casos: rama en modelo distinto · respuesta regenerada</h2>
+    <p class="doc-caption">Una rama post-fallback lleva el tag «modelo alterno» permanente junto al selector (stickiness por sesión, ADR-0006). Regenerar usa el mismo selector en el turno del agente («respuesta 1/2»).</p>
+    <div class="frame">
+      <div class="col">
+        <div class="msg-user">
+          <div class="msg-user__row"><div class="msg-user__bubble">Mostrame el checklist de cierre contable</div></div>
+          <div style="display:flex; align-items:center; gap: var(--sp-2);">
+            <div class="branch-sel" role="group" aria-label="Versiones de este mensaje">
+              <button type="button" class="branch-sel__btn" aria-label="Versión anterior"><svg aria-hidden="true"><use href="#i-chl"/></svg></button>
+              <span class="branch-sel__label" aria-label="versión 3 de 3 de este mensaje">3/3</span>
+              <button type="button" class="branch-sel__btn" aria-label="Versión siguiente" disabled><svg aria-hidden="true"><use href="#i-chr"/></svg></button>
+            </div>
+            <span class="tag tag--warn" data-tip="Esta rama corre en un modelo alternativo">modelo alterno</span>
+          </div>
+        </div>
+        <article class="msg-agent">
+          <span class="msg-agent__avatar" aria-hidden="true"><svg><use href="#i-bot"/></svg></span>
+          <div>
+            <div class="msg-agent__body"><p>Checklist de cierre contable (resumen): 1) calendario contable cerrado, 2) saldos conciliados, 3) apuración de resultado ejecutada…</p></div>
+            <div class="meta-line">
+              <div class="branch-sel" role="group" aria-label="Versiones de esta respuesta">
+                <button type="button" class="branch-sel__btn" aria-label="Respuesta anterior"><svg aria-hidden="true"><use href="#i-chl"/></svg></button>
+                <span class="branch-sel__label" aria-label="respuesta 2 de 2">2/2</span>
+                <button type="button" class="branch-sel__btn" aria-label="Respuesta siguiente" disabled><svg aria-hidden="true"><use href="#i-chr"/></svg></button>
+              </div>
+              <span>respuesta regenerada · hace 3 min</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ E — Error al crear rama ════════ -->
+  <section class="doc-section" aria-labelledby="e-t">
+    <span class="kicker kicker--dim">E</span>
+    <h2 id="e-t">Error al crear rama — el texto editado no se pierde</h2>
+    <div class="frame">
+      <div class="col">
+        <div class="msg-user">
+          <div class="edit-box">
+            <textarea class="textarea" rows="2" aria-label="Editar mensaje">¿Cómo configuro MV_AGENTE para retenciones de IT en Bolivia?</textarea>
+            <div class="error-card" role="alert" style="padding: var(--sp-3);">
+              <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+              <div>
+                <p class="error-card__title">No pudimos crear la rama</p>
+                <p class="error-card__why" style="margin-bottom:0">Hubo un problema temporal. Tu texto editado sigue acá — probá de nuevo.</p>
+              </div>
+            </div>
+            <div class="edit-actions">
+              <button type="button" class="btn btn--secondary btn--sm">Cancelar</button>
+              <button type="button" class="btn btn--primary btn--sm">Reintentar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

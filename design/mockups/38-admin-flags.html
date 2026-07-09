@@ -1,0 +1,213 @@
+<!-- MOCKUP de documentación de diseño — Resultar Agents Platform — no es código de producción -->
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-brand="default">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>38 · Feature flags y kill-switches — Consola admin — Resultar Agents Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  .doc { max-width: 1240px; margin: 0 auto; padding: var(--sp-8) var(--sp-6) var(--sp-10); }
+  .doc-section { margin-top: var(--sp-9); }
+  .doc-caption { font-size: var(--fs-caption); color: var(--ink-faint); margin: var(--sp-1) 0 var(--sp-4); }
+
+  /* Interruptor accesible (checkbox con role visual de switch) */
+  .switch { position: relative; display: inline-block; width: 38px; height: 22px; flex: none; }
+  .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+  .switch__track { position: absolute; inset: 0; border-radius: var(--r-pill); background: color-mix(in srgb, var(--ink) 18%, transparent); border: 1px solid var(--line-strong); transition: background-color var(--dur-1) var(--ease-out); }
+  .switch__track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--ink-dim); transition: transform var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out); }
+  .switch input:checked + .switch__track { background: color-mix(in srgb, var(--money) 30%, transparent); border-color: var(--money); }
+  .switch input:checked + .switch__track::after { transform: translateX(16px); background: var(--money); }
+  .switch input:focus-visible + .switch__track { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+  .audit-inline { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); }
+  .agent-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--sp-4); }
+  .agent-card__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+  .banner-preview { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); background: color-mix(in srgb, var(--warn) 10%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent); border-radius: var(--r-sm); font-size: var(--fs-caption); color: var(--ink-dim); }
+  .banner-preview svg { width: 13px; height: 13px; color: var(--warn); flex: none; }
+  .footnote { border-top: 1px dashed var(--line-strong); margin-top: var(--sp-6); padding-top: var(--sp-3); font-size: var(--fs-caption); color: var(--ink-faint); }
+  @media (max-width: 768px) {
+    .doc { padding: var(--sp-6) var(--sp-4) var(--sp-9); }
+  }
+</style>
+</head>
+<body>
+
+<div class="dx-switcher" role="group" aria-label="Vista previa: cambiar tema y marca">
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.theme=h.dataset.theme==='light'?'dark':'light'">Tema</button>
+  <button type="button" class="dx-switcher__btn" onclick="var h=document.documentElement;h.dataset.brand=h.dataset.brand==='totvs'?'default':'totvs'">Marca</button>
+</div>
+<script>
+  var dxH = document.documentElement;
+  if (!dxH.dataset.theme) { dxH.dataset.theme = 'dark'; }
+  if (!dxH.dataset.brand) { dxH.dataset.brand = 'default'; }
+</script>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></symbol>
+  </defs>
+</svg>
+
+<main class="doc">
+
+  <header>
+    <span class="kicker">Vista 38 · Consola admin · Gobernanza</span>
+    <h1>Feature flags y kill-switches</h1>
+    <p class="muted">Flags por scope, apagado de emergencia por agente y escalación a Pro (D-13). Spec: <code>docs/design/VISTAS/08-admin-gobernanza.md §8.4</code>.</p>
+    <p class="doc-caption">Datos 100% ficticios. Solo Admin. Operable completo desde móvil (apagar un agente a las 2 AM es el caso de uso).</p>
+  </header>
+
+  <!-- ════════ Sección 1 — Feature flags ════════ -->
+  <section class="doc-section" aria-labelledby="s1-t">
+    <span class="kicker kicker--dim">Sección 1</span>
+    <h2 id="s1-t">Feature flags — con audit inline</h2>
+    <div class="table-wrap">
+      <table class="table">
+        <caption class="sr-only">Feature flags de la instancia</caption>
+        <thead><tr><th scope="col">Clave</th><th scope="col">Descripción</th><th scope="col">Scope</th><th scope="col">Estado</th><th scope="col">Último cambio</th><th scope="col"></th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="mono">workflows.enabled</td>
+            <td class="muted">Sección Workflows visible en la app</td>
+            <td><span class="tag tag--accent">GLOBAL</span></td>
+            <td><label class="switch"><input type="checkbox" role="switch" checked aria-label="workflows.enabled"><span class="switch__track"></span></label></td>
+            <td class="audit-inline">mperez · 09/06/2026 18:40</td>
+            <td><a href="#" style="font-size:var(--fs-caption);">historial</a></td>
+          </tr>
+          <tr>
+            <td class="mono">attachments.preview</td>
+            <td class="muted">Vista previa de adjuntos en el chat</td>
+            <td><span class="tag tag--info">AGENTE: DocAgent</span></td>
+            <td><label class="switch"><input type="checkbox" role="switch" checked aria-label="attachments.preview"><span class="switch__track"></span></label></td>
+            <td class="audit-inline">lucia · 05/06/2026 11:02</td>
+            <td><a href="#" style="font-size:var(--fs-caption);">historial</a></td>
+          </tr>
+          <tr>
+            <td class="mono">rag.search</td>
+            <td class="muted">Búsqueda RAG (diferido por ROADMAP)</td>
+            <td><span class="tag tag--accent">GLOBAL</span></td>
+            <td><label class="switch"><input type="checkbox" role="switch" aria-label="rag.search"><span class="switch__track"></span></label></td>
+            <td class="audit-inline">mperez · 03/04/2026 09:15</td>
+            <td><a href="#" style="font-size:var(--fs-caption);">historial</a></td>
+          </tr>
+          <tr>
+            <td class="mono">catalog.beta_agents</td>
+            <td class="muted">Mostrar agentes Beta en el catálogo</td>
+            <td><span class="tag">ROL: funcional</span></td>
+            <td><label class="switch"><input type="checkbox" role="switch" aria-label="catalog.beta_agents"><span class="switch__track"></span></label></td>
+            <td class="audit-inline">mperez · 28/05/2026 16:33</td>
+            <td><a href="#" style="font-size:var(--fs-caption);">historial</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="doc-caption">Cambiar un flag con scope rol/agente advierte el impacto («afecta a 14 usuarios con rol Funcional»). Concurrencia: optimistic-lock — «el flag cambió hace un momento (lucia) — recargá».</p>
+  </section>
+
+  <!-- ════════ Sección 2 — Kill-switch por agente ════════ -->
+  <section class="doc-section" aria-labelledby="s2-t">
+    <span class="kicker kicker--dim">Sección 2</span>
+    <h2 id="s2-t">Kill-switch por agente — DevAgent apagado</h2>
+    <div class="agent-cards">
+      <div class="panel">
+        <div class="agent-card__head"><h3 style="margin:0;">DocAgent</h3><span><span class="live-dot" aria-hidden="true"></span> <span class="tag tag--money">ACTIVO</span></span></div>
+        <p class="muted" style="font-size:var(--fs-small);">12 sesiones activas ahora.</p>
+        <button class="btn btn--danger btn--sm">Apagar agente</button>
+      </div>
+      <div class="panel">
+        <div class="agent-card__head"><h3 style="margin:0;">ValidationAgent</h3><span><span class="live-dot" aria-hidden="true"></span> <span class="tag tag--money">ACTIVO</span></span></div>
+        <p class="muted" style="font-size:var(--fs-small);">3 sesiones activas ahora.</p>
+        <button class="btn btn--danger btn--sm">Apagar agente</button>
+      </div>
+      <div class="panel" style="border-color: color-mix(in srgb, var(--warn) 45%, var(--line));">
+        <div class="agent-card__head"><h3 style="margin:0;">DevAgent</h3><span><span class="live-dot live-dot--off" aria-hidden="true"></span> <span class="tag tag--warn">APAGADO</span></span></div>
+        <p class="audit-inline" style="margin:0 0 var(--sp-2);">apagado por mperez · 11/06/2026 07:55</p>
+        <p class="muted" style="font-size:var(--fs-small);">Razón: «costo anómalo en el gateway — investigando».</p>
+        <div class="banner-preview" role="img" aria-label="Vista previa del banner para usuarios">
+          <svg aria-hidden="true"><use href="#i-alert"/></svg>
+          DevAgent está temporalmente fuera de servicio — costo anómalo en el gateway — investigando. Tus sesiones quedan guardadas.
+        </div>
+        <button class="btn btn--secondary btn--sm" style="margin-top:var(--sp-3);">Encender</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ Sección 3 — Escalación a Pro (D-13) ════════ -->
+  <section class="doc-section" aria-labelledby="s3-t">
+    <span class="kicker kicker--dim">Sección 3</span>
+    <h2 id="s3-t">Escalación a Pro por agente (decisión D-13)</h2>
+    <div class="table-wrap">
+      <table class="table">
+        <caption class="sr-only">Escalación a modelo Pro por agente</caption>
+        <thead><tr><th scope="col">Agente</th><th scope="col">Escalación</th><th scope="col">Modelo Pro</th><th scope="col">Último cambio</th></tr></thead>
+        <tbody>
+          <tr><td>DocAgent</td><td><label class="switch"><input type="checkbox" role="switch" checked aria-label="Escalación DocAgent"><span class="switch__track"></span></label> <span class="tag tag--alt">HABILITADA</span></td><td class="mono">deepseek-v4-pro</td><td class="audit-inline">mperez · 01/06/2026 10:00</td></tr>
+          <tr><td>ValidationAgent</td><td><label class="switch"><input type="checkbox" role="switch" checked aria-label="Escalación ValidationAgent"><span class="switch__track"></span></label> <span class="tag tag--alt">HABILITADA</span></td><td class="mono">deepseek-v4-pro</td><td class="audit-inline">mperez · 01/06/2026 10:00</td></tr>
+          <tr><td>DevAgent</td><td><label class="switch"><input type="checkbox" role="switch" aria-label="Escalación DevAgent"><span class="switch__track"></span></label> <span class="tag tag--outline">DESHABILITADA</span></td><td class="mono">deepseek-v4-pro</td><td class="audit-inline">lucia · 08/06/2026 14:21</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="doc-caption">Si está deshabilitada, el marcador <code>&lt;&lt;&lt;NEEDS_PRO&gt;&gt;&gt;</code> no genera tarjeta de escalación en ese agente. Deshabilitar con tarjetas ya emitidas las deja inertes (el botón desaparece, queda una nota) — se advierte al confirmar.</p>
+  </section>
+
+  <!-- ════════ Variante — Modal de apagado ════════ -->
+  <section class="doc-section" aria-labelledby="vm-t">
+    <span class="kicker kicker--dim">Variante</span>
+    <h2 id="vm-t">Modal «Apagar agente» — razón obligatoria + preview del banner</h2>
+    <div class="panel" role="dialog" aria-labelledby="off-title" style="max-width:560px;box-shadow:var(--shadow-3);">
+      <h4 class="modal__title" id="off-title" style="margin-bottom:var(--sp-3);">Apagar DocAgent</h4>
+      <div class="error-card error-card--warn" style="margin-bottom:var(--sp-4);">
+        <span class="error-card__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+        <div><p class="error-card__title">12 sesiones activas</p>
+        <p class="error-card__why" style="margin:0;">Recibirán el banner y no podrán enviar mensajes nuevos. Las sesiones quedan guardadas.</p></div>
+      </div>
+      <div class="field">
+        <label class="field-label" for="off-reason">Razón <span class="req" aria-hidden="true">*</span></label>
+        <textarea class="textarea" id="off-reason" oninput="document.getElementById('off-prev').textContent='DocAgent está temporalmente fuera de servicio — '+(this.value||'{razón}')+'. Tus sesiones quedan guardadas.';document.getElementById('off-btn').disabled=!this.value.trim();" placeholder="Visible para todos los usuarios en el banner"></textarea>
+        <span class="field-hint">El botón se habilita al escribir. Micro-demo: escribí y mirá el preview.</span>
+      </div>
+      <p class="field-label" style="margin-bottom:var(--sp-1);">Banner que verán los usuarios</p>
+      <div class="banner-preview"><svg aria-hidden="true"><use href="#i-alert"/></svg><span id="off-prev">DocAgent está temporalmente fuera de servicio — {razón}. Tus sesiones quedan guardadas.</span></div>
+      <div style="display:flex;justify-content:flex-end;gap:var(--sp-2);margin-top:var(--sp-4);">
+        <button class="btn btn--ghost">Cancelar</button>
+        <button class="btn btn--danger" id="off-btn" disabled>Apagar DocAgent</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════ Estados ════════ -->
+  <section class="doc-section" aria-labelledby="ve-t">
+    <span class="kicker kicker--dim">Estados</span>
+    <h2 id="ve-t">Carga, vacío y error de cambio</h2>
+    <div class="agent-cards">
+      <div class="panel" aria-busy="true">
+        <span class="kicker kicker--dim">Carga</span>
+        <span class="skeleton skeleton--title" style="margin-bottom:var(--sp-3);"></span>
+        <span class="skeleton skeleton--text" style="margin-bottom:var(--sp-2);"></span>
+        <span class="skeleton skeleton--text" style="width:70%;"></span>
+      </div>
+      <div class="panel">
+        <div class="empty-state" style="padding:var(--sp-6);">
+          <span class="empty-state__icon"><svg aria-hidden="true"><use href="#i-flag"/></svg></span>
+          <p class="empty-state__title">No hay flags configurados</p>
+          <p class="empty-state__hint">Los kill-switches y la escalación siempre existen: uno por agente del catálogo.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <span class="kicker kicker--dim">Error de cambio</span>
+        <p class="muted" style="font-size:var(--fs-small);">El switch vuelve a su estado anterior — nunca queda en estado mentiroso.</p>
+        <div class="toast toast--danger" style="animation:none;">
+          <span class="toast__icon"><svg aria-hidden="true"><use href="#i-alert"/></svg></span>
+          <div><p class="toast__title">No se pudo cambiar workflows.enabled</p><p class="toast__msg">El servicio no respondió · <a href="#">Reintentar</a></p></div>
+        </div>
+      </div>
+    </div>
+    <p class="footnote">Nota deliberada: <strong>ningún flag controla reglas duras</strong>. No existe flag para «HITL off» ni para «SQL write» a Protheus — esa ausencia es una decisión de plataforma, no un faltante.</p>
+  </section>
+
+</main>
+</body>
+</html>
