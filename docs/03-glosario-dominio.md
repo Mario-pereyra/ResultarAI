@@ -50,6 +50,7 @@
 |---|---|---|
 | **Sesión** | `Session` | Conversación persistente entre un usuario y un agente; contenedor append-only de turnos y mensajes. |
 | **Turno** / **Frontera de turno** | `Turn` | Ciclo pregunta-respuesta dentro de una sesión; unidad en la que se evalúa la compaction y el Policy Gate. |
+| **Fases del turno** | `TurnPhase` | Las fases ordenadas de la ejecución de un turno: `receive`, `route`, `execute_graph`, y `respond`. |
 | **Mensaje** | `Message` | Unidad mínima persistida (usuario, agente o sistema) dentro de un turno; nunca se reescribe. |
 | **Rama** | `parent_id`, branch-never-rewrite | Historial alternativo creado al editar o regenerar un mensaje; el original nunca se borra ni se sobrescribe. |
 | **Selector de versiones** | — | Control de UI para navegar entre ramas que parten de un mismo punto de la conversación. |
