@@ -19,8 +19,8 @@
 
 ## 3. Tool calls visibles
 
-- [ ] 3.1 Contrato de datos de la Tool call visible como proyección del `AuditEvent`: nombre de Tool, argumentos, resultado truncado (con marca) y duración; colapsable/expandible (ref `design/FUNCIONALIDADES.md` §4). Verificación: tests de "Cada invocación produce un registro visible colapsable" y "Truncado del resultado en el registro visible". `[modelo: sonnet]`
-- [ ] 3.2 Capa por rol y estado de gobernanza en el registro visible: Funcional=lenguaje simple sin parámetros completos; Técnico/Admin=parámetros completos; escritura escalada = "en espera de aprobación", lectura `allow` = "ejecutada" (ref §4 y §12). Verificación: tests de "Funcional ve lenguaje simple", "Técnico y Admin ven parámetros completos", "Escritura escalada se muestra en espera de aprobación" y "Lectura permitida se muestra como ejecutada". `[modelo: sonnet]`
+- [x] 3.1 Contrato de datos de la Tool call visible como proyección del `AuditEvent`: nombre de Tool, argumentos, resultado truncado (con marca) y duración; colapsable/expandible (ref `design/FUNCIONALIDADES.md` §4). Verificación: tests de "Cada invocación produce un registro visible colapsable" y "Truncado del resultado en el registro visible". `[modelo: sonnet]`
+- [x] 3.2 Capa por rol y estado de gobernanza en el registro visible: Funcional=lenguaje simple sin parámetros completos; Técnico/Admin=parámetros completos; escritura escalada = "en espera de aprobación", lectura `allow` = "ejecutada" (ref §4 y §12). Verificación: tests de "Funcional ve lenguaje simple", "Técnico y Admin ven parámetros completos", "Escritura escalada se muestra en espera de aprobación" y "Lectura permitida se muestra como ejecutada". `[modelo: sonnet]`
 
 ## 4. MCP Server de ejemplo de fábrica y manifiestos
 
