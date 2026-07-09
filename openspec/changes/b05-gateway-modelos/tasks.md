@@ -32,5 +32,5 @@
 
 ## 6. Cierre
 
-- [ ] 6.1 Actualizar `docs/03-glosario-dominio.md` con los términos nuevos introducidos por este change: Perfil de modelo (`ModelProfile`), Cascada de fallback, Modelo alterno, Marcador de escalación, Cache hit/miss. Verificación: cada término usado en proposal/specs/design de `b05-gateway-modelos` existe en el glosario con la misma grafía. `[modelo: haiku]`
-- [ ] 6.2 Review final del change: contrato consistente entre `core/ports`, el adapter y las tres specs; ningún import de SDK de proveedor fuera de `adapters/llm_litellm`; cascada, contadores y marcador cubiertos por tests con proveedor simulado. Verificación: checklist del reviewer en el PR + `uv run lint-imports` en verde. `[modelo: opus]`
+- [x] 6.1 Actualizar `docs/03-glosario-dominio.md` con los términos nuevos introducidos por este change: Perfil de modelo (`ModelProfile`), Cascada de fallback, Modelo alterno, Marcador de escalación, Cache hit/miss. Verificación: cada término usado en proposal/specs/design de `b05-gateway-modelos` existe en el glosario con la misma grafía. `[modelo: haiku]`
+- [x] 6.2 Review final del change: contrato consistente entre `core/ports`, el adapter y las tres specs; ningún import de SDK de proveedor fuera de `adapters/llm_litellm`; cascada, contadores y marcador cubiertos por tests con proveedor simulado. Verificación: checklist del reviewer en el PR + `uv run lint-imports` en verde. `[modelo: opus]`
