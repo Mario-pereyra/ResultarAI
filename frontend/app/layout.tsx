@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { Chakra_Petch, Saira, JetBrains_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
+import { THEME_COOKIE, resolveTheme } from "../lib/theme";
 import "../styles/tokens.css";
 import "../styles/components/index.css";
 import "./globals.css";
@@ -51,27 +52,20 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /*
  * Contrato de tema/brand (tarea 3.4, d10-design-system-shell — README.md
- * documenta este mismo contrato para quien implemente 5.4):
+ * documenta este mismo contrato; reutilizado tal cual por la tarea 5.4):
  * - Cookie `theme`, valores "dark" | "light", persiste la preferencia
  *   personal de tema. Sin cookie -> "dark" (default de instancia: escenario
  *   "dark·default es el tema por defecto de la instancia",
- *   specs/design-system/spec.md).
+ *   specs/design-system/spec.md). Constante/función en `lib/theme.ts` —
+ *   `app/api/theme/route.ts` (switcher del shell, tarea 5.4) importa las
+ *   mismas, nunca las reimplementa.
  * - `data-brand` queda fijo en "default" en este change: todavía no hay
- *   cookie de brand ni selector. La tarea 5.4 (switcher de tema/brand) DEBE
- *   reusar el mecanismo: leer/escribir la cookie `theme` con este contrato
- *   y, si agrega selección de brand, una cookie `brand` análoga resuelta acá
- *   mismo, en el Server Component raíz.
+ *   cookie de brand ni selector.
  * - Todo se resuelve en el servidor con `cookies()` de `next/headers`: cero
  *   scripts inline de theming y cero useEffect para el estado inicial — el
  *   HTML ya llega con data-theme/data-brand correctos, sin flash de tema
  *   incorrecto (FOUC).
  */
-const THEME_COOKIE = "theme";
-type Theme = "dark" | "light";
-
-function resolveTheme(value: string | undefined): Theme {
-  return value === "light" ? "light" : "dark";
-}
 
 export default async function RootLayout({
   children,

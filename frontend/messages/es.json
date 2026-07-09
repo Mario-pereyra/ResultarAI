@@ -6,5 +6,57 @@
   "HomePage": {
     "title": "ResultarAI",
     "greeting": "Bienvenido, escribí tu consulta."
+  },
+  "Shell": {
+    "skipLink": "Saltar al contenido",
+    "banner": {
+      "full": "Respuestas generadas por IA — verificá antes de aplicar en cliente",
+      "short": "Respuestas generadas por IA — verificá antes de aplicar"
+    },
+    "sidebar": {
+      "instanceName": "Resultar Bolivia",
+      "sections": {
+        "catalogo": "Catálogo",
+        "chat": "Chat",
+        "workflows": "Workflows",
+        "aprobaciones": "Aprobaciones",
+        "miEspacio": "Mi espacio",
+        "administracion": "Administración",
+        "construccion": "Construcción"
+      },
+      "adminKicker": "Admin",
+      "collapse": "Colapsar",
+      "expand": "Expandir",
+      "navLabel": "Principal",
+      "drawerLabel": "Menú principal",
+      "approvalsAriaLabel": "{count, plural, =0 {Aprobaciones} one {Aprobaciones, # pendiente} other {Aprobaciones, # pendientes}}"
+    },
+    "topbar": {
+      "searchLabel": "Buscar agentes, sesiones, docs…",
+      "searchPlaceholder": "Buscar agentes, sesiones, docs…",
+      "searchShortcutHint": "Ctrl K",
+      "openMenu": "Abrir menú",
+      "themeToLight": "Cambiar a tema claro",
+      "themeToDark": "Cambiar a tema oscuro",
+      "notifications": "Notificaciones",
+      "notificationsEmpty": "Sin novedades por ahora",
+      "userMenuLabel": "Menú de usuario: {name}, rol {role}",
+      "myWorkspace": "Mi espacio",
+      "theme": "Tema",
+      "logout": "Cerrar sesión",
+      "roles": {
+        "admin": "Admin",
+        "tecnico": "Técnico",
+        "funcional": "Funcional"
+      }
+    },
+    "gatewayError": {
+      "funcionalTitle": "El asistente no está disponible",
+      "funcionalWhy": "Intentá de nuevo en unos minutos.",
+      "technicalTitle": "El servicio de IA no está disponible",
+      "technicalWhy": "El gateway del modelo no está respondiendo. El resto del shell sigue funcionando.",
+      "retry": "Reintentar",
+      "retrying": "Reintentando…"
+    }
   }
 }

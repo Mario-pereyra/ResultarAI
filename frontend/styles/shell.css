@@ -1,0 +1,421 @@
+/*
+ * styles/shell.css — Shell de aplicación (tarea 5, d10-design-system-shell).
+ *
+ * `.ai-banner` y `.notif-bell` YA están definidos verbatim en
+ * styles/tokens.css (portados 1:1 de design/mockups/tokens.css §5.25/§5.26,
+ * tarea 3.3) — este archivo NO los redefine, solo los usa/extiende
+ * (`.ai-banner__text--*`, `.notif-bell__count` sigue viniendo de tokens.css).
+ *
+ * El resto de clases de acá (`.shell-*`, `.skip-link`) no tiene equivalente
+ * en tokens.css: design/mockups/03-shell.html las define ad-hoc en el
+ * `<style>` propio del mockup (`.sb`, `.tb`, …) a escala de MINIATURA de
+ * documentación (sidebar 200px / topbar 48px, para caber 3 variantes de rol
+ * lado a lado en la página). Acá se portan con nombres semánticos de
+ * producción y a la escala REAL exigida por
+ * openspec/changes/d10-design-system-shell/specs/app-shell/spec.md
+ * ("sidebar de 240 px, topbar de 56 px, banner de 28 px") y
+ * design/DESIGN-SYSTEM.md §6.1, consumiendo EXCLUSIVAMENTE tokens de
+ * styles/tokens.css — mismo criterio de "solo tokens, nunca valores
+ * literales" que styles/components/dropdown.css (ver su comentario de
+ * trazabilidad para el precedente de esta decisión).
+ */
+
+/* ── Skip-link (tarea 5.7) ───────────────────────────────────────────────
+   No existe en tokens.css: se construye sobre `.sr-only` sin usar esa
+   clase directamente (necesita volver a ser visible en :focus-visible, algo
+   que `.sr-only` no permite revertir por sí sola). */
+.skip-link {
+  position: absolute;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  z-index: var(--z-tooltip);
+  transform: translateY(-200%);
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── Frame raíz ──────────────────────────────────────────────────────── */
+.shell-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.shell-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+.shell-sidebar {
+  width: 240px;
+  flex: none;
+  background: var(--bg-raised);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-3) 0;
+}
+.shell-sidebar.is-collapsed {
+  width: 64px;
+}
+
+.shell-sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4) var(--sp-4);
+  overflow: hidden;
+}
+.shell-sidebar__mark {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+}
+.shell-sidebar__name {
+  font-family: var(--font-display);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.shell-sidebar.is-collapsed .shell-sidebar__name {
+  display: none;
+}
+
+.shell-sidebar__nav {
+  display: grid;
+  gap: 2px;
+  padding: 0 var(--sp-2);
+}
+.shell-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 7px var(--sp-3);
+  border-radius: var(--r-sm);
+  color: var(--ink-dim);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  border-left: 2px solid transparent;
+}
+.shell-sidebar__link:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.shell-sidebar__link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.shell-sidebar__link.is-active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+}
+.shell-sidebar__link svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.shell-sidebar.is-collapsed .shell-sidebar__link {
+  position: relative;
+  justify-content: center;
+}
+.shell-sidebar.is-collapsed .shell-sidebar__label {
+  display: none;
+}
+
+/* Nota: el mockup fuente (03-shell.html) fuerza un blanco literal en tema
+   claro con un override aparte; acá no hace falta — `--danger-ink` YA
+   resuelve a blanco puro en ambos temas claros (tokens.css §3), así que
+   `color: var(--danger-ink)` ya es correcto sin ningún valor literal. */
+.shell-sidebar__badge {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-pill);
+  background: var(--danger);
+  color: var(--danger-ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+.shell-sidebar.is-collapsed .shell-sidebar__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  margin-left: 0;
+}
+
+.shell-sidebar__kicker {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: var(--ls-kicker);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: var(--sp-3) var(--sp-4) var(--sp-1);
+}
+.shell-sidebar.is-collapsed .shell-sidebar__kicker {
+  padding-left: 0;
+  text-align: center;
+}
+
+.shell-sidebar__footer {
+  margin-top: auto;
+  padding: var(--sp-2) var(--sp-2) 0;
+}
+.shell-sidebar__collapse-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: 7px var(--sp-3);
+  border: 0;
+  background: transparent;
+  border-radius: var(--r-sm);
+  color: var(--ink-faint);
+  font-size: var(--fs-small);
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+.shell-sidebar__collapse-btn:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+.shell-sidebar__collapse-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.shell-sidebar__collapse-btn svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+.shell-sidebar.is-collapsed .shell-sidebar__collapse-btn {
+  justify-content: center;
+}
+
+/* ── Topbar ──────────────────────────────────────────────────────────── */
+.shell-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  height: 56px;
+  flex: none;
+  padding: 0 var(--sp-4);
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.shell-topbar__hamburger {
+  display: none;
+}
+
+.shell-topbar__search {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 32px;
+  padding: 0 var(--sp-3);
+  background: var(--bg-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  color: var(--ink-faint);
+}
+.shell-topbar__search:focus-within {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 1px;
+}
+.shell-topbar__search svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.shell-topbar__search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-caption);
+  outline: none;
+}
+.shell-topbar__search-input::placeholder {
+  color: var(--ink-faint);
+}
+.shell-topbar__kbd {
+  flex: none;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-xs);
+  padding: 0 4px;
+  font-size: 10px;
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+}
+
+.shell-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-left: auto;
+}
+.shell-topbar__icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+.shell-topbar__icon:hover {
+  color: var(--ink);
+}
+.shell-topbar__icon:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.shell-topbar__icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.shell-topbar__bell-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shell-topbar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.shell-topbar__avatar {
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+}
+.shell-topbar__user-name {
+  font-size: var(--fs-caption);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* ── Contenido ───────────────────────────────────────────────────────── */
+.shell-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.shell-content {
+  padding: var(--sp-5);
+  display: grid;
+  gap: var(--sp-4);
+  align-content: start;
+}
+.shell-content:focus-visible {
+  outline: none;
+}
+
+/* ── Drawer móvil (<768px, tarea 5.7) ───────────────────────────────────
+   Reusa .shell-sidebar/.shell-sidebar__* para el contenido de navegación
+   (mismo nav, mismo componente); acá solo el envoltorio posicionado. */
+.shell-drawer-scrim {
+  position: fixed;
+  inset: 0;
+  background: var(--scrim);
+  z-index: var(--z-overlay);
+}
+.shell-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 260px;
+  z-index: var(--z-overlay);
+  box-shadow: var(--shadow-3);
+}
+.shell-drawer .shell-sidebar {
+  width: 100%;
+  height: 100%;
+  border-right: 0;
+}
+.shell-drawer__search {
+  padding: 0 var(--sp-3) var(--sp-3);
+}
+
+@media (max-width: 767px) {
+  .shell-sidebar--desktop {
+    display: none;
+  }
+  .shell-topbar__hamburger {
+    display: grid;
+  }
+  .shell-topbar__search {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .shell-drawer-scrim,
+  .shell-drawer {
+    display: none;
+  }
+}
+
+/* ── Banner IA responsive (tarea 5.5) ────────────────────────────────────
+   `.ai-banner` (tokens.css) centra su contenido; acá solo se alterna cuál
+   de los dos <span> de texto se ve por breakpoint. Ambos viven siempre en
+   el DOM (ver componente AiBanner) para que el test de jsdom pueda leer
+   los dos textos sin depender de que el motor de CSS evalúe @media. */
+.ai-banner__text--short {
+  display: none;
+}
+@media (max-width: 767px) {
+  .ai-banner__text--full {
+    display: none;
+  }
+  .ai-banner__text--short {
+    display: inline;
+  }
+}

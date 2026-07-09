@@ -1,7 +1,8 @@
 "use client";
 
 import { createPortal } from "react-dom";
-import { useEffect, useId, useRef, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useId, useRef, type MouseEvent as ReactMouseEvent, type ReactNode } from "react";
+import { useFocusTrap } from "@/lib/use-focus-trap";
 
 /**
  * Modal (tarea 4.6, d10-design-system-shell).
@@ -11,10 +12,10 @@ import { useEffect, useId, useRef, type MouseEvent as ReactMouseEvent, type Reac
  * cierre por Esc y retorno de foco al disparador — comportamiento exigido
  * por el escenario "Modal con trampa de foco" de
  * openspec/changes/d10-design-system-shell/specs/design-system/spec.md.
+ *
+ * La trampa de foco vive en `lib/use-focus-trap.ts` (extraída en la tarea
+ * 5.7 para que el drawer móvil del shell reuse el mismo comportamiento).
  */
-
-const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 export type ModalProps = {
   open: boolean;
@@ -46,75 +47,8 @@ export function Modal({
 }: ModalProps) {
   const titleId = useId();
   const modalRef = useRef<HTMLDivElement | null>(null);
-  const triggerRef = useRef<Element | null>(null);
 
-  // onClose/closeOnEscape se leen desde un ref dentro del listener para que
-  // el efecto de trampa de foco dependa solo de `open`: así un re-render del
-  // padre con una nueva identidad de `onClose` no reinicia el foco inicial
-  // ni el bloqueo de scroll mientras el modal sigue abierto.
-  const onCloseRef = useRef(onClose);
-  const closeOnEscapeRef = useRef(closeOnEscape);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-    closeOnEscapeRef.current = closeOnEscape;
-  }, [onClose, closeOnEscape]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    triggerRef.current = document.activeElement;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    const focusables = () =>
-      Array.from(modalRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR) ?? []);
-
-    focusables()[0]?.focus();
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        if (closeOnEscapeRef.current) {
-          event.preventDefault();
-          onCloseRef.current();
-        }
-        return;
-      }
-
-      if (event.key !== "Tab") return;
-
-      const nodes = focusables();
-      if (nodes.length === 0) {
-        event.preventDefault();
-        return;
-      }
-
-      const first = nodes[0];
-      const last = nodes[nodes.length - 1];
-      const active = document.activeElement as HTMLElement | null;
-      const activeIndex = active ? nodes.indexOf(active) : -1;
-
-      if (event.shiftKey) {
-        if (activeIndex <= 0) {
-          event.preventDefault();
-          last.focus();
-        }
-      } else if (activeIndex === -1 || activeIndex === nodes.length - 1) {
-        event.preventDefault();
-        first.focus();
-      }
-    }
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      const trigger = triggerRef.current;
-      if (trigger instanceof HTMLElement) {
-        trigger.focus();
-      }
-    };
-  }, [open]);
+  useFocusTrap(open, modalRef, { onClose, closeOnEscape });
 
   if (!open || typeof window === "undefined") return null;
 

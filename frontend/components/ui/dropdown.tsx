@@ -34,16 +34,33 @@ export type DropdownItem = {
 };
 
 export type DropdownProps = {
-  /** Nombre accesible del disparador. Visible como texto si no se pasa `triggerIcon`. */
+  /** Nombre accesible del disparador. Visible como texto si no se pasa `triggerIcon`/`triggerContent`. */
   triggerLabel: string;
   items: DropdownItem[];
   /** Ícono del disparador (p. ej. campana); si se pasa, va junto a `aria-label`. */
   triggerIcon?: ReactNode;
+  /**
+   * Contenido visual completo del disparador (tarea 5.4, d10-design-system-shell:
+   * avatar + nombre + `RoleBadge` del menú de usuario del shell). Si se pasa,
+   * sustituye visualmente a `triggerIcon`/el texto de `triggerLabel`; el
+   * contenido queda `aria-hidden` porque `triggerLabel` sigue siendo el
+   * nombre accesible del botón (mismo criterio que `triggerIcon`).
+   */
+  triggerContent?: ReactNode;
+  /** Clase extra en el botón disparador (p. ej. `notif-bell` para la campana del shell). */
+  triggerClassName?: string;
   /** Alineación del menú respecto del disparador. */
   align?: "start" | "end";
 };
 
-export function Dropdown({ triggerLabel, items, triggerIcon, align = "start" }: DropdownProps) {
+export function Dropdown({
+  triggerLabel,
+  items,
+  triggerIcon,
+  triggerContent,
+  triggerClassName,
+  align = "start",
+}: DropdownProps) {
   const [open, setOpen] = useState(false);
   const openFocusTarget = useRef<"first" | "last">("first");
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -186,15 +203,23 @@ export function Dropdown({ triggerLabel, items, triggerIcon, align = "start" }: 
         type="button"
         id={triggerId}
         ref={triggerRef}
-        className="dropdown__trigger"
+        className={
+          triggerClassName ? `dropdown__trigger ${triggerClassName}` : "dropdown__trigger"
+        }
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
-        aria-label={triggerIcon ? triggerLabel : undefined}
+        aria-label={triggerIcon || triggerContent ? triggerLabel : undefined}
         onClick={handleTriggerClick}
         onKeyDown={handleTriggerKeyDown}
       >
-        {triggerIcon ? <span aria-hidden="true">{triggerIcon}</span> : triggerLabel}
+        {triggerContent ? (
+          <span aria-hidden="true">{triggerContent}</span>
+        ) : triggerIcon ? (
+          <span aria-hidden="true">{triggerIcon}</span>
+        ) : (
+          triggerLabel
+        )}
       </button>
       {open ? (
         <div
