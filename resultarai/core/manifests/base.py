@@ -16,9 +16,31 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 __all__ = [
     "BaseManifest",
+    "EvalStatus",
     "ManifestStatus",
+    "RiskLevel",
     "SemVer",
 ]
+
+
+class RiskLevel(enum.StrEnum):
+    """Nivel de riesgo declarado (glosario: Niveles de riesgo). Compartido por Skills y Tools."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+class EvalStatus(enum.StrEnum):
+    """Estado del bloque de evals (principio 16: evals preparadas, no definidas).
+
+    `placeholder`: espacio reservado, sin dataset real. `active`: dataset real y
+    eval ejecutable (Etapa P / e25).
+    """
+
+    PLACEHOLDER = "placeholder"
+    ACTIVE = "active"
 
 
 class ManifestStatus(enum.StrEnum):

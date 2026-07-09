@@ -22,7 +22,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from resultarai.core.manifests.base import BaseManifest
+from resultarai.core.manifests.base import BaseManifest, RiskLevel
 
 __all__ = [
     "McpBinding",
@@ -57,15 +57,6 @@ class OperationType(enum.StrEnum):
 
     READ = "read"
     WRITE = "write"
-
-
-class RiskLevel(enum.StrEnum):
-    """Nivel de riesgo de la tool (fijo por `version`)."""
-
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-    CRITICAL = "critical"
 
 
 class PermissionMode(enum.StrEnum):

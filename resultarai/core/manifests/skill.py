@@ -15,7 +15,7 @@ from typing import Annotated, Final, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from resultarai.core.manifests.base import BaseManifest, SemVer
+from resultarai.core.manifests.base import BaseManifest, EvalStatus, RiskLevel, SemVer
 
 __all__ = [
     "ERP_SAFE_QUERY_API",
@@ -61,21 +61,6 @@ class ExecutionMode(enum.StrEnum):
 
     READ_ONLY = "read_only"
     READ_WRITE = "read_write"
-
-
-class RiskLevel(enum.StrEnum):
-    """Nivel de riesgo declarado (capa de gobernanza)."""
-
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
-
-
-class EvalStatus(enum.StrEnum):
-    """Estado del bloque de evals de la skill (placeholder obligatorio, principio 16)."""
-
-    PLACEHOLDER = "placeholder"
-    ACTIVE = "active"
 
 
 # Los enums llegan como strings desde YAML: strict=False admite solo valores del enum
