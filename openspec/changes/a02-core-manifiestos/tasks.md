@@ -30,4 +30,4 @@
 
 ## 5. Cierre
 
-- [ ] 5.1 Review final del change: consistencia specs↔schemas↔manifiestos de fábrica, invariantes duras codificadas en el schema, `core/manifests/` sin frameworks (import-linter KEPT), cero ejecución de Tools/modelos introducida. Verificación: checklist del reviewer en el PR y `openspec validate "a02-core-manifiestos"` en verde. `[modelo: opus]`
+- [x] 5.1 Review final del change: consistencia specs↔schemas↔manifiestos de fábrica, invariantes duras codificadas en el schema, `core/manifests/` sin frameworks (import-linter KEPT), cero ejecución de Tools/modelos introducida. Verificación: checklist del reviewer en el PR y `openspec validate "a02-core-manifiestos"` en verde. `[modelo: opus]`

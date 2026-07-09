@@ -139,7 +139,7 @@ evals:
   template: skill_eval_template
 ```
 
-> **Skills que tocan el ERP (Etapa P):** además de lo anterior, `execution.mode: read_only` **exige** `execution.graph: plan_then_execute_graph` (plan validado antes de ejecutar, regla dura 7); el schema de `a02` lo verifica por invariante.
+> **Skills que tocan el ERP (Etapa P):** una skill "toca el ERP" cuando declara `execution.target: erp_safe_query_api` (única vía permitida hacia el Protheus, regla dura 5). Ese target **exige** que `execution.graph` sea un graph plan-then-execute (`plan_then_execute_graph`; plan validado antes de ejecutar, regla dura 7); el schema de `a02` lo verifica por invariante. Las skills genéricas de fábrica no declaran `target`.
 
 ### 3. Tool Manifest — `manifests/tools/`
 
