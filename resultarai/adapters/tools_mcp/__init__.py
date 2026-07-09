@@ -5,6 +5,13 @@ contrato completo. El MCP Server de ejemplo de fábrica vive en
 `example_server/` (subpaquete separado, ejecutable como proceso propio).
 """
 
+from resultarai.adapters.tools_mcp.binding import (
+    BindingValidationError,
+    ResolvedToolBinding,
+    resolve_tool_binding,
+    validate_binding_against_live_server,
+    validate_binding_against_server,
+)
 from resultarai.adapters.tools_mcp.client import McpToolClient, ToolExecutionRejected
 from resultarai.adapters.tools_mcp.descriptors import ToolDescriptor, parse_tool_descriptor
 from resultarai.adapters.tools_mcp.errors import (
@@ -12,6 +19,12 @@ from resultarai.adapters.tools_mcp.errors import (
     McpToolClientError,
     ToolArgumentValidationError,
     UnknownToolError,
+)
+from resultarai.adapters.tools_mcp.governed import (
+    AuditSink,
+    EndpointResolutionError,
+    GovernedInvocationResult,
+    GovernedToolExecutor,
 )
 from resultarai.adapters.tools_mcp.session import (
     McpToolSession,
@@ -30,10 +43,16 @@ from resultarai.adapters.tools_mcp.transports import (
 )
 
 __all__ = [
+    "AuditSink",
+    "BindingValidationError",
+    "EndpointResolutionError",
+    "GovernedInvocationResult",
+    "GovernedToolExecutor",
     "McpCapabilityError",
     "McpToolClient",
     "McpToolClientError",
     "McpToolSession",
+    "ResolvedToolBinding",
     "StdioTransportConfig",
     "StreamableHttpTransportConfig",
     "ToolArgumentValidationError",
@@ -49,4 +68,7 @@ __all__ = [
     "paginate_tool_descriptors",
     "parse_call_tool_result",
     "parse_tool_descriptor",
+    "resolve_tool_binding",
+    "validate_binding_against_live_server",
+    "validate_binding_against_server",
 ]

@@ -6,10 +6,15 @@ gobernanza que la spec no cubre: clasificacion lectura/escritura (`risk.operatio
 nivel de riesgo (`risk.level`), permisos, seguridad, auditoria y el binding con el
 Tool Registry (ver docs/04-manifiestos.md, seccion "Tool Manifest").
 
-**Clasificacion fija por `version`.** La clasificacion lectura/escritura y el nivel de
-riesgo (`risk`) son inmutables por carga: no hay mutacion en runtime. Cambiar la
-clasificacion o el riesgo exige una **nueva `version`** del Manifest (un PR revisado);
-el schema lo garantiza porque el Manifest se construye inmutable desde el YAML versionado.
+**Clasificacion fija por `version` e inmutable en runtime (c09, tarea 2.2).** La
+clasificacion lectura/escritura y el nivel de riesgo (`risk`) son inmutables: no hay
+mutacion en runtime. Cambiar la clasificacion o el riesgo exige una **nueva `version`**
+del Manifest (un PR revisado). El schema lo garantiza con `frozen=True` tanto en el
+`ToolManifest` como en sus sub-modelos (`_StrictSubModel`): reasignar
+`manifest.risk.operation_type` o `manifest.risk.level` en runtime lanza un
+`ValidationError` de pydantic (frozen), nunca una mutacion silenciosa. El `frozen=True` se
+acota a este Manifest (el que la spec de `tool-registry-binding` declara inmutable); el
+resto de Manifests conservan la config de `BaseManifest`.
 
 **Regla dura 5.** `security.allow_sql_freeform` DEBE ser `false`; un `true` es rechazado
 por el validador (jamas SQL libre contra el ERP).
@@ -79,13 +84,17 @@ NonEmptyStr = Annotated[str, Field(min_length=1)]
 
 
 class _StrictSubModel(BaseModel):
-    """Base de los sub-modelos del Tool Manifest: strict + extra forbid.
+    """Base de los sub-modelos del Tool Manifest: strict + extra forbid + frozen.
 
     Replica la config de `BaseManifest` para que los bloques anidados (`mcp`, `risk`,
-    `security`, ...) rechacen tambien coerciones implicitas y claves desconocidas.
+    `security`, ...) rechacen tambien coerciones implicitas y claves desconocidas, y anade
+    `frozen=True`: la clasificacion (`risk.operation_type`, `risk.level`) y el binding MCP
+    quedan inmutables en runtime (c09, tarea 2.2). Reasignar `manifest.risk.operation_type`
+    lanza un `ValidationError` de pydantic (frozen), no una mutacion silenciosa; cambiar la
+    clasificacion exige una nueva `version` del Manifest (un PR).
     """
 
-    model_config = ConfigDict(strict=True, extra="forbid")
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
 
 
 class McpBinding(_StrictSubModel):
@@ -157,7 +166,15 @@ class ToolManifest(BaseManifest):
     referencia MCP (`mcp`) y la clasificacion (`risk`) son obligatorias; el riesgo y la
     clasificacion lectura/escritura quedan fijos por `version` (cambiarlos = nueva
     version = PR). `security.allow_sql_freeform: true` es rechazado por regla dura 5.
+
+    Override local de `model_config` con `frozen=True` (c09, tarea 2.2): a diferencia de
+    los otros 5 Manifests (que heredan la config de `BaseManifest`), el ToolManifest es
+    inmutable en runtime porque su clasificacion es autoritativa para la gobernanza y no
+    debe poder rebajarse por mutacion. Reasignar cualquier campo (p. ej. `manifest.risk`)
+    lanza un `ValidationError` de pydantic (frozen).
     """
+
+    model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
 
     name: NonEmptyStr
     type: ToolTypeField

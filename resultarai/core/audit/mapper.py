@@ -50,8 +50,14 @@ def create_audit_event(
     request: ActionRequest,
     decision: PolicyDecision,
     corrects: str | None = None,
+    result_summary: str | None = None,
 ) -> AuditEvent:
-    """Creates a new AuditEvent mapping fields from ActionRequest and PolicyDecision."""
+    """Creates a new AuditEvent mapping fields from ActionRequest and PolicyDecision.
+
+    `result_summary` es aditivo (c09, tarea 2.4): cuando una lectura `allow` se ejecuta,
+    porta el resumen del resultado (o el error observado si la ejecucion devolvio un
+    fallo); en las decisiones que no ejecutan (`deny`, `escalate_hitl`) queda en `None`.
+    """
     masked_params = _enmask_parameters(request.parameters)
 
     return AuditEvent(
@@ -68,4 +74,5 @@ def create_audit_event(
         reason=decision.reason,
         parameters=masked_params,
         corrects=corrects,
+        result_summary=result_summary,
     )
