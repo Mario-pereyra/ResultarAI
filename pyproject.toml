@@ -11,6 +11,7 @@ dependencies = [
     "psycopg[binary]>=3.1.0",
     "uuid6>=2024.7.10",
     "litellm>=1.91.1",
+    "langgraph>=1.2.8",
 ]
 
 [project.scripts]
