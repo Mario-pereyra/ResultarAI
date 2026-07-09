@@ -2,13 +2,13 @@
 
 ## 1. Modelo de datos (Postgres / Alembic)
 
-- [ ] 1.1 Migración Alembic: tabla `users` (id, username, display_name, email, role, group_id, password_hash, must_change_password, status, created_at, updated_at). Verificación: `alembic upgrade head` corre limpio y la tabla es consultable. `[modelo: sonnet]`
-- [ ] 1.2 Migración Alembic: tabla `sessions` (id, user_id, created_at, last_seen_at, expires_at, revoked_at, revoked_by) con índices por `user_id` y `expires_at`. Verificación: `alembic upgrade head` en verde; índice usado por el plan de consulta de validación de sesión. `[modelo: opus]`
-- [ ] 1.3 Migración Alembic: tablas `totp_secrets` (secret cifrado, enrolled_at) y `totp_backup_codes` (hash Argon2id, used_at). Verificación: migración en verde; columna del secreto nunca almacena texto plano (revisión de la migración). `[modelo: opus]`
-- [ ] 1.4 Migración Alembic: tabla `login_attempts` (account_ref, origin, failed_at) o contador equivalente para el rate limiting progresivo. Verificación: migración en verde. `[modelo: sonnet]`
-- [ ] 1.5 Migración Alembic: tablas `groups` y `group_members`. Verificación: migración en verde; constraint de unicidad de membresía. `[modelo: sonnet]`
-- [ ] 1.6 Migración Alembic: tablas `usage_agreement_versions` (id, text, published_at) y `usage_agreement_acceptances` (user_id, version_id, accepted_at). Verificación: migración en verde. `[modelo: sonnet]`
-- [ ] 1.7 Migración Alembic: mecanismo append-only de auditoría de identidad (extensión del `AuditEvent` de `a03` con `event_type`, o tabla `identity_audit_log` propia si `a03` no expone un tipo genérico — decisión de design.md #8). Verificación: migración en verde; sin `UPDATE`/`DELETE` posible por constraint o trigger. `[modelo: opus]`
+- [x] 1.1 Migración Alembic: tabla `users` (id, username, display_name, email, role, group_id, password_hash, must_change_password, status, created_at, updated_at). Verificación: `alembic upgrade head` corre limpio y la tabla es consultable. `[modelo: sonnet]`
+- [x] 1.2 Migración Alembic: tabla `sessions` (id, user_id, created_at, last_seen_at, expires_at, revoked_at, revoked_by) con índices por `user_id` y `expires_at`. Verificación: `alembic upgrade head` en verde; índice usado por el plan de consulta de validación de sesión. `[modelo: opus]`
+- [x] 1.3 Migración Alembic: tablas `totp_secrets` (secret cifrado, enrolled_at) y `totp_backup_codes` (hash Argon2id, used_at). Verificación: migración en verde; columna del secreto nunca almacena texto plano (revisión de la migración). `[modelo: opus]`
+- [x] 1.4 Migración Alembic: tabla `login_attempts` (account_ref, origin, failed_at) o contador equivalente para el rate limiting progresivo. Verificación: migración en verde. `[modelo: sonnet]`
+- [x] 1.5 Migración Alembic: tablas `groups` y `group_members`. Verificación: migración en verde; constraint de unicidad de membresía. `[modelo: sonnet]`
+- [x] 1.6 Migración Alembic: tablas `usage_agreement_versions` (id, text, published_at) y `usage_agreement_acceptances` (user_id, version_id, accepted_at). Verificación: migración en verde. `[modelo: sonnet]`
+- [x] 1.7 Migración Alembic: mecanismo append-only de auditoría de identidad (extensión del `AuditEvent` de `a03` con `event_type`, o tabla `identity_audit_log` propia si `a03` no expone un tipo genérico — decisión de design.md #8). Verificación: migración en verde; sin `UPDATE`/`DELETE` posible por constraint o trigger. `[modelo: opus]`
 
 ## 2. Núcleo de sesión, contraseñas y TOTP (seguridad crítica)
 
