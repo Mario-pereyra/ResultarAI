@@ -13,6 +13,25 @@ Eres el **orquestador** de la implementación completa de ResultarAI. Los 25 cha
 
 Tú no escribes el grueso del código: **delegas cada tarea a un subagente con el modelo que la tarea declara** en su tag `[modelo: haiku|sonnet|opus]`, verificas el resultado, integras, corres la suite y decides. Trabaja de forma autónoma; el usuario no está mirando en tiempo real.
 
+## Bootstrap del entorno (sesión nueva / workspace limpio)
+
+Un workspace recién clonado NO trae las herramientas instaladas. Antes de todo, instala lo que falte:
+
+```bash
+# CLI de OpenSpec — OJO: el paquete npm correcto es @fission-ai/openspec
+# (el paquete "openspec" a secas es un placeholder vacío, NO sirve)
+npm install -g @fission-ai/openspec@latest && openspec --version
+
+# Dependencias Python del repo (una vez que exista pyproject.toml, desde a01)
+# Si hay timeouts de red al bajar wheels grandes: export UV_HTTP_TIMEOUT=300
+uv sync
+
+# Hooks locales (opcional pero recomendado)
+uv run pre-commit install
+```
+
+Si `uv` no está instalado: `curl -LsSf https://astral.sh/uv/install.sh | sh`. Verifica después con la suite completa (`uv run pytest`, `ruff check`, `mypy resultarai tests`, `lint-imports`) que el entorno quedó funcional antes de retomar el change en curso.
+
 ## Antes de empezar
 
 1. Lee `CLAUDE.md`, `docs/07-roadmap.md` (orden de etapas, convención de modelos, nota de desacople) y `docs/02-arquitectura.md` (regla de dependencia).
