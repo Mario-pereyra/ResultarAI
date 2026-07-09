@@ -24,4 +24,4 @@
 ## 4. Cierre
 
 - [x] 4.1 Actualizar `CLAUDE.md`: sección Comandos con los comandos reales (uv sync, pytest, ruff, mypy, lint-imports) y Mapa del repo sin placeholders. Verificación: comandos copiables funcionan. `[modelo: haiku]`
-- [ ] 4.2 Review final del change: consistencia docs↔specs↔código, fronteras verificadas, cero lógica de runtime introducida. Verificación: checklist del reviewer en el PR. `[modelo: opus]`
+- [x] 4.2 Review final del change: consistencia docs↔specs↔código, fronteras verificadas, cero lógica de runtime introducida. Verificación: checklist del reviewer en el PR. `[modelo: opus]`

@@ -64,7 +64,7 @@ uv run pre-commit install     # instalar hooks pre-commit (una sola vez)
 |---|---|
 | `docs/01-vision.md` | Qué es, usuarios, alcance (producto completo de fábrica + Etapa P), no-objetivos, jerarquía docs/design/blueprint |
 | `docs/02-arquitectura.md` | Estilo adoptado, bounded contexts, regla de dependencia, deployables, flujo de petición |
-| `docs/03-glosario-dominio.md` | Lenguaje ubicuo: scaffolding, conectividad, Protheus |
+| `docs/03-glosario-dominio.md` | Lenguaje ubicuo: scaffolding, runtime, producto (identidad, adjuntos, cuotas, HITL, memoria), gobernanza de plataforma, operación, conectividad, Protheus |
 | `docs/04-manifiestos.md` | Los 6 contratos declarativos con ejemplos YAML y ciclo de vida |
 | `docs/05-estructura-y-convenciones.md` | Árbol de paquetes, convenciones Python, testing, import-linter |
 | `docs/06-seguridad-gobernanza.md` | Policy Gate, riesgo/HITL, audit log, data boundaries, plan-then-execute, evals |

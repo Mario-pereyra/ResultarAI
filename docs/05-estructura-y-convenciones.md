@@ -63,6 +63,8 @@ Los satélites (`erp-safe-query-api/`, `edge-connector/`) tendrán su propia est
 # pyproject.toml
 [tool.importlinter]
 root_package = "resultarai"
+# Requerido para poder prohibir módulos externos (langgraph, litellm, …)
+include_external_packages = true
 
 [[tool.importlinter.contracts]]
 name = "El nucleo no conoce el mundo exterior"
