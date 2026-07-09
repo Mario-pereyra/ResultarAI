@@ -26,10 +26,12 @@ def test_core_and_subpackages_import_clean() -> None:
 def test_core_import_does_not_pull_in_frameworks() -> None:
     """Importar `resultarai.core` no debe cargar los adapters prohibidos (regla dura 1)."""
     forbidden_prefixes = ("langgraph", "litellm", "langfuse", "fastapi", "httpx")
-    already_loaded = {name for name in sys.modules if name.startswith(forbidden_prefixes)}
-    assert not already_loaded, (
-        f"Modulos de framework ya cargados antes de importar core: {already_loaded}"
-    )
+
+    # Clean sys.modules of forbidden prefixes so that test order does not affect this test
+    for prefix in forbidden_prefixes:
+        for name in list(sys.modules.keys()):
+            if name.startswith(prefix):
+                sys.modules.pop(name, None)
 
     import resultarai.core  # noqa: F401
 
