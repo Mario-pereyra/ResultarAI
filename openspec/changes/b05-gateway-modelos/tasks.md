@@ -13,11 +13,11 @@
 
 ## 3. Adapter LiteLLM — invocación, cascada y contadores
 
-- [ ] 3.1 Implementar `resultarai/adapters/llm_litellm/client.py`: invoca LiteLLM para un perfil dado y traduce su respuesta al contrato de salida del port. Verificación: contract test con proveedor simulado (sin red real) que confirma el mapeo campo a campo. `[modelo: sonnet]`
-- [ ] 3.2 Implementar la ejecución de la cascada de fallback (iterar perfiles en orden, capturar fallos, detener en el primer éxito, marcar `is_alternate_model`). Verificación: test que fuerza fallo del primer perfil simulado y confirma fallback correcto al segundo con metadato completo. `[modelo: sonnet]`
-- [ ] 3.3 Implementar el error de cascada agotada cuando todos los perfiles configurados fallan en la misma invocación. Verificación: test que fuerza fallo de todos los perfiles simulados y confirma el tipo de excepción de 1.2 con el detalle de cada perfil. `[modelo: sonnet]`
-- [ ] 3.4 Implementar la extracción y normalización de contadores de cache hit/miss desde el `usage` reportado por LiteLLM, cubriendo el caso de ausencia de esos campos. Verificación: dos tests (usage con contadores, usage sin contadores) confirman que el contrato de salida nunca reporta cero cuando el dato está ausente. `[modelo: sonnet]`
-- [ ] 3.5 Implementar el cálculo de costo aplicando la tarifa hit del perfil a los tokens hit y la tarifa miss a los tokens miss. Verificación: test que compara el costo calculado contra un cálculo manual con tarifas de un perfil de prueba. `[modelo: sonnet]`
+- [x] 3.1 Implementar `resultarai/adapters/llm_litellm/client.py`: invoca LiteLLM para un perfil dado y traduce su respuesta al contrato de salida del port. Verificación: contract test con proveedor simulado (sin red real) que confirma el mapeo campo a campo. `[modelo: sonnet]`
+- [x] 3.2 Implementar la ejecución de la cascada de fallback (iterar perfiles en orden, capturar fallos, detener en el primer éxito, marcar `is_alternate_model`). Verificación: test que fuerza fallo del primer perfil simulado y confirma fallback correcto al segundo con metadato completo. `[modelo: sonnet]`
+- [x] 3.3 Implementar el error de cascada agotada cuando todos los perfiles configurados fallan en la misma invocación. Verificación: test que fuerza fallo de todos los perfiles simulados y confirma el tipo de excepción de 1.2 con el detalle de cada perfil. `[modelo: sonnet]`
+- [x] 3.4 Implementar la extracción y normalización de contadores de cache hit/miss desde el `usage` reportado por LiteLLM, cubriendo el caso de ausencia de esos campos. Verificación: dos tests (usage con contadores, usage sin contadores) confirman que el contrato de salida nunca reporta cero cuando el dato está ausente. `[modelo: sonnet]`
+- [x] 3.5 Implementar el cálculo de costo aplicando la tarifa hit del perfil a los tokens hit y la tarifa miss a los tokens miss. Verificación: test que compara el costo calculado contra un cálculo manual con tarifas de un perfil de prueba. `[modelo: sonnet]`
 
 ## 4. Marcador de escalación (anti prompt-injection)
 
@@ -27,8 +27,8 @@
 
 ## 5. Tests de contrato con proveedor simulado
 
-- [ ] 5.1 Construir el doble de proveedor (`tests/contracts/llm_litellm/fake_provider.py`) parametrizable por perfil: éxito, error, timeout, usage con cache hit/miss, usage sin esos campos. Verificación: el doble reemplaza toda llamada real a LiteLLM en los tests de las secciones 3 y 4; ningún test de esta sección requiere red. `[modelo: sonnet]`
-- [ ] 5.2 Escribir el contract test que recorre los escenarios de las specs `model-gateway`, `model-profiles` y `escalation-marker` contra el adapter completo. Verificación: `uv run pytest tests/contracts/llm_litellm/` en verde sin acceso a red. `[modelo: sonnet]`
+- [x] 5.1 Construir el doble de proveedor (`tests/contracts/llm_litellm/fake_provider.py`) parametrizable por perfil: éxito, error, timeout, usage con cache hit/miss, usage sin esos campos. Verificación: el doble reemplaza toda llamada real a LiteLLM en los tests de las secciones 3 y 4; ningún test de esta sección requiere red. `[modelo: sonnet]`
+- [x] 5.2 Escribir el contract test que recorre los escenarios de las specs `model-gateway`, `model-profiles` y `escalation-marker` contra el adapter completo. Verificación: `uv run pytest tests/contracts/llm_litellm/` en verde sin acceso a red. `[modelo: sonnet]`
 
 ## 6. Cierre
 
