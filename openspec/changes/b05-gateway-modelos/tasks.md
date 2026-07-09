@@ -9,7 +9,7 @@
 
 - [x] 2.1 Definir el schema Pydantic `ModelProfile` (id, proveedor, modelo, parámetros de invocación, tarifa cache hit, tarifa cache miss) en `resultarai/core/`. Verificación: `tests/core/test_model_profile_schema.py` cubre un perfil válido y casos inválidos (tarifa faltante, proveedor vacío). `[modelo: opus]`
 - [x] 2.2 Extender el schema del Agent Manifest (`a02-core-manifiestos`) con `fallback_cascade` (lista ordenada de ids de perfil) y `escalation.enabled` (bool, default true). Verificación: test de validación cruzada que falla si `fallback_cascade` referencia un perfil inexistente o inactivo. `[modelo: opus]`
-- [ ] 2.3 Escribir configuración de ejemplo de perfiles de modelo (mínimo 2 perfiles) y una cascada de ejemplo asignada a `default_chat`. Verificación: la configuración valida contra el schema de 2.1 y 2.2 vía CLI de validación. `[modelo: haiku]`
+- [x] 2.3 Escribir configuración de ejemplo de perfiles de modelo (mínimo 2 perfiles) y una cascada de ejemplo asignada a `default_chat`. Verificación: la configuración valida contra el schema de 2.1 y 2.2 vía CLI de validación. `[modelo: haiku]`
 
 ## 3. Adapter LiteLLM — invocación, cascada y contadores
 
