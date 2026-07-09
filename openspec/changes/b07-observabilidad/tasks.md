@@ -2,8 +2,8 @@
 
 ## 1. Cliente Langfuse y configuración
 
-- [ ] 1.1 Agregar la dependencia `langfuse` al grupo de adapters en `pyproject.toml` (uv) y documentar `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` en `.env.example`. Verificación: `uv sync` instala sin error; `.env.example` documenta las 3 variables. `[modelo: haiku]`
-- [ ] 1.2 Documentar la convención de naming (tags de traza, patrón de URL de traza y de sesión) en un README breve dentro de `adapters/tracing_langfuse/`, listo para que `d19-admin-operacion` lo referencie. Verificación: el README contiene los 2 patrones de URL de la decisión 7 de `design.md`. `[modelo: haiku]`
+- [x] 1.1 Agregar la dependencia `langfuse` al grupo de adapters en `pyproject.toml` (uv) y documentar `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` en `.env.example`. Verificación: `uv sync` instala sin error; `.env.example` documenta las 3 variables. `[modelo: haiku]`
+- [x] 1.2 Documentar la convención de naming (tags de traza, patrón de URL de traza y de sesión) en un README breve dentro de `adapters/tracing_langfuse/`, listo para que `d19-admin-operacion` lo referencie. Verificación: el README contiene los 2 patrones de URL de la decisión 7 de `design.md`. `[modelo: haiku]`
 
 ## 2. Contrato de traza por turno y enmascaramiento
 
