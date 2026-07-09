@@ -8,9 +8,9 @@
 
 ## 2. Fixtures y dobles para tests
 
-- [ ] 2.1 Crear fixture de Routing Manifest de ejemplo en `tests/core/fixtures/routing_manifest_default_chat.yaml`, reutilizando la forma del manifiesto de fábrica de `a02-core-manifiestos`, con las 3 reglas usadas en los escenarios de `skill-router` (`erp_query` → `activate_skill`, `general_question` → `answer_directly`, sin regla para intent desconocido). Verificación: el fixture valida contra el schema de Routing Manifest de `a02` (test de carga). `[modelo: haiku]`
-- [ ] 2.2 Crear dobles deterministas de `PolicyPort`, `LLMPort`, `TracePort` y `StatePort` en `tests/contracts/fixtures/doubles.py` (respuestas `allow`/`deny`/`escalate_hitl` configurables por test; `LLMPort` doble devuelve texto fijo; `TracePort`/`StatePort` dobles registran en memoria para aserciones). Verificación: `tests/contracts/test_doubles_smoke.py` instancia cada doble y confirma que cumple el `Protocol` correspondiente. `[modelo: haiku]`
-- [ ] 2.3 Crear fixture de sesión (`tests/contracts/fixtures/session_near_limit.py`) con historial de mensajes cuyo tamaño se acerca y cruza el 80% de la ventana de un perfil de modelo de prueba, para los tests de compaction. `[modelo: haiku]`
+- [x] 2.1 Crear fixture de Routing Manifest de ejemplo en `tests/core/fixtures/routing_manifest_default_chat.yaml`, reutilizando la forma del manifiesto de fábrica de `a02-core-manifiestos`, con las 3 reglas usadas en los escenarios de `skill-router` (`erp_query` → `activate_skill`, `general_question` → `answer_directly`, sin regla para intent desconocido). Verificación: el fixture valida contra el schema de Routing Manifest de `a02` (test de carga). `[modelo: haiku]`
+- [x] 2.2 Crear dobles deterministas de `PolicyPort`, `LLMPort`, `TracePort` y `StatePort` en `tests/contracts/fixtures/doubles.py` (respuestas `allow`/`deny`/`escalate_hitl` configurables por test; `LLMPort` doble devuelve texto fijo; `TracePort`/`StatePort` dobles registran en memoria para aserciones). Verificación: `tests/contracts/test_doubles_smoke.py` instancia cada doble y confirma que cumple el `Protocol` correspondiente. `[modelo: haiku]`
+- [x] 2.3 Crear fixture de sesión (`tests/contracts/fixtures/session_near_limit.py`) con historial de mensajes cuyo tamaño se acerca y cruza el 80% de la ventana de un perfil de modelo de prueba, para los tests de compaction. `[modelo: haiku]`
 
 ## 3. Adapter `runtime_langgraph`: graph template de respuesta directa
 
