@@ -2,10 +2,11 @@
 
 > Última actualización: 2026-07-09
 > Decisiones formales: ver [adr/](adr/). Términos: ver [03-glosario-dominio.md](03-glosario-dominio.md).
+> Fuente normativa de producto y UX: ver [`design/`](../design/) — 44 vistas con mockup, flujos E2E, mapa funcional y design system, con los ajustes de la tabla de pivote en [07-roadmap.md](07-roadmap.md). Este documento (`docs/`) manda en arquitectura; ante cualquier contradicción de estilo/estructura técnica, `docs/` prevalece sobre `design/`.
 
 ## El estilo en un párrafo
 
-**Monolito modular en Python con núcleo hexagonal (Ports & Adapters), DDD estratégico y organización por vertical slices.** El núcleo (`core/`) contiene los manifiestos, registries, Policy Gate y reglas de routing — y **no importa ningún framework**. LangGraph, LiteLLM, Langfuse, MCP y Postgres son adapters reemplazables detrás de ports. Existen tres deployables, separados por física de red, no por moda: la plataforma core, la ERP Safe Query API y el Edge Connector Windows.
+**Monolito modular en Python con núcleo hexagonal (Ports & Adapters), DDD estratégico y organización por vertical slices.** El núcleo (`core/`) contiene los manifiestos, registries, Policy Gate y reglas de routing — y **no importa ningún framework**. LangGraph, LiteLLM, Langfuse, MCP y Postgres son adapters reemplazables detrás de ports. El frontend (Next.js + assistant-ui, `frontend/`) se sirve junto a la plataforma core, dentro del mismo monorepo — no es un deployable separado (ver más abajo). Existen tres deployables, separados por física de red, no por moda: la plataforma core, la ERP Safe Query API y el Edge Connector Windows.
 
 ## Diagrama
 
@@ -13,7 +14,10 @@
                     ┌─────────────────────────────────────────────┐
                     │           PLATAFORMA CORE (deployable 1)     │
                     │                                             │
-   Usuario ──HTTP──▶│  app/api (FastAPI)                          │
+                    │  frontend/ (Next.js + assistant-ui)         │
+   Usuario ──HTTP──▶│      │                                      │
+                    │      ▼                                      │
+                    │  app/api (FastAPI)                          │
                     │      │                                      │
                     │      ▼                                      │
                     │  app/ (casos de uso)                        │
@@ -43,17 +47,27 @@
                     Protheus (AppServer/DBAccess/MS SQL del cliente)
 ```
 
+El usuario habla con `frontend/` (Next.js + assistant-ui); el frontend llama a `app/api` — nunca a `core/` ni a los adapters directamente. El frontend se scaffoldea en el change `d10-design-system-shell`; la decisión formal (por qué Next.js + assistant-ui, por qué monorepo con la plataforma core y no deployable propio) queda en ADR-0007.
+
 ## Bounded contexts
 
 | Bounded context | Responsabilidad | Capa(s) del blueprint v2.4 |
 |---|---|---|
 | `scaffolding` | Manifiestos, registries, validación de schemas — **el núcleo del dominio** | 3, 4 |
 | `orchestration` | Default Chat, Skill Router, graph templates | 4 |
-| `governance` | Policy Gate, autorización runtime, HITL, audit log | 1, 11 |
+| `governance` | Policy Gate, autorización runtime, mecanismo HITL (`requires_human_approval`), audit log | 1, 11 |
 | `tools` | Tool adapters: MCP, OpenAPI, ERP Safe Query API | 5 |
 | `connectivity` | Edge Connector, detección de VPN | 6 |
 | `gateway` | Binding LiteLLM, cache profiles, canonicalización de prompts | 9 |
 | `observability` | Hooks Langfuse/OpenTelemetry, evidencia, costos | 13 |
+| `identity` | Sesiones firmadas con revocación, roles Admin/Técnico/Funcional, TOTP, acuerdo de uso auditado, alta de usuarios/grupos | — (producto, pivote 2026-07-09; `d11`) |
+| `quotas` | Cuotas jerárquicas global→grupo→usuario→sesión evaluadas antes de cada llamada, solicitudes y liberaciones auditadas | — (producto, pivote 2026-07-09; `d16`) |
+| `approvals` | Producto de aprobaciones sobre el mecanismo HITL de `governance`: cola, tarjeta de aprobación, comentario obligatorio, 4-ojos en irreversibles | — (producto, pivote 2026-07-09; `d17`) |
+| `attachments` | Validación e ingesta de adjuntos, extracción por tipo, sanitización anti-injection, escaneo N2/N3, retención | — (producto, pivote 2026-07-09; `d14`) |
+| `notifications` | Centro de notificaciones in-app: campana, no-leídas, deep links, filtrado por rol/ownership | — (producto, pivote 2026-07-09; `d12`) |
+| `workflows` | Motor de workflows deterministas: pasos fijos por versión, pausa HITL, historial y re-ejecución auditada | — (producto, pivote 2026-07-09; `e22`) |
+
+Los contextos nuevos no están en el blueprint v2.4 (documento de referencia del ERP): nacen del pivote 2026-07-09 hacia el producto completo "de fábrica" (ver [07-roadmap.md](07-roadmap.md)) y su especificación detallada vive en el change de OpenSpec correspondiente, no en este documento.
 
 ## Regla de dependencia
 
@@ -76,7 +90,7 @@ Todo lo demás vive dentro del monolito. Extraer un servicio nuevo requiere un A
 
 ## Flujo de una petición (camino feliz del MVP)
 
-1. El usuario escribe en el chat → `app/api` recibe y autentica.
+1. El usuario escribe en el chat en `frontend/` (Next.js + assistant-ui) → llama a `app/api`, que recibe y autentica.
 2. El caso de uso arma el contexto y llama al **Default Chat** (graph template en `adapters/runtime_langgraph`).
 3. El **Skill Router** (`core/routing`) decide: respuesta directa o activar una skill.
 4. Si activa skill: el **Policy Gate** (`core/policy`) valida usuario, cliente, skill, tool y riesgo. Deny-by-default.
