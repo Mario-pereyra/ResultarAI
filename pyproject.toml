@@ -12,6 +12,7 @@ dependencies = [
     "uuid6>=2024.7.10",
     "litellm>=1.91.1",
     "langgraph>=1.2.8",
+    "langfuse>=4.13.2",
 ]
 
 [project.scripts]
