@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { useState } from "react";
 import { SessionProvider, type SessionContextValue } from "@/lib/session-context";
 import { capabilitiesForRole } from "@/lib/capabilities";
 import { Sidebar, type SidebarLabels } from "./sidebar";
@@ -112,17 +113,24 @@ describe("Sidebar — drawer móvil con trampa de foco (tarea 5.7)", () => {
     const user = userEvent.setup();
     const onCloseDrawer = vi.fn();
 
+    // Harness con estado real: al cerrar, el drawer se desmonta de verdad y la
+    // trampa de foco (use-focus-trap) debe devolver el foco al disparador
+    // (hallazgo H5 del review final: aseverar el retorno de foco, no solo el callback).
     function Harness() {
+      const [open, setOpen] = useState(false);
       return (
         <div>
-          <button>abrir</button>
+          <button onClick={() => setOpen(true)}>abrir</button>
           <SessionProvider value={sessionFor("funcional")}>
             <Sidebar
               labels={labels}
               collapsed={false}
               onToggleCollapse={vi.fn()}
-              drawerOpen
-              onCloseDrawer={onCloseDrawer}
+              drawerOpen={open}
+              onCloseDrawer={() => {
+                onCloseDrawer();
+                setOpen(false);
+              }}
             />
           </SessionProvider>
         </div>
@@ -130,9 +138,15 @@ describe("Sidebar — drawer móvil con trampa de foco (tarea 5.7)", () => {
     }
 
     render(<Harness />);
+    const trigger = screen.getByRole("button", { name: "abrir" });
+    await user.click(trigger);
+    expect(document.querySelector('[aria-modal="true"]')).not.toBeNull();
+
     await user.keyboard("{Escape}");
 
     expect(onCloseDrawer).toHaveBeenCalledOnce();
+    expect(document.querySelector('[aria-modal="true"]')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
   });
 
   it("click en el scrim cierra el drawer", async () => {

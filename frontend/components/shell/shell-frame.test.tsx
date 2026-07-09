@@ -131,3 +131,24 @@ describe('ShellFrame — escenario "Skip-link es el primer foco"', () => {
     expect(skipLink.getAttribute("href")).toBe(`#${main?.id}`);
   });
 });
+
+describe("ShellFrame — colapso del sidebar persistido por usuario (tarea 5.3, hallazgo H1 del review)", () => {
+  it("round-trip: colapsar escribe localStorage y un montaje nuevo restaura el estado colapsado", async () => {
+    const user = userEvent.setup();
+
+    // Primer montaje: sidebar expandido, se colapsa con el botón.
+    const first = renderFrame(sessionFor("funcional", "ok"));
+    await user.click(screen.getByRole("button", { name: "Colapsar" }));
+    expect(window.localStorage.getItem("resultarai:sidebar-collapsed")).toBe("true");
+    first.unmount();
+
+    // Segundo montaje (sesión nueva del mismo usuario): restaura desde localStorage.
+    renderFrame(sessionFor("funcional", "ok"));
+    const toggle = screen.getByRole("button", { name: "Expandir" });
+    expect(toggle.getAttribute("aria-pressed")).toBe("true");
+
+    // Expandir de vuelta también persiste.
+    await user.click(toggle);
+    expect(window.localStorage.getItem("resultarai:sidebar-collapsed")).toBe("false");
+  });
+});
