@@ -1,16 +1,16 @@
-id: example_skill
-name: Utilidades de Ejemplo
+id: report_formatting
+name: Formato de Informes
 status: active
 version: 1.0.0
 
 description: >
-  Skill de ejemplo de fábrica: envuelve un paquete Agent Skill (SKILL.md) con
-  utilidades genéricas y expone, con gobernanza, sus tools permitidas del Tool Registry.
+  Skill de ejemplo de fábrica: formatea y estructura informes profesionales
+  usando una plantilla estándar y reglas de estilo consistentes.
 
 skill_package:
   spec: agent_skills
-  ref: example-utils
-  path: skills/packages/example-utils/SKILL.md
+  ref: report-formatting
+  path: skills/packages/report-formatting/SKILL.md
   version: 1.0.0
 
 execution:
@@ -32,9 +32,9 @@ tools:
 
 output_policy:
   summarize_results: true
-  mask_sensitive_fields: true
-  max_rows: 20
+  mask_sensitive_fields: false
+  max_rows: 50
 
 evals:
   status: placeholder
-  template: example_skill_eval
+  template: report_formatting_eval
