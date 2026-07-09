@@ -2,9 +2,9 @@
 
 ## 1. Fundación de persistencia (Alembic y conexión)
 
-- [ ] 1.1 Añadir al grupo de dependencias del adapter (`pyproject.toml`): SQLAlchemy, Alembic, driver Postgres (psycopg) y librería UUIDv7; declarar el servicio Postgres en el `docker compose` de desarrollo/CI. Verificación: `uv sync` termina sin errores y `docker compose up postgres` levanta la base. `[modelo: haiku]`
-- [ ] 1.2 Inicializar el entorno Alembic dentro de `adapters/persistence_postgres/` (`env.py`, `naming_convention` de constraints para diffs/downgrades limpios, rol de migración vs. rol de aplicación). Verificación: `alembic upgrade head` sobre una base vacía crea `alembic_version` sin errores. `[modelo: haiku]`
-- [ ] 1.3 Configurar la conexión y la sesión SQLAlchemy con transacciones explícitas, sin fugar el motor hacia `core/`. Verificación: `uv run lint-imports` en verde (contratos de frontera e independencia de adapters de `a01`) y test de humo de conexión. `[modelo: sonnet]`
+- [x] 1.1 Añadir al grupo de dependencias del adapter (`pyproject.toml`): SQLAlchemy, Alembic, driver Postgres (psycopg) y librería UUIDv7; declarar el servicio Postgres en el `docker compose` de desarrollo/CI. Verificación: `uv sync` termina sin errores y `docker compose up postgres` levanta la base. `[modelo: haiku]`
+- [x] 1.2 Inicializar el entorno Alembic dentro de `adapters/persistence_postgres/` (`env.py`, `naming_convention` de constraints para diffs/downgrades limpios, rol de migración vs. rol de aplicación). Verificación: `alembic upgrade head` sobre una base vacía crea `alembic_version` sin errores. `[modelo: haiku]`
+- [x] 1.3 Configurar la conexión y la sesión SQLAlchemy con transacciones explícitas, sin fugar el motor hacia `core/`. Verificación: `uv run lint-imports` en verde (contratos de frontera e independencia de adapters de `a01`) y test de humo de conexión. `[modelo: sonnet]`
 
 ## 2. Sesiones, mensajes y ramas (conversation-persistence)
 
