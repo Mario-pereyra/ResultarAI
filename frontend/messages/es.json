@@ -1,0 +1,10 @@
+{
+  "App": {
+    "title": "ResultarAI",
+    "description": "Plataforma interna de IA de Resultar Soluciones."
+  },
+  "HomePage": {
+    "title": "ResultarAI",
+    "greeting": "Bienvenido, escribí tu consulta."
+  }
+}

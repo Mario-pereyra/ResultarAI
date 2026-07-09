@@ -1,9 +1,9 @@
 ## 1. Scaffold del frontend
 
-- [ ] 1.1 Crear `frontend/` con Next.js (App Router) + TypeScript: `package.json`, `tsconfig.json`, estructura mínima (`app/`, `public/`, `scripts/`). Verificación: `npm run dev` levanta una página en blanco sin errores de consola. `[modelo: sonnet]`
-- [ ] 1.2 Agregar `@assistant-ui/react` como dependencia (ADR-0007, sin uso funcional todavía — llega en `d13-chat-conversacion`) y documentarlo en `frontend/README.md`. Verificación: `npm ls @assistant-ui/react` resuelve sin conflictos de versión. `[modelo: haiku]`
-- [ ] 1.3 Configurar ESLint (`next/core-web-vitals` + `@typescript-eslint`) y `tsc --noEmit` como scripts `lint`/`typecheck` en `package.json`. Verificación: `npm run lint` y `npm run typecheck` terminan en verde sobre el scaffold vacío. `[modelo: sonnet]`
-- [ ] 1.4 Configurar `next-intl`: `messages/es.json` inicial + provider en el layout raíz. Verificación: la página raíz renderiza un texto de prueba resuelto desde el catálogo, no hardcodeado. `[modelo: sonnet]`
+- [x] 1.1 Crear `frontend/` con Next.js (App Router) + TypeScript: `package.json`, `tsconfig.json`, estructura mínima (`app/`, `public/`, `scripts/`). Verificación: `npm run dev` levanta una página en blanco sin errores de consola. `[modelo: sonnet]`
+- [x] 1.2 Agregar `@assistant-ui/react` como dependencia (ADR-0007, sin uso funcional todavía — llega en `d13-chat-conversacion`) y documentarlo en `frontend/README.md`. Verificación: `npm ls @assistant-ui/react` resuelve sin conflictos de versión. `[modelo: haiku]`
+- [x] 1.3 Configurar ESLint (`next/core-web-vitals` + `@typescript-eslint`) y `tsc --noEmit` como scripts `lint`/`typecheck` en `package.json`. Verificación: `npm run lint` y `npm run typecheck` terminan en verde sobre el scaffold vacío. `[modelo: sonnet]`
+- [x] 1.4 Configurar `next-intl`: `messages/es.json` inicial + provider en el layout raíz. Verificación: la página raíz renderiza un texto de prueba resuelto desde el catálogo, no hardcodeado. `[modelo: sonnet]`
 
 ## 2. CI del frontend
 

@@ -1,0 +1,29 @@
+/*
+ * Reset mínimo del scaffold. Los tokens reales (color, tipografía,
+ * espaciado, radios, motion) se portan desde design/mockups/tokens.css
+ * en las tareas de la sección "Tokens (design-system)" de este change.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
