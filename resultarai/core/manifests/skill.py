@@ -137,10 +137,19 @@ class EvalsConfig(_StrictModel):
 
 
 class RetrievalConfig(_StrictModel):
-    """Puerta abierta a RAG: metadato declarativo inerte (el sub-schema real lo completa 1.6).
+    """Puerta abierta a RAG (docs/04-manifiestos.md, "Puerta abierta: retrieval"): metadato inerte.
 
-    Ausente -> ningun comportamiento de recuperacion. Presente -> solo reserva el contrato;
-    no invoca ningun adapter (no existe `RetrievalPort` en este change).
+    Sub-schema declarativo puro, sin comportamiento ni adapter asociado en este change: reserva
+    el contrato para cuando exista `RetrievalPort` (diferido a `a03`; la implementacion real de
+    RAG es Etapa P). Como `retrieval` es opcional en el manifiesto, su ausencia (None) no activa
+    ningun comportamiento de recuperacion; su presencia tampoco invoca ningun adapter.
+
+    Campos (bloque normativo de docs/04):
+    - `enabled`: cuando llegue RAG (Etapa P) sera `true` + fuente indexada; hoy siempre inerte.
+    - `source`: id de la coleccion/indice; `null` mientras no exista `RetrievalPort`.
+
+    El modo estricto heredado de `_StrictModel` (`strict=True`, `extra="forbid"`) rechaza toda
+    clave desconocida dentro del bloque.
     """
 
     enabled: bool = False
