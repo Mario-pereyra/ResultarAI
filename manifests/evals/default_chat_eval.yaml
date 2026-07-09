@@ -1,0 +1,10 @@
+id: default_chat_eval
+status: placeholder
+version: 1.0.0
+
+target_kind: agent
+metrics_planned:
+  - task_completion_rate
+  - skill_selection_accuracy
+  - response_relevance_score
+dataset: null

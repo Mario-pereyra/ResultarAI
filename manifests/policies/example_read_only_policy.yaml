@@ -1,0 +1,14 @@
+id: example_read_only_policy
+status: active
+version: 1.0.0
+
+applies_to:
+  skills: [example_skill]
+
+rules:
+  - effect: allow
+    when:
+      operation_type: read
+  - effect: escalate_hitl
+    when:
+      risk_level: high

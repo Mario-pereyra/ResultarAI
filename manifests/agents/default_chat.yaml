@@ -1,0 +1,38 @@
+id: default_chat
+name: Chat por Defecto
+type: default_orchestrator
+status: active
+version: 1.0.0
+
+runtime:
+  framework: langgraph
+  graph: default_chat_graph
+
+capabilities:
+  can_answer_general_questions: true
+  can_use_skills: true
+  can_delegate_to_agents: false
+  can_execute_tools_directly: false
+
+enabled_skills:
+  - example_skill
+
+tool_access_policy:
+  mode: deny_by_default
+  allow_only_via_skills: true
+
+limits:
+  max_steps_per_task: 10
+  max_cost_usd_per_task: 0.50
+
+observability:
+  provider: langfuse
+  trace_all_interactions: true
+  log_skill_selection: true
+  log_tool_calls: true
+  log_model_calls: true
+  log_costs: true
+
+evals:
+  status: placeholder
+  template: default_chat_eval

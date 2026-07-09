@@ -1,0 +1,13 @@
+id: default_routing
+status: active
+version: 1.0.0
+
+rules:
+  - intent: example_task
+    action: activate_skill
+    target: example_skill
+  - intent: general_question
+    action: answer_directly
+  - intent: unknown
+    action: answer_directly
+    note: never invent data access; declare lack of capability

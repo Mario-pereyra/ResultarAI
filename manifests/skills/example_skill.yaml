@@ -1,0 +1,40 @@
+id: example_skill
+name: Utilidades de Ejemplo
+status: active
+version: 1.0.0
+
+description: >
+  Skill de ejemplo de fábrica: envuelve un paquete Agent Skill (SKILL.md) con
+  utilidades genéricas y expone, con gobernanza, sus tools permitidas del Tool Registry.
+
+skill_package:
+  spec: agent_skills
+  ref: example_utils
+  path: skills/example_utils/SKILL.md
+  version: 1.0.0
+
+execution:
+  mode: read_only
+  graph: default_skill_graph
+  requires_human_approval: false
+
+visibility:
+  roles:
+    - admin
+    - tecnico
+    - funcional
+
+risk:
+  level: low
+
+tools:
+  - example_echo
+
+output_policy:
+  summarize_results: true
+  mask_sensitive_fields: true
+  max_rows: 20
+
+evals:
+  status: placeholder
+  template: example_skill_eval

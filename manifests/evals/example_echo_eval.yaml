@@ -1,0 +1,10 @@
+id: example_echo_eval
+status: placeholder
+version: 1.0.0
+
+target_kind: tool
+metrics_planned:
+  - invocation_success_rate
+  - response_correctness
+  - latency_p99
+dataset: null

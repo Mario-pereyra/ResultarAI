@@ -1,0 +1,10 @@
+id: example_skill_eval
+status: placeholder
+version: 1.0.0
+
+target_kind: skill
+metrics_planned:
+  - task_completion_rate
+  - tool_call_accuracy
+  - groundedness_score
+dataset: null
