@@ -1,0 +1,206 @@
+/*
+  tokens.css — Resultar Agents Platform · Sistema de diseño v1.0
+  ================================================================
+  PORTADO de `design/mockups/tokens.css` (fuente de verdad visual).
+  
+  SECCIONES PORTADAS:
+  - §2 Tokens globales (tipografía, espaciado, radios, motion, z-index, breakpoints)
+  - §3 Temas: 4 sets de tokens semánticos de color (dark/light × default/totvs)
+  
+  NOTA IMPORTANTE: Este archivo es un portado directo de design/mockups/tokens.css.
+  Los valores CSS deben permanecer exactamente iguales. Cualquier cambio de valor
+  DEBE hacerse primero en design/mockups/tokens.css (fuente de verdad), nunca aquí.
+  
+  Los componentes React (sección §5 del original: .btn, .input, .table, etc.)
+  se portarán en archivos separados por componente (tarea 3.3).
+  
+  Theming por atributos en <html>:
+    html[data-theme="dark"|"light"][data-brand="default"|"totvs"]
+  Las 4 combinaciones están completas y verificadas WCAG 2.1 AA.
+  Default: dark·default (cuando html no tiene atributos explícitos).
+*/
+
+/* ── Fuentes (Google Fonts) ────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Saira:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+/* ── Sección 2: Tokens globales (independientes de tema y marca) ──────────── */
+:root {
+  /* Tipografía: familias */
+  --font-display: "Chakra Petch", "Saira", system-ui, sans-serif; /* títulos, kickers */
+  --font-body: "Saira", system-ui, sans-serif;                    /* texto de UI */
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;         /* datos, números, código */
+
+  /* Tipografía: escala modular 12→32 px (ratio ≈1.2) */
+  --fs-caption: 12px;  /* metadatos, captions, celdas auxiliares */
+  --fs-small:   13px;  /* botones, tags, texto denso de tablas */
+  --fs-body:    14px;  /* texto base de la UI */
+  --fs-lead:    16px;  /* párrafo destacado, mensajes de chat */
+  --fs-h4:      18px;  /* títulos de card */
+  --fs-h3:      20px;  /* títulos de sección */
+  --fs-h2:      24px;  /* títulos de página secundarios */
+  --fs-h1:      28px;  /* título de página */
+  --fs-display: 32px;  /* cifras protagonistas (taxímetro, dashboards) */
+
+  --lh-tight: 1.2;
+  --lh-base:  1.5;
+  --lh-loose: 1.65;
+  --ls-kicker: .16em;
+
+  /* Espaciado: escala de 4 px */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+  --sp-9: 48px;
+  --sp-10: 64px;
+
+  /* Radios — deliberadamente contenidos (estética instrumental) */
+  --r-xs: 2px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 10px;
+  --r-xl: 14px;
+  --r-pill: 999px;
+
+  /* Motion */
+  --dur-1: 120ms;  /* micro-feedback: hover, focus */
+  --dur-2: 180ms;  /* transiciones estándar */
+  --dur-3: 280ms;  /* entradas/salidas: toasts, modals */
+  --ease-out: cubic-bezier(.16, .84, .3, 1);
+  --ease-in-out: cubic-bezier(.45, 0, .25, 1);
+
+  /* Z-index */
+  --z-nav: 10;
+  --z-dropdown: 40;
+  --z-overlay: 80;
+  --z-modal: 90;
+  --z-toast: 100;
+  --z-tooltip: 110;
+
+  /* Breakpoints (informativos: las custom properties no funcionan en @media;
+     usar los valores literales en los mockups)
+     --bp-mobile:  380px   (chat, catálogo, aprobaciones HITL)
+     --bp-tablet:  768px
+     --bp-desktop: 1200px  (experiencia completa, desktop-first) */
+}
+
+/* ── Sección 3: Temas ─────────────────────────────────────────────────────── */
+
+/* 3.1 DARK · DEFAULT — "sala de control" (tema por defecto del producto) */
+:root,
+html[data-theme="dark"][data-brand="default"] {
+  color-scheme: dark;
+  --bg: #0a0d13;            /* fondo de aplicación */
+  --bg-raised: #10151f;     /* sidebar, zonas elevadas, inputs */
+  --panel: #121826;         /* cards, paneles, modals */
+  --line: #222b3c;          /* bordes y divisores sutiles */
+  --line-strong: #35415a;   /* bordes de controles interactivos */
+  --ink: #e8edf5;           /* texto principal — 16.6:1 sobre --bg */
+  --ink-dim: #9aa7bd;       /* texto secundario — 8.0:1 */
+  --ink-faint: #7c89a0;     /* metadatos, placeholders — 5.5:1 */
+  --accent: #ffb000;        /* ámbar: acento/atención — 10.6:1 */
+  --accent-fill: #ffb000;   /* relleno de acción primaria */
+  --accent-ink: #181102;    /* tinta sobre --accent-fill — 10.2:1 */
+  --accent-soft: rgba(255, 176, 0, .14);  /* tinte de selección/realce */
+  --accent-alt: #ffb000;    /* acento cálido (en default = mismo ámbar) */
+  --money: #3ddc97;         /* dinero, éxito — 11.0:1 */
+  --info: #58aeff;          /* enlaces, datos informativos — 8.2:1 */
+  --warn: #ffb000;          /* advertencia (en default comparte el ámbar) */
+  --danger: #ff5c5c;        /* peligro, destructivo — 6.4:1 */
+  --danger-ink: #1f0a0a;    /* tinta sobre relleno danger */
+  --focus-ring: #ffb000;
+  --scrim: rgba(4, 6, 10, .66);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .45);
+  --shadow-2: 0 4px 14px rgba(0, 0, 0, .45);
+  --shadow-3: 0 12px 40px rgba(0, 0, 0, .55);
+}
+
+/* 3.2 LIGHT · DEFAULT — "sala de control" en papel técnico cálido */
+html[data-theme="light"][data-brand="default"] {
+  color-scheme: light;
+  --bg: #f2efe8;
+  --bg-raised: #f8f6f0;
+  --panel: #fffdf8;
+  --line: #ddd6c6;
+  --line-strong: #b9b09a;
+  --ink: #1b2130;           /* 14.0:1 sobre --bg */
+  --ink-dim: #4f5868;       /* 7.2:1 sobre --panel */
+  --ink-faint: #6e7787;     /* 4.5:1 sobre --panel */
+  --accent: #8a5c00;        /* ámbar oscurecido para texto/ícono — 5.1:1 */
+  --accent-fill: #ffb000;   /* el botón primario conserva el ámbar pleno */
+  --accent-ink: #181102;
+  --accent-soft: rgba(255, 176, 0, .22);
+  --accent-alt: #8a5c00;
+  --money: #0e7a50;         /* 4.7:1 sobre --bg, 5.4:1 sobre --panel */
+  --info: #1d5fc2;          /* 5.3:1 */
+  --warn: #8a5c00;
+  --danger: #b42b2b;        /* 5.5:1 */
+  --danger-ink: #ffffff;
+  --focus-ring: #8a5c00;
+  --scrim: rgba(27, 33, 48, .45);
+  --shadow-1: 0 1px 2px rgba(43, 38, 24, .14);
+  --shadow-2: 0 4px 14px rgba(43, 38, 24, .16);
+  --shadow-3: 0 12px 40px rgba(43, 38, 24, .22);
+}
+
+/* 3.3 DARK · TOTVS — paleta oficial rebrand dic-2025 sobre fondo nocturno */
+html[data-theme="dark"][data-brand="totvs"] {
+  color-scheme: dark;
+  --bg: #0b1020;
+  --bg-raised: #101a2e;
+  --panel: #0e2030;         /* superficie con tinte del Azul Escuro #002233 */
+  --line: #1f3346;
+  --line-strong: #2f4a61;
+  --ink: #eef3f8;           /* 17:1 sobre --bg */
+  --ink-dim: #9fb2c4;       /* 8.1:1 */
+  --ink-faint: #74879b;     /* 5.1:1 */
+  --accent: #00dbff;        /* Azul TOTVS — 11.3:1 sobre --bg */
+  --accent-fill: #00dbff;
+  --accent-ink: #002233;    /* Azul Escuro sobre cian — 9.85:1 */
+  --accent-soft: rgba(0, 219, 255, .12);
+  --accent-alt: #ff8900;    /* Laranja oficial — 7.96:1 (sustituye al ámbar) */
+  --money: #3ddc97;         /* 10.8:1 — el verde dinero es transversal */
+  --info: #58aeff;          /* 8.0:1 */
+  --warn: #ffb800;          /* Yellow oficial del portal TOTVS — 10.9:1 */
+  --danger: #ff5c5c;        /* 6.3:1 */
+  --danger-ink: #1f0a0a;
+  --focus-ring: #00dbff;
+  --scrim: rgba(0, 10, 20, .66);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .45);
+  --shadow-2: 0 4px 14px rgba(0, 0, 0, .45);
+  --shadow-3: 0 12px 40px rgba(0, 0, 0, .55);
+}
+
+/* 3.4 LIGHT · TOTVS — tinta Azul Escuro, interactivo azul funcional oficial.
+   #00DBFF falla como texto sobre blanco (1.67:1): solo se usa como
+   superficie/realce (--accent-soft) con tinta #002233 encima. */
+html[data-theme="light"][data-brand="totvs"] {
+  color-scheme: light;
+  --bg: #f2f5f8;
+  --bg-raised: #f8fafc;
+  --panel: #ffffff;
+  --line: #d7dee5;
+  --line-strong: #b3c0cb;
+  --ink: #002233;           /* 16.45:1 sobre --panel (AAA) */
+  --ink-dim: #3c5666;       /* 7.7:1 */
+  --ink-faint: #5d7382;     /* 5.0:1 */
+  --accent: #0a46ea;        /* azul funcional oficial totvs.com — 6.8:1 */
+  --accent-fill: #0a46ea;
+  --accent-ink: #ffffff;    /* 6.8:1 sobre --accent-fill */
+  --accent-soft: rgba(0, 219, 255, .22);  /* realce cian de marca */
+  --accent-alt: #a85600;    /* laranja oscurecido para texto — 5.3:1 */
+  --money: #0e7a50;
+  --info: #0a46ea;
+  --warn: #8a5c00;
+  --danger: #b42b2b;
+  --danger-ink: #ffffff;
+  --focus-ring: #0a46ea;
+  --scrim: rgba(0, 34, 51, .45);
+  --shadow-1: 0 1px 2px rgba(0, 34, 51, .12);
+  --shadow-2: 0 4px 14px rgba(0, 34, 51, .14);
+  --shadow-3: 0 12px 40px rgba(0, 34, 51, .20);
+}

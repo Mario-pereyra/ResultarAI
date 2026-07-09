@@ -12,8 +12,8 @@
 
 ## 3. Tokens (design-system)
 
-- [ ] 3.1 Portar los tokens globales (tipografía, espaciado, radios, sombras por variable, motion, z-index, breakpoints) de `design/mockups/tokens.css` §2 a la hoja de tokens del frontend, bajo `:root`. Verificación: escenario "Escala de espaciado completa" de `specs/design-system/spec.md`. `[modelo: haiku]`
-- [ ] 3.2 Portar verbatim los 4 sets de tokens de color tema×brand (`design/mockups/tokens.css` §3.1–3.4). Verificación: escenario "Los 4 sets están completos" y "dark·default es el tema por defecto de la instancia". `[modelo: haiku]`
+- [x] 3.1 Portar los tokens globales (tipografía, espaciado, radios, sombras por variable, motion, z-index, breakpoints) de `design/mockups/tokens.css` §2 a la hoja de tokens del frontend, bajo `:root`. Verificación: escenario "Escala de espaciado completa" de `specs/design-system/spec.md`. `[modelo: haiku]`
+- [x] 3.2 Portar verbatim los 4 sets de tokens de color tema×brand (`design/mockups/tokens.css` §3.1–3.4). Verificación: escenario "Los 4 sets están completos" y "dark·default es el tema por defecto de la instancia". `[modelo: haiku]`
 - [ ] 3.3 Cargar Chakra Petch, Saira y JetBrains Mono, y aplicar `tabular-nums` a las clases `.mono`/`.num`. Verificación: escenario "Columna numérica alineada". `[modelo: haiku]`
 - [ ] 3.4 Importar la hoja de tokens globalmente en el layout raíz de Next.js; resolver `data-theme`/`data-brand` en SSR sin flash de tema incorrecto (FOUC). Verificación: recarga de página no muestra parpadeo de tema. `[modelo: sonnet]`
 
