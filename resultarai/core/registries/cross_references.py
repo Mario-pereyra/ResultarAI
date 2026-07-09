@@ -140,6 +140,22 @@ def validate_cross_references(registries: Registries) -> None:
                 field="enabled_skills",
                 target_kind="Skill",
             )
+        for profile_id in agent.fallback_cascade:
+            profile = registries.model_profiles.get(profile_id)
+            if profile is None:
+                raise DanglingReferenceError(
+                    origin=origin,
+                    field="fallback_cascade",
+                    target=f"ModelProfile:{profile_id}",
+                    reason=f"no existe ningún ModelProfile con id {profile_id!r}",
+                )
+            if not profile.active:
+                raise DanglingReferenceError(
+                    origin=origin,
+                    field="fallback_cascade",
+                    target=f"ModelProfile:{profile_id}",
+                    reason=f"ModelProfile {profile_id!r} existe pero está inactivo",
+                )
         _resolve_exists(
             registries.evals,
             agent.evals.template,

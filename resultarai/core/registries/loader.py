@@ -40,6 +40,7 @@ from resultarai.core.manifests import (
     SkillManifest,
     ToolManifest,
 )
+from resultarai.core.model_profile import ModelProfile
 from resultarai.core.registries.cross_references import validate_cross_references
 from resultarai.core.registries.registry import ManifestRegistry
 
@@ -111,6 +112,62 @@ def _load_registry[M: BaseManifest](directory: Path, schema: type[M]) -> Manifes
     return ManifestRegistry(manifests)
 
 
+def _load_model_profiles(path: Path) -> dict[str, ModelProfile]:
+    """Carga los perfiles de modelo desde manifests/model_profiles.yaml.
+
+    Si el archivo no existe, devuelve un diccionario vacio.
+    """
+    if not path.is_file():
+        return {}
+
+    try:
+        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        raise ManifestLoadError(f"{path}: invalid YAML syntax: {exc}") from exc
+
+    if raw is None:
+        return {}
+
+    profiles: dict[str, ModelProfile] = {}
+    if isinstance(raw, list):
+        for idx, item in enumerate(raw):
+            if not isinstance(item, dict):
+                t_name = type(item).__name__
+                raise ManifestLoadError(
+                    f"{path}: expected list of mappings, got list element of type "
+                    f"{t_name} at index {idx}"
+                )
+            try:
+                profile = ModelProfile.model_validate(item)
+                profiles[profile.id] = profile
+            except ValidationError as exc:
+                raise ManifestLoadError(
+                    f"{path}: model profile validation failed at index {idx}: {exc}"
+                ) from exc
+    elif isinstance(raw, dict):
+        for key, item in raw.items():
+            if not isinstance(item, dict):
+                t_name = type(item).__name__
+                raise ManifestLoadError(
+                    f"{path}: expected dictionary of mappings, got key {key!r} of type {t_name}"
+                )
+            try:
+                p_data = dict(item)
+                if "id" not in p_data:
+                    p_data["id"] = key
+                profile = ModelProfile.model_validate(p_data)
+                profiles[profile.id] = profile
+            except ValidationError as exc:
+                raise ManifestLoadError(
+                    f"{path}: model profile validation failed for key {key!r}: {exc}"
+                ) from exc
+    else:
+        t_name = type(raw).__name__
+        raise ManifestLoadError(f"{path}: expected YAML list or mapping at top level, got {t_name}")
+
+    return profiles
+
+
 @dataclass(frozen=True, slots=True)
 class Registries:
     """Los 6 Registries tipados construidos desde un directorio `manifests/`."""
@@ -121,6 +178,7 @@ class Registries:
     policies: PolicyRegistry
     routing: RoutingRegistry
     evals: EvalTemplateRegistry
+    model_profiles: dict[str, ModelProfile]
 
 
 def load_registries(manifests_dir: Path) -> Registries:
@@ -143,6 +201,7 @@ def load_registries(manifests_dir: Path) -> Registries:
         policies=_load_registry(manifests_dir / "policies", PolicyManifest),
         routing=_load_registry(manifests_dir / "routing", RoutingManifest),
         evals=_load_registry(manifests_dir / "evals", EvalTemplateManifest),
+        model_profiles=_load_model_profiles(manifests_dir / "model_profiles.yaml"),
     )
     validate_cross_references(registries)
     return registries

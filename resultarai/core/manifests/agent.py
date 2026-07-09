@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from resultarai.core.manifests.base import BaseManifest, ManifestId
 
@@ -63,6 +63,10 @@ class AgentEvals(_StrictModel):
     template: ManifestId
 
 
+class AgentEscalation(_StrictModel):
+    enabled: bool = True
+
+
 class AgentManifest(BaseManifest):
     """Define un agente: proposito, runtime, skills habilitadas, limites y evals.
 
@@ -78,6 +82,8 @@ class AgentManifest(BaseManifest):
     observability: AgentObservability
     evals: AgentEvals
     limits: AgentLimits | None = None
+    fallback_cascade: list[str] = Field(default_factory=list)
+    escalation: AgentEscalation = Field(default_factory=AgentEscalation)
 
     @model_validator(mode="after")
     def _enforce_golden_rule(self) -> Self:

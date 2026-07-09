@@ -220,3 +220,103 @@ def test_skill_referencing_nonexistent_eval_template_fails(tmp_path: Path) -> No
     assert "Skill:example_skill" in message
     assert "EvalTemplate:nonexistent_eval_template" in message
     assert exc_info.value.field == "evals.template"
+
+
+def test_agent_referencing_nonexistent_model_profile_fails(tmp_path: Path) -> None:
+    _write_full_valid_set(tmp_path)
+    # Write model_profiles.yaml with one profile
+    profiles = [
+        {
+            "id": "gpt_4o",
+            "provider": "openai",
+            "model": "gpt-4o",
+            "cache_hit_rate": 0.0,
+            "cache_miss_rate": 0.0,
+            "active": True,
+        }
+    ]
+    profiles_path = tmp_path / "model_profiles.yaml"
+    profiles_path.write_text(yaml.safe_dump(profiles), encoding="utf-8")
+
+    # Override agent to reference nonexistent model profile 'claude_3'
+    _write_manifest(
+        tmp_path / "agents",
+        "default_chat.yaml",
+        _agent_payload(fallback_cascade=["gpt_4o", "claude_3"]),
+    )
+
+    with pytest.raises(DanglingReferenceError) as exc_info:
+        load_registries(tmp_path)
+
+    message = str(exc_info.value)
+    assert "Agent:default_chat" in message
+    assert "ModelProfile:claude_3" in message
+    assert exc_info.value.field == "fallback_cascade"
+
+
+def test_agent_referencing_inactive_model_profile_fails(tmp_path: Path) -> None:
+    _write_full_valid_set(tmp_path)
+    # Write model_profiles.yaml with one active and one inactive profile
+    profiles = [
+        {
+            "id": "gpt_4o",
+            "provider": "openai",
+            "model": "gpt-4o",
+            "cache_hit_rate": 0.0,
+            "cache_miss_rate": 0.0,
+            "active": True,
+        },
+        {
+            "id": "claude_3",
+            "provider": "anthropic",
+            "model": "claude-3",
+            "cache_hit_rate": 0.0,
+            "cache_miss_rate": 0.0,
+            "active": False,
+        },
+    ]
+    profiles_path = tmp_path / "model_profiles.yaml"
+    profiles_path.write_text(yaml.safe_dump(profiles), encoding="utf-8")
+
+    # Override agent to reference the inactive profile
+    _write_manifest(
+        tmp_path / "agents",
+        "default_chat.yaml",
+        _agent_payload(fallback_cascade=["gpt_4o", "claude_3"]),
+    )
+
+    with pytest.raises(DanglingReferenceError) as exc_info:
+        load_registries(tmp_path)
+
+    message = str(exc_info.value)
+    assert "Agent:default_chat" in message
+    assert "ModelProfile:claude_3" in message
+    assert "inactivo" in message
+    assert exc_info.value.field == "fallback_cascade"
+
+
+def test_agent_referencing_valid_model_profile_succeeds(tmp_path: Path) -> None:
+    _write_full_valid_set(tmp_path)
+    profiles = [
+        {
+            "id": "gpt_4o",
+            "provider": "openai",
+            "model": "gpt-4o",
+            "cache_hit_rate": 0.0,
+            "cache_miss_rate": 0.0,
+            "active": True,
+        }
+    ]
+    profiles_path = tmp_path / "model_profiles.yaml"
+    profiles_path.write_text(yaml.safe_dump(profiles), encoding="utf-8")
+
+    _write_manifest(
+        tmp_path / "agents",
+        "default_chat.yaml",
+        _agent_payload(fallback_cascade=["gpt_4o"]),
+    )
+
+    registries = load_registries(tmp_path)
+    agent = registries.agents.get("default_chat")
+    assert agent is not None
+    assert agent.fallback_cascade == ["gpt_4o"]

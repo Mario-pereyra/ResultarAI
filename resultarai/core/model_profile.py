@@ -16,3 +16,4 @@ class ModelProfile(BaseModel):
     parameters: dict[str, Any] = Field(default_factory=dict)
     cache_hit_rate: float = Field(ge=0.0)
     cache_miss_rate: float = Field(ge=0.0)
+    active: bool = True
