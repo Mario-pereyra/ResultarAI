@@ -19,15 +19,15 @@
 
 ## 4. Componentes base (design-system)
 
-- [ ] 4.1 Implementar botón (`.btn` primary/secondary/danger/ghost, tamaños sm/lg/block, estados default/hover/focus-visible/active/disabled/loading) como componente React con ARIA. Verificación: escenario "Botón primario con estado de carga". `[modelo: sonnet]`
-- [ ] 4.2 Implementar input/textarea/select (`.field`/`.input`/`.textarea`/`.select`) con label asociado, hint, error y `aria-describedby`/`aria-invalid`. Verificación: test de accesibilidad (label↔control, error anunciado). `[modelo: sonnet]`
-- [ ] 4.3 Implementar tabla de datos densa (`.table-wrap`/`.table`/`.table--dense`) con soporte de columnas numéricas mono. Verificación: escenario "Tabla densa con datos monoespaciados". `[modelo: sonnet]`
-- [ ] 4.4 Implementar panel/card (`.panel`, variantes flush/raised) y tag/badge-rol (`.tag`, `.badge-rol`). Verificación: variantes de `design/DESIGN-SYSTEM.md` §8.5/§8.6 renderizadas en el styleguide. `[modelo: sonnet]`
-- [ ] 4.5 Implementar toast (`.toast-stack`/`.toast`) con `aria-live` y auto-cierre configurable (persistente en warn/danger). Verificación: test de comportamiento — toast warn/danger no se auto-cierra. `[modelo: sonnet]`
-- [ ] 4.6 Implementar modal (`.overlay`/`.modal`) con trampa de foco, cierre por `Esc` y retorno de foco al disparador. Verificación: escenario "Modal con trampa de foco". `[modelo: sonnet]`
-- [ ] 4.7 Implementar dropdown genérico (base para menú de usuario y campana) con navegación por flechas y `Esc`. Verificación: test de teclado — flechas mueven el foco entre ítems, `Esc` cierra y devuelve foco. `[modelo: sonnet]`
-- [ ] 4.8 Implementar tooltip (`[data-tip]`) accesible por hover y focus, y componentes skeleton/empty-state. Verificación: tooltip visible en `focus-visible` sin uso de mouse. `[modelo: sonnet]`
-- [ ] 4.9 Agregar auditoría de colores hardcodeados (script que falla si aparece un hex/`rgb()`/`rgba()` fuera de la capa de tokens) al job de CI. Verificación: escenario "Auditoría estática sin hex hardcodeado" ejecuta en CI. `[modelo: sonnet]`
+- [x] 4.1 Implementar botón (`.btn` primary/secondary/danger/ghost, tamaños sm/lg/block, estados default/hover/focus-visible/active/disabled/loading) como componente React con ARIA. Verificación: escenario "Botón primario con estado de carga". `[modelo: sonnet]`
+- [x] 4.2 Implementar input/textarea/select (`.field`/`.input`/`.textarea`/`.select`) con label asociado, hint, error y `aria-describedby`/`aria-invalid`. Verificación: test de accesibilidad (label↔control, error anunciado). `[modelo: sonnet]`
+- [x] 4.3 Implementar tabla de datos densa (`.table-wrap`/`.table`/`.table--dense`) con soporte de columnas numéricas mono. Verificación: escenario "Tabla densa con datos monoespaciados". `[modelo: sonnet]`
+- [x] 4.4 Implementar panel/card (`.panel`, variantes flush/raised) y tag/badge-rol (`.tag`, `.badge-rol`). Verificación: variantes de `design/DESIGN-SYSTEM.md` §8.5/§8.6 renderizadas en el styleguide. `[modelo: sonnet]`
+- [x] 4.5 Implementar toast (`.toast-stack`/`.toast`) con `aria-live` y auto-cierre configurable (persistente en warn/danger). Verificación: test de comportamiento — toast warn/danger no se auto-cierra. `[modelo: sonnet]`
+- [x] 4.6 Implementar modal (`.overlay`/`.modal`) con trampa de foco, cierre por `Esc` y retorno de foco al disparador. Verificación: escenario "Modal con trampa de foco". `[modelo: sonnet]`
+- [x] 4.7 Implementar dropdown genérico (base para menú de usuario y campana) con navegación por flechas y `Esc`. Verificación: test de teclado — flechas mueven el foco entre ítems, `Esc` cierra y devuelve foco. `[modelo: sonnet]`
+- [x] 4.8 Implementar tooltip (`[data-tip]`) accesible por hover y focus, y componentes skeleton/empty-state. Verificación: tooltip visible en `focus-visible` sin uso de mouse. `[modelo: sonnet]`
+- [x] 4.9 Agregar auditoría de colores hardcodeados (script que falla si aparece un hex/`rgb()`/`rgba()` fuera de la capa de tokens) al job de CI. Verificación: escenario "Auditoría estática sin hex hardcodeado" ejecuta en CI. `[modelo: sonnet]`
 
 ## 5. Shell de aplicación (app-shell)
 

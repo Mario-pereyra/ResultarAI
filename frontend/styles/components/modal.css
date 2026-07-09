@@ -1,1 +1,52 @@
-/* Portado de design/mockups/tokens.css §5 — lo llena la tarea de su componente (d10 sección 4). */
+/* Portado VERBATIM de design/mockups/tokens.css §5.18 "Overlay + Modal"
+   (líneas 801-838). Tarea 4.6 de d10-design-system-shell. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background: var(--scrim);
+  display: grid;
+  place-items: center;
+  padding: var(--sp-4);
+}
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-3);
+  width: min(540px, 100%);
+  max-height: calc(100vh - 64px);
+  display: flex;
+  flex-direction: column;
+  z-index: var(--z-modal);
+}
+.modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--line);
+}
+.modal__title { font-family: var(--font-display); font-size: var(--fs-h4); font-weight: 600; margin: 0; }
+.modal__body { padding: var(--sp-5); overflow-y: auto; }
+.modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  padding: var(--sp-4) var(--sp-5);
+  border-top: 1px solid var(--line);
+}
+
+/* Responsive: portado de design/DESIGN-SYSTEM.md §8.8 ("<768 px el modal
+   toma todo el ancho menos 16 px"); el breakpoint de 768px es uno de los
+   3 valores literales documentados en §3.3 (móvil/tablet/desktop). */
+@media (max-width: 768px) {
+  .overlay { padding: var(--sp-2); }
+  .modal { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal { animation: none; }
+}

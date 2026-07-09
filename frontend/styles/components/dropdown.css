@@ -1,1 +1,111 @@
-/* Portado de design/mockups/tokens.css §5 — lo llena la tarea de su componente (d10 sección 4). */
+/* Tarea 4.7 de d10-design-system-shell — Dropdown genérico.
+   NOTA de trazabilidad: a diferencia del resto de styles/components/*.css,
+   design/mockups/tokens.css §5 NO define una clase `.dropdown`/`.menu`
+   reutilizable (verificado por grep: la única mención de "dropdown" en la
+   fuente es el token `--z-dropdown` y el comentario de la campana de
+   notificaciones en §5.26, que described un `.notif-panel` ad-hoc apoyado en
+   `.panel.panel--raised`, no un componente genérico). El inventario
+   (design/DESIGN-SYSTEM.md §56 Requirement "Inventario de componentes base")
+   sí exige un dropdown "patrón usado por el menú de usuario y la campana",
+   así que esta hoja lo define desde cero, consumiendo EXCLUSIVAMENTE los
+   tokens semánticos ya portados a styles/tokens.css — mismo criterio (radios,
+   sombras, bordes, tipografía) que design/mockups/tokens.css usa para sus
+   propios componentes — para que menú de usuario y campana (fuera de esta
+   tarea) puedan apoyarse en ella sin reinventar estilos. */
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Disparador por defecto: botón-ícono/texto neutro, mismas proporciones que
+   `.notif-bell` (36px, borde --line-strong, radio --r-sm) para que el
+   patrón sea intercambiable con la campana real cuando se construya. */
+.dropdown__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 36px;
+  min-width: 36px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-dim);
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+.dropdown__trigger:hover { color: var(--ink); border-color: var(--ink-faint); }
+.dropdown__trigger:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.dropdown__trigger[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
+.dropdown__trigger svg { width: 18px; height: 18px; flex: none; }
+
+/* Panel del menú: mismo tratamiento visual que `.panel.panel--raised`
+   (fondo --panel, borde --line, radio --r-lg, shadow-2) pero posicionado en
+   absoluto respecto del disparador, con el z-index de capa `--z-dropdown`
+   definido en styles/tokens.css §2 (Z-index). */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + var(--sp-2));
+  left: 0;
+  z-index: var(--z-dropdown);
+  min-width: 200px;
+  max-width: 320px;
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: var(--sp-2);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-2);
+  animation: dx-dropdown-in var(--dur-2) var(--ease-out);
+}
+.dropdown-menu--end { left: auto; right: 0; }
+
+.dropdown-menu__item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  border: 0;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out);
+}
+.dropdown-menu__item svg { width: 16px; height: 16px; flex: none; }
+.dropdown-menu__item:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.dropdown-menu__item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.dropdown-menu__item:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+.dropdown-menu__item--danger { color: var(--danger); }
+.dropdown-menu__item--danger:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
+
+.dropdown-menu__separator {
+  height: 1px;
+  margin: var(--sp-1) 0;
+  background: var(--line);
+  border: 0;
+}
+
+@keyframes dx-dropdown-in {
+  from { opacity: 0; transform: translateY(-4px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dropdown-menu { animation: none; }
+}

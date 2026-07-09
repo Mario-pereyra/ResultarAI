@@ -1,1 +1,28 @@
-/* Portado de design/mockups/tokens.css §5 — lo llena la tarea de su componente (d10 sección 4). */
+/* Portado VERBATIM de design/mockups/tokens.css §5.17 "Tooltip — informativo,
+   vía atributo data-tip" (líneas 778-799). Tarea 4.8 de d10-design-system-shell.
+   [data-tip]:hover Y [data-tip]:focus-visible ya cubren "accesible por hover
+   y focus" (design/DESIGN-SYSTEM.md §8.10: "hover y focus-visible — no solo
+   hover, teclado"): el componente React (Tooltip.tsx) solo estampa el
+   atributo data-tip sobre su hijo, no reimplementa la burbuja. */
+
+[data-tip] { position: relative; }
+[data-tip]:hover::after, [data-tip]:focus-visible::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-tooltip);
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-body);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  line-height: 1.35;
+  padding: 5px 9px;
+  border-radius: var(--r-sm);
+  white-space: nowrap;
+  max-width: 280px;
+  box-shadow: var(--shadow-2);
+  pointer-events: none;
+}

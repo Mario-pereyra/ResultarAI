@@ -1,1 +1,38 @@
-/* Portado de design/mockups/tokens.css §5 — lo llena la tarea de su componente (d10 sección 4). */
+/* Portado VERBATIM de design/mockups/tokens.css §5.11 "Skeleton — carga
+   progresiva" (líneas 640-656). Tarea 4.8 de d10-design-system-shell. */
+
+.skeleton {
+  display: block;
+  border-radius: var(--r-sm);
+  color: transparent !important;
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--ink) 7%, transparent) 25%,
+    color-mix(in srgb, var(--ink) 13%, transparent) 50%,
+    color-mix(in srgb, var(--ink) 7%, transparent) 75%);
+  background-size: 200% 100%;
+  animation: dx-shimmer 1.4s linear infinite;
+  user-select: none;
+  pointer-events: none;
+}
+.skeleton--text { height: 12px; }
+.skeleton--title { height: 20px; width: 50%; }
+.skeleton--block { height: 80px; }
+
+/* Contenedor del componente React (Skeleton.tsx): agrupa N líneas
+   .skeleton--text con el mismo espaciado de --sp-1 que el resto del
+   sistema usa entre líneas de texto relacionadas. No existe en la fuente
+   porque el mockup estático no necesita agrupar líneas dinámicamente. */
+.skeleton-group {
+  display: grid;
+  gap: var(--sp-1);
+}
+
+/* Animación de entrada (dx-shimmer), portada de design/mockups/tokens.css
+   "Animaciones" (línea 1132) porque es la única usada por este componente. */
+@keyframes dx-shimmer { to { background-position: -200% 0; } }
+
+/* Motion reducido: portado del bloque de tokens.css "Motion reducido"
+   (línea 1145-1148), acotado a .skeleton (única clase base de este archivo). */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}

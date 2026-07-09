@@ -1,1 +1,96 @@
-/* Portado de design/mockups/tokens.css §5 — lo llena la tarea de su componente (d10 sección 4). */
+/* Portado de design/mockups/tokens.css §5.5 "Formularios" (líneas 438-495):
+   .field, .field-label, .field-hint, .field-error, .input/.select/.textarea
+   y sus estados/modificadores. `.checkbox`/`.check-row` (líneas 497-514,
+   mismo §5.5 en la fuente) quedan FUERA de este archivo a propósito: no
+   forman parte del inventario de componentes de esta tarea (4.2 —
+   Field/Input/Textarea/Select) ni de ningún otro archivo de d10 sección 4;
+   se portan cuando algún change futuro necesite un componente Checkbox
+   propio.
+
+   DESVIACIÓN DOCUMENTADA respecto al portado verbatim (regla de la
+   auditoría de colores, tarea 4.9): la regla `.select` original embebe el
+   color del chevron como hex URL-encoded dentro del data-URI del SVG
+   (`stroke='%23808a9c'`, línea 490 de la fuente) — un valor de color
+   hardcodeado fuera de la capa de tokens, invisible para el regex de la
+   auditoría (`%23` no es `#`) pero igual de hardcodeado en espíritu. Un
+   data-URI de background-image es una cadena estática: no puede resolver
+   `var(--token)` ni heredar `currentColor` del elemento. Se reemplaza el
+   chevron embebido por un ícono SVG real en el componente React `Select`
+   (frontend/components/ui/select.tsx), pintado con `stroke="currentColor"`
+   y coloreado 100% vía token con la clase `.select-chevron` de abajo
+   (`color: var(--ink-faint)`, el mismo rol semántico — "metadatos,
+   placeholders" — que aproximaba el gris fijo original). Consistente con
+   design.md Decisión 1 / Riesgo 3 de d10-design-system-shell: "cualquier
+   estilo nuevo necesario se agrega primero a tokens.css-equivalente del
+   frontend, nunca inline". */
+
+.field { display: grid; gap: var(--sp-1); margin-bottom: var(--sp-4); }
+.field-label {
+  font-size: var(--fs-small);
+  font-weight: 600;
+  color: var(--ink);
+}
+.field-label .req { color: var(--danger); }
+.field-hint { font-size: var(--fs-caption); color: var(--ink-faint); }
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-caption);
+  font-weight: 500;
+  color: var(--danger);
+}
+
+.input, .select, .textarea {
+  width: 100%;
+  height: 36px;
+  padding: 0 var(--sp-3);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  transition: border-color var(--dur-1) var(--ease-out),
+              box-shadow var(--dur-1) var(--ease-out);
+}
+.textarea { height: auto; min-height: 88px; padding: var(--sp-2) var(--sp-3); resize: vertical; line-height: var(--lh-base); }
+.input::placeholder, .textarea::placeholder { color: var(--ink-faint); }
+.input:hover, .select:hover, .textarea:hover { border-color: color-mix(in srgb, var(--line-strong) 50%, var(--ink-faint)); }
+.input:focus-visible, .select:focus-visible, .textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring) 25%, transparent);
+}
+.input:disabled, .select:disabled, .textarea:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  background: color-mix(in srgb, var(--ink) 4%, var(--bg-raised));
+}
+.input.is-invalid, .select.is-invalid, .textarea.is-invalid { border-color: var(--danger); }
+.input.is-invalid:focus-visible, .select.is-invalid:focus-visible, .textarea.is-invalid:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 25%, transparent);
+}
+.input--mono { font-family: var(--font-mono); font-size: var(--fs-small); }
+
+/* .select: portado sin `background-image`/`background-position` (el
+   chevron embebido de la fuente) — ver nota de cabecera. `appearance: none`
+   + `padding-right` se conservan para dejar espacio al ícono real que
+   agrega el componente React. */
+.select {
+  appearance: none;
+  padding-right: var(--sp-7);
+  cursor: pointer;
+}
+
+/* Wrapper + ícono del chevron del Select (no están en la fuente: sustituyen
+   el chevron embebido en el data-URI, ver nota de cabecera). */
+.select-wrap { position: relative; display: block; }
+.select-chevron {
+  position: absolute;
+  top: 50%;
+  right: var(--sp-3);
+  transform: translateY(-50%);
+  color: var(--ink-faint);
+  pointer-events: none;
+}

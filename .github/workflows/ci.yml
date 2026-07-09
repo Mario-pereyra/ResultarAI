@@ -165,6 +165,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Audit colors
+        run: npm run audit:colors
+
       - name: Typecheck
         run: npm run typecheck
 

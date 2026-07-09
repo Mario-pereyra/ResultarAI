@@ -1,1 +1,71 @@
-/* Portado de design/mockups/tokens.css §5 — lo llena la tarea de su componente (d10 sección 4). */
+/* Portado VERBATIM de design/mockups/tokens.css §5.10 "Toast" (líneas 606-638).
+   Tarea 4.5 de d10-design-system-shell. Sin hex/rgb: todo color viene de
+   styles/tokens.css (--info/--money/--warn/--danger/--panel/--line/...). */
+
+.toast-stack {
+  position: fixed;
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  z-index: var(--z-toast);
+  display: grid;
+  gap: var(--sp-2);
+  width: min(360px, calc(100vw - 32px));
+}
+
+.toast {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--sp-3);
+  align-items: start;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--info);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  box-shadow: var(--shadow-2);
+  animation: dx-toast-in var(--dur-3) var(--ease-out);
+}
+.toast__icon { color: var(--info); display: flex; margin-top: 2px; }
+.toast__icon svg { width: 16px; height: 16px; }
+.toast__title { font-size: var(--fs-small); font-weight: 600; margin: 0; }
+.toast__msg { font-size: var(--fs-caption); color: var(--ink-dim); margin: 2px 0 0; }
+.toast--ok     { border-left-color: var(--money); }
+.toast--ok     .toast__icon { color: var(--money); }
+.toast--warn   { border-left-color: var(--warn); }
+.toast--warn   .toast__icon { color: var(--warn); }
+.toast--danger { border-left-color: var(--danger); }
+.toast--danger .toast__icon { color: var(--danger); }
+
+/* Botón de cierre manual del toast (no está en la fuente porque el mockup
+   estático no lo necesita; el componente React sí ofrece cierre manual —
+   ver frontend/components/ui/Toast.tsx). Solo tokens, sin color literal. */
+.toast__close {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 2px;
+  margin: -2px -2px 0 0;
+  color: var(--ink-faint);
+  cursor: pointer;
+  border-radius: var(--r-xs);
+  display: inline-flex;
+}
+.toast__close:hover { color: var(--ink); }
+.toast__close:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
+.toast__close svg { width: 12px; height: 12px; }
+
+/* Animación de entrada (dx-toast-in), portada de design/mockups/tokens.css
+   "Animaciones" (línea 1138-1141) porque es la única usada por este
+   componente; dx-spin/dx-pulse/dx-shimmer se portan junto a los componentes
+   que los usan (botón/skeleton) para evitar que este archivo dependa de
+   selectores fuera de su propiedad. */
+@keyframes dx-toast-in {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+/* Motion reducido: portado del bloque de tokens.css "Motion reducido"
+   (línea 1145-1148), acotado a .toast (única clase de este archivo). */
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+}

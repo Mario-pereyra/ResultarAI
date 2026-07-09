@@ -1,1 +1,93 @@
-/* Portado de design/mockups/tokens.css §5 — lo llena la tarea de su componente (d10 sección 4). */
+/* Portado VERBATIM de design/mockups/tokens.css §5.2 "Botones" (líneas
+   296-373). Sin valores de color hardcodeados en la fuente: todo llega vía
+   var(--token) o `currentColor`, así que no hubo nada que reemplazar aquí
+   (tarea 4.1, d10-design-system-shell). */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: 36px;
+  padding: 0 var(--sp-4);
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  letter-spacing: .02em;
+  line-height: 1;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color var(--dur-1) var(--ease-out),
+              border-color var(--dur-1) var(--ease-out),
+              color var(--dur-1) var(--ease-out),
+              filter var(--dur-1) var(--ease-out),
+              box-shadow var(--dur-1) var(--ease-out);
+}
+.btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.btn svg { width: 16px; height: 16px; flex: none; }
+
+.btn--primary { background: var(--accent-fill); color: var(--accent-ink); }
+.btn--primary:hover { filter: brightness(1.08); box-shadow: var(--shadow-1); }
+.btn--primary:active { filter: brightness(.95); }
+
+.btn--secondary {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.btn--secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+.btn--secondary:active { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+
+.btn--danger { background: var(--danger); color: var(--danger-ink); }
+.btn--danger:hover { filter: brightness(1.08); }
+.btn--danger:active { filter: brightness(.95); }
+
+.btn--ghost { background: transparent; color: var(--ink-dim); }
+.btn--ghost:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.btn--ghost:active { background: color-mix(in srgb, var(--ink) 10%, transparent); }
+
+.btn:disabled, .btn.is-disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: none;
+}
+
+.btn--loading { pointer-events: none; position: relative; color: transparent !important; }
+.btn--loading::after {
+  content: "";
+  position: absolute;
+  width: 14px; height: 14px;
+  border: 2px solid;
+  border-color: currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: dx-spin .7s linear infinite;
+}
+.btn--primary.btn--loading::after { border-color: var(--accent-ink); border-right-color: transparent; }
+.btn--danger.btn--loading::after { border-color: var(--danger-ink); border-right-color: transparent; }
+.btn--secondary.btn--loading::after,
+.btn--ghost.btn--loading::after { border-color: var(--ink-dim); border-right-color: transparent; }
+
+.btn--sm { height: 28px; padding: 0 var(--sp-3); font-size: var(--fs-caption); }
+.btn--lg { height: 44px; padding: 0 var(--sp-5); font-size: var(--fs-body); }
+.btn--block { display: flex; width: 100%; }
+
+/* Animación del spinner de carga (referenciada por .btn--loading::after
+   arriba). Portada VERBATIM de design/mockups/tokens.css sección
+   "Animaciones" (línea 1131); se define aquí porque `.btn` es el único
+   componente de las tareas 4.1-4.4 que la usa (los demás — dx-shimmer,
+   dx-pulse, dx-toast-in — los portan skeleton.css/toast.css, fuera de esta
+   tarea). NOTA: la fuente deja explícito en su bloque
+   `@media (prefers-reduced-motion: reduce)` que "el spinner de carga se
+   conserva por ser feedback funcional" — a propósito NO se apaga esta
+   animación bajo motion reducido. */
+@keyframes dx-spin { to { transform: rotate(360deg); } }

@@ -1,1 +1,20 @@
-/* Portado de design/mockups/tokens.css §5 — lo llena la tarea de su componente (d10 sección 4). */
+/* Portado VERBATIM de design/mockups/tokens.css §5.12 "Empty state"
+   (líneas 658-672). Tarea 4.8 de d10-design-system-shell.
+   `.empty-state` ya es `display: grid; gap: var(--sp-2)`, así que el CTA
+   opcional (EmptyState.tsx, prop `action`) hereda el mismo espaciado por ser
+   un hijo más del grid: no hace falta una clase `.empty-state__action`. */
+
+.empty-state {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-2);
+  text-align: center;
+  padding: var(--sp-9) var(--sp-6);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-lg);
+  color: var(--ink-dim);
+}
+.empty-state__icon { color: var(--ink-faint); }
+.empty-state__icon svg { width: 32px; height: 32px; }
+.empty-state__title { font-size: var(--fs-h4); font-weight: 600; color: var(--ink); margin: 0; }
+.empty-state__hint { font-size: var(--fs-small); max-width: 42ch; margin: 0; }
