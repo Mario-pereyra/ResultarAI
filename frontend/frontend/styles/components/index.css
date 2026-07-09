@@ -1,0 +1,14 @@
+/* Índice de estilos de componentes base (d10 sección 4).
+   Cada archivo porta las clases de su componente desde design/mockups/tokens.css §5.
+   Los agentes/tareas SOLO editan su propio archivo; este índice es fijo. */
+@import "./button.css";
+@import "./fields.css";
+@import "./table.css";
+@import "./panel.css";
+@import "./tag.css";
+@import "./toast.css";
+@import "./modal.css";
+@import "./dropdown.css";
+@import "./tooltip.css";
+@import "./skeleton.css";
+@import "./empty-state.css";

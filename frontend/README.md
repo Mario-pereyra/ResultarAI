@@ -52,6 +52,15 @@ Vitest + `@testing-library/react` + `@testing-library/user-event`, entorno `jsdo
 
 Los Server Components `async` (como `app/page.tsx`, que llama `getTranslations`) no se testean directamente con Testing Library/Vitest: dependen del runtime de Next.js (AsyncLocalStorage del plugin de next-intl) para resolver el catálogo, algo que no está disponible fuera de un render real de Next.js. Por eso la UI se extrae a un componente presentacional sin `async` ni llamadas de servidor (ej. `app/home-content.tsx`), que sí se testea directamente (`app/home-content.test.tsx`). Este patrón se repite para las vistas que agreguen `d11`–`d21`.
 
+## Tokens, fuentes y tema (tareas 3.3/3.4 de `d10-design-system-shell`)
+
+- `styles/tokens.css` (portado 1:1 de `design/mockups/tokens.css` §2/§3, más una sección de utilidades al final) se importa globalmente en `app/layout.tsx`, antes de `app/globals.css`. `globals.css` es solo reset + base de documento: consume las custom properties de tokens (`var(--bg)`, `var(--font-body)`, etc.) pero nunca redefine sus valores.
+- **Fuentes**: Chakra Petch, Saira y JetBrains Mono se cargan con `next/font/google` en `app/layout.tsx` (self-hosted, sin request a Google Fonts en runtime), cada una expuesta como CSS variable (`--font-chakra-petch`, `--font-saira`, `--font-jetbrains-mono`) aplicada como `className` en `<html>`. `styles/tokens.css` las consume como primer valor de `--font-display`/`--font-body`/`--font-mono` (con el nombre literal de Google Fonts como fallback del propio `var()`), así que ningún componente necesita saber que la fuente viene de `next/font`.
+- **Contrato de tema/brand (para `5.4-selector-tema-brand` y cualquier código que lea/escriba el tema)**:
+  - Cookie `theme`, valores `"dark"` | `"light"`. Sin cookie → `"dark"` (default de instancia).
+  - `data-brand` está fijo en `"default"` en este change (no hay cookie de brand ni selector todavía); `5.4` debe sumar una cookie `brand` análoga con el mismo mecanismo si agrega selección de marca.
+  - Todo se resuelve en `app/layout.tsx` (Server Component raíz) con `cookies()` de `next/headers`, estampando `<html data-theme={...} data-brand="default">` directamente en el HTML servido. **Cero** scripts inline de theming y **cero** `useEffect` para el estado inicial: el SSR ya lo resuelve, así que no hay flash de tema incorrecto (FOUC). Cualquier switcher de tema debe escribir la cookie (p. ej. vía Server Action o route handler) y dejar que una recarga/navegación vuelva a pasar por este mismo Server Component — no debe mutar `data-theme` desde el cliente con JS.
+
 ## Decisiones no obvias de este scaffold
 
 - **Next.js 16.2.10 + React 19.2.4**: versiones estables más recientes disponibles en npm al crear el scaffold (2026-07-09).

@@ -20,15 +20,28 @@
   Default: dark·default (cuando html no tiene atributos explícitos).
 */
 
-/* ── Fuentes (Google Fonts) ────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Saira:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+/* ── Fuentes (tarea 3.3, d10-design-system-shell) ──────────────────────────────
+   El `@import` a Google Fonts del mockup original (Chakra+Petch:wght@500;600;700
+   + Saira:wght@400;500;600;700 + JetBrains+Mono:wght@400;500;700) queda
+   removido a propósito: `next/font/google` (ver frontend/app/layout.tsx) ya
+   autohospeda esas mismas familias/pesos con las CSS custom properties
+   --font-chakra-petch / --font-saira / --font-jetbrains-mono aplicadas en
+   <html>. Mantener el `@import` duplicaría la descarga (una vía next/font,
+   otra vía red externa a Google) y reintroduciría exactamente el parpadeo
+   (FOUC) que next/font existe para evitar. */
 
 /* ── Sección 2: Tokens globales (independientes de tema y marca) ──────────── */
 :root {
-  /* Tipografía: familias */
-  --font-display: "Chakra Petch", "Saira", system-ui, sans-serif; /* títulos, kickers */
-  --font-body: "Saira", system-ui, sans-serif;                    /* texto de UI */
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;         /* datos, números, código */
+  /* Tipografía: familias.
+     Estrategia (tarea 3.3): `var(--font-x, "Nombre literal")` — primero la
+     CSS variable que expone next/font/google (self-hosted, sin red externa);
+     si no estuviera definida, cae al nombre literal de Google Fonts ya
+     portado del mockup, seguido de la misma cadena de fallback original. Los
+     VALORES semánticos (qué familia cumple cada rol) no cambian: solo se
+     ajusta el mecanismo de resolución de la fuente concreta cargada. */
+  --font-display: var(--font-chakra-petch, "Chakra Petch"), "Saira", system-ui, sans-serif; /* títulos, kickers */
+  --font-body: var(--font-saira, "Saira"), system-ui, sans-serif;                    /* texto de UI */
+  --font-mono: var(--font-jetbrains-mono, "JetBrains Mono"), ui-monospace, monospace;         /* datos, números, código */
 
   /* Tipografía: escala modular 12→32 px (ratio ≈1.2) */
   --fs-caption: 12px;  /* metadatos, captions, celdas auxiliares */
@@ -204,3 +217,22 @@ html[data-theme="light"][data-brand="totvs"] {
   --shadow-2: 0 4px 14px rgba(0, 34, 51, .14);
   --shadow-3: 0 12px 40px rgba(0, 34, 51, .20);
 }
+
+/* ── Utilidades (tarea 3.3, d10-design-system-shell) ─────────────────────────
+   .mono y .money: portados verbatim de design/mockups/tokens.css §5.28
+   "Utilidades" (líneas 1115-1119 de la fuente). El resto de §5 (componentes:
+   .btn, .input, .table, etc.) se porta en las tareas de la sección 4 de
+   tasks.md, no en esta.
+
+   .num: NO existe como utilidad global en la fuente — solo aparece acoplada
+   a componentes concretos (`.table .num`, `.quota-row .num`; líneas 547 y 604
+   de design/mockups/tokens.css), ambas con `font-family: var(--font-mono)` +
+   `font-variant-numeric: tabular-nums`. Se generaliza aquí como utilidad
+   standalone (mismo font-mono + tabular-nums, alineada a la derecha como
+   corresponde a una columna numérica) para que cualquier celda de dato
+   operativo pueda usarla ya desde esta tarea; cuando el componente Tabla
+   (sección 4) porte `.table .num`, ese selector más específico sigue
+   aplicando igual dentro de `.table`. */
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
+.money { font-family: var(--font-mono); color: var(--money); font-variant-numeric: tabular-nums; }

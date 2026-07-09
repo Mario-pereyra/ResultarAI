@@ -1,7 +1,12 @@
 /*
- * Reset mínimo del scaffold. Los tokens reales (color, tipografía,
- * espaciado, radios, motion) se portan desde design/mockups/tokens.css
- * en las tareas de la sección "Tokens (design-system)" de este change.
+ * Reset mínimo del scaffold + base de documento (tarea 3.4,
+ * d10-design-system-shell). Los tokens (color, tipografía, espaciado,
+ * radios, motion) viven en ../styles/tokens.css (importado antes que este
+ * archivo en app/layout.tsx) — este archivo SOLO consume esas custom
+ * properties (var(--bg), var(--font-body), etc.), nunca redefine sus
+ * valores. El resto de la sección "§4. Base de documento" de
+ * design/mockups/tokens.css (h1-h4, código, enlaces con foco, etc.) llega
+ * con los componentes base de la sección 4 de tasks.md.
  */
 
 *,
@@ -19,8 +24,21 @@ body {
   overflow-x: hidden;
 }
 
+html {
+  background: var(--bg);
+}
+
 body {
   min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background-color var(--dur-2) var(--ease-in-out),
+    color var(--dur-2) var(--ease-in-out);
 }
 
 a {
