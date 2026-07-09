@@ -3,14 +3,18 @@
 from typing import Any
 
 from resultarai.core.policy import PolicyDecision
-from resultarai.core.ports import LLMPort, StatePort, ToolPort, TracePort
+from resultarai.core.ports import LLMPort, LLMResponse, StatePort, ToolPort, TracePort
 
 
 class DummyLLM:
     """Mock LLMPort."""
 
-    def generate(self, prompt: str, **kwargs: Any) -> str:
-        return f"generated from {prompt}"
+    def generate(self, prompt: str, **kwargs: Any) -> LLMResponse:
+        return LLMResponse(
+            text=f"generated from {prompt}",
+            model_profile_id="dummy-model",
+            is_alternate_model=False,
+        )
 
 
 class DummyTool:
@@ -55,7 +59,9 @@ def test_protocols_conformance() -> None:
     trace: TracePort = DummyTrace()
     state: StatePort = DummyState()
 
-    assert llm.generate("hello") == "generated from hello"
+    response = llm.generate("hello")
+    assert isinstance(response, LLMResponse)
+    assert response.text == "generated from hello"
 
     decision = PolicyDecision(
         effect="allow",
