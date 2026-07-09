@@ -13,6 +13,7 @@ dependencies = [
     "litellm>=1.91.1",
     "langgraph>=1.2.8",
     "langfuse>=4.13.2",
+    "mcp==1.28.1",
 ]
 
 [project.scripts]
@@ -97,7 +98,7 @@ source_modules = ["resultarai.core"]
 forbidden_modules = [
     "resultarai.adapters", "resultarai.app",
     "langgraph", "litellm", "langfuse", "fastapi", "httpx",
-    "sqlalchemy", "alembic", "psycopg", "uuid6",
+    "sqlalchemy", "alembic", "psycopg", "uuid6", "mcp",
 ]
 
 [[tool.importlinter.contracts]]
