@@ -8,6 +8,7 @@ from resultarai.core.ports.llm_errors import (
 )
 from resultarai.core.ports.policy import PolicyPort
 from resultarai.core.ports.retrieval import NullRetrievalAdapter, RetrievalPort
+from resultarai.core.ports.skill_package import SkillPackagePort
 from resultarai.core.ports.state import StatePort
 from resultarai.core.ports.tool import ToolPort
 from resultarai.core.ports.trace import TracePort
@@ -21,6 +22,7 @@ __all__ = [
     "NullRetrievalAdapter",
     "PolicyPort",
     "RetrievalPort",
+    "SkillPackagePort",
     "StatePort",
     "ToolPort",
     "TracePort",
