@@ -10,6 +10,7 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 from resultarai.adapters.persistence_postgres.connection import get_db_session
 from resultarai.adapters.persistence_postgres.models import (
     Attachment,
+    AuditLog,
     CompactionMarker,
     Extraction,
     Message,
@@ -25,7 +26,7 @@ def cleanup_db() -> Generator[None, None, None]:
         session.execute(
             text(
                 "TRUNCATE TABLE compaction_markers, messages, sessions, "
-                "extractions, attachments, message_attachments CASCADE"
+                "extractions, attachments, message_attachments, audit_logs CASCADE"
             )
         )
         session.commit()
@@ -36,7 +37,7 @@ def cleanup_db() -> Generator[None, None, None]:
         session.execute(
             text(
                 "TRUNCATE TABLE compaction_markers, messages, sessions, "
-                "extractions, attachments, message_attachments CASCADE"
+                "extractions, attachments, message_attachments, audit_logs CASCADE"
             )
         )
         session.commit()
@@ -637,3 +638,154 @@ def test_retention_purging() -> None:
         db_ma = db_session.get(MessageAttachment, (msg_id, att_id))
         assert db_ma is not None
         assert db_ma.inserted_text == "Snippet of raw.txt used in LLM prompt"
+
+
+def test_audit_log_fields_persistence() -> None:
+    """Inserta un registro completo de auditoría, lo recupera y comprueba que todos
+
+    los campos coincidan perfectamente.
+    """
+    timestamp = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+    params = {"sensitive_param": "****", "another_param": "value"}
+
+    with get_db_session() as session:
+        log = AuditLog(
+            user="mario1w3",
+            tenant="tenant-test",
+            agent="default_chat",
+            skill="erp_query",
+            tool="read_protheus",
+            operation_type="read",
+            timestamp=timestamp,
+            environment="production",
+            effect="allow",
+            applied_policy="policy-erp-access",
+            reason="User has permissions and parameters are safe",
+            parameters=params,
+            result_summary="Successfully queried ERP database",
+            cost=0.0015,
+            trace_id="trace-abc-123",
+        )
+        session.add(log)
+        session.flush()
+        log_id = log.id
+
+    with get_db_session() as session:
+        db_log = session.get(AuditLog, log_id)
+        assert db_log is not None
+        assert db_log.id == log_id
+        assert db_log.user == "mario1w3"
+        assert db_log.tenant == "tenant-test"
+        assert db_log.agent == "default_chat"
+        assert db_log.skill == "erp_query"
+        assert db_log.tool == "read_protheus"
+        assert db_log.operation_type == "read"
+        assert abs((db_log.timestamp - timestamp).total_seconds()) < 1.0
+        assert db_log.environment == "production"
+        assert db_log.effect == "allow"
+        assert db_log.applied_policy == "policy-erp-access"
+        assert db_log.reason == "User has permissions and parameters are safe"
+        assert db_log.parameters == params
+        assert db_log.corrects is None
+        assert db_log.result_summary == "Successfully queried ERP database"
+        assert db_log.cost == 0.0015
+        assert db_log.trace_id == "trace-abc-123"
+
+
+def test_audit_log_immutability() -> None:
+    """Comprueba que intentar hacer UPDATE o DELETE sobre un registro en `audit_logs`
+
+    falle arrojando DBAPIError.
+    """
+    with get_db_session() as session:
+        log = AuditLog(
+            user="mario1w3",
+            tenant="tenant-test",
+            agent="default_chat",
+            skill="erp_query",
+            tool="read_protheus",
+            operation_type="read",
+            environment="production",
+            effect="allow",
+            applied_policy="policy-erp-access",
+            reason="Reason text",
+            parameters={"param": "value"},
+        )
+        session.add(log)
+        session.flush()
+        log_id = log.id
+
+    # Try UPDATE
+    def try_update() -> None:
+        with get_db_session() as session:
+            db_log = session.get(AuditLog, log_id)
+            assert db_log is not None
+            db_log.reason = "Modified reason"
+
+    with pytest.raises(DBAPIError) as exc_info:
+        try_update()
+    err_msg = str(exc_info.value)
+    assert "prevent_update_delete_audit_logs" in err_msg or "append-only" in err_msg
+
+    # Try DELETE
+    def try_delete() -> None:
+        with get_db_session() as session:
+            db_log = session.get(AuditLog, log_id)
+            assert db_log is not None
+            session.delete(db_log)
+
+    with pytest.raises(DBAPIError) as exc_info:
+        try_delete()
+    err_msg = str(exc_info.value)
+    assert "prevent_update_delete_audit_logs" in err_msg or "append-only" in err_msg
+
+
+def test_audit_log_correction_link() -> None:
+    """Inserta un registro inicial, inserta un segundo registro con `corrects`
+
+    apuntando al id del inicial, lo recupera y comprueba la referencia.
+    """
+    with get_db_session() as session:
+        initial_log = AuditLog(
+            user="mario1w3",
+            tenant="tenant-test",
+            agent="default_chat",
+            skill="erp_query",
+            tool="read_protheus",
+            operation_type="read",
+            environment="production",
+            effect="deny",
+            applied_policy="policy-erp-access",
+            reason="Blocked due to suspicious parameter",
+            parameters={"param": "suspicious"},
+        )
+        session.add(initial_log)
+        session.flush()
+        initial_id = initial_log.id
+
+    with get_db_session() as session:
+        correction_log = AuditLog(
+            user="mario1w3",
+            tenant="tenant-test",
+            agent="default_chat",
+            skill="erp_query",
+            tool="read_protheus",
+            operation_type="read",
+            environment="production",
+            effect="allow",
+            applied_policy="policy-erp-access",
+            reason="Corrected: parameter was safe, initial block was false positive",
+            parameters={"param": "suspicious_but_actually_safe"},
+            corrects=initial_id,
+        )
+        session.add(correction_log)
+        session.flush()
+        correction_id = correction_log.id
+
+    with get_db_session() as session:
+        db_correction = session.get(AuditLog, correction_id)
+        assert db_correction is not None
+        assert db_correction.corrects == initial_id
+        assert db_correction.corrected_event is not None
+        assert db_correction.corrected_event.id == initial_id
+        assert db_correction.corrected_event.effect == "deny"

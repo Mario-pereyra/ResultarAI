@@ -9,6 +9,7 @@ from sqlalchemy import (
     Boolean,
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
@@ -193,3 +194,34 @@ class MessageAttachment(Base):
     # Relationships
     message: Mapped["Message"] = relationship("Message")
     attachment: Mapped["Attachment"] = relationship("Attachment")
+
+
+class AuditLog(Base):
+    """Represents an audit log entry for security and governance decisions."""
+
+    __tablename__ = "audit_logs"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid6.uuid7)
+    user: Mapped[str] = mapped_column(String(255), nullable=False)
+    tenant: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    agent: Mapped[str] = mapped_column(String(255), nullable=False)
+    skill: Mapped[str] = mapped_column(String(255), nullable=False)
+    tool: Mapped[str] = mapped_column(String(255), nullable=False)
+    operation_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    timestamp: Mapped[datetime.datetime] = mapped_column(
+        DateTime, nullable=False, default=get_utc_now
+    )
+    environment: Mapped[str] = mapped_column(String(255), nullable=False)
+    effect: Mapped[str] = mapped_column(String(50), nullable=False)
+    applied_policy: Mapped[str] = mapped_column(String(255), nullable=False)
+    reason: Mapped[str] = mapped_column(Text, nullable=False)
+    parameters: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    corrects: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("audit_logs.id"), nullable=True
+    )
+    result_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cost: Mapped[float | None] = mapped_column(Float, nullable=True)
+    trace_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Relationships
+    corrected_event: Mapped["AuditLog | None"] = relationship("AuditLog", remote_side=[id])
