@@ -20,7 +20,7 @@
 
 - [x] 3.1 Escribir los YAML de fábrica del Agent `default_chat` (general, sin nombre comercial, `can_execute_tools_directly: false`, `deny_by_default`), 1 Skill de ejemplo y 1 Tool de ejemplo que referencia un MCP server de ejemplo. Verificación: el CLI de validación (tarea 4.1) los reporta válidos con exit code 0. `[modelo: haiku]`
 - [x] 3.2 Escribir los YAML de fábrica de las Policies genéricas (deny-by-default + `allow` de lecturas de ejemplo), el Routing default y el Eval Template placeholder. Verificación: el CLI de validación los reporta válidos y sus referencias cruzadas resuelven. `[modelo: haiku]`
-- [ ] 3.3 Escribir el test de contrato que carga los manifiestos de fábrica en los Registries y verifica referencias cruzadas, regla de oro de `default_chat` y clasificación de la Tool de ejemplo. Verificación: `tests/contracts/test_factory_manifests.py` en verde (cubre el requirement "Manifiestos de fábrica de ejemplo cargables"). `[modelo: sonnet]`
+- [x] 3.3 Escribir el test de contrato que carga los manifiestos de fábrica en los Registries y verifica referencias cruzadas, regla de oro de `default_chat` y clasificación de la Tool de ejemplo. Verificación: `tests/contracts/test_factory_manifests.py` en verde (cubre el requirement "Manifiestos de fábrica de ejemplo cargables"). `[modelo: sonnet]`
 
 ## 4. Validación por CLI, arranque fail-fast y CI
 
