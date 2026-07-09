@@ -19,6 +19,7 @@ const labels: TopbarLabels = {
   themeToDark: "Cambiar a tema oscuro",
   notifications: "Notificaciones",
   notificationsEmpty: "Sin novedades por ahora",
+  notificationsAriaLabel: "Notificaciones, sin novedades",
   userMenuLabel: "Menú de usuario: lucia, rol Funcional",
   myWorkspace: "Mi espacio",
   theme: "Tema",
@@ -26,18 +27,27 @@ const labels: TopbarLabels = {
   roleLabel: "Funcional",
 };
 
-function sessionFor(role: SessionContextValue["user"]["role"], name: string): SessionContextValue {
+function sessionFor(
+  role: SessionContextValue["user"]["role"],
+  name: string,
+  unreadNotifications = 0,
+): SessionContextValue {
   return {
     user: { name, role },
     gateway: { status: "ok" },
     pendingApprovals: 0,
+    unreadNotifications,
     capabilities: capabilitiesForRole(role),
   };
 }
 
-function renderTopbar(role: SessionContextValue["user"]["role"] = "funcional", name = "lucia") {
+function renderTopbar(
+  role: SessionContextValue["user"]["role"] = "funcional",
+  name = "lucia",
+  unreadNotifications = 0,
+) {
   return render(
-    <SessionProvider value={sessionFor(role, name)}>
+    <SessionProvider value={sessionFor(role, name, unreadNotifications)}>
       <Topbar theme="dark" labels={{ ...labels, roleLabel: "Funcional" }} onOpenDrawer={vi.fn()} />
     </SessionProvider>,
   );
@@ -92,5 +102,82 @@ describe("Topbar", () => {
 
     expect(fetch).toHaveBeenCalledWith("/api/theme", { method: "POST" });
     expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  describe('escenario "Botón con texto 25% más largo no rompe el layout" (tarea 6.2)', () => {
+    it("un nombre de usuario un 25% más largo se renderiza completo en .shell-topbar__user-name", () => {
+      const original = "lucia";
+      const inflated = `${original}${"~".repeat(Math.ceil(original.length * 0.25))}`;
+
+      const { container } = renderTopbar("funcional", inflated);
+
+      const nameEl = container.querySelector(".shell-topbar__user-name");
+      expect(nameEl?.textContent).toBe(inflated);
+    });
+  });
+
+  describe('escenario "Contador de notificaciones no leídas": plural ICU en la campana (tarea 6.3)', () => {
+    it("sin no leídas: el botón usa el nombre accesible interpolado en 0 y no muestra badge visible", () => {
+      const { container } = renderTopbar("funcional", "lucia", 0);
+
+      expect(
+        screen.getByRole("button", { name: "Notificaciones, sin novedades" }),
+      ).not.toBeNull();
+      expect(container.querySelector(".notif-bell__count")).toBeNull();
+    });
+
+    it("con 1 no leída: el nombre accesible interpolado en singular y el badge muestra 1", () => {
+      const { container } = render(
+        <SessionProvider
+          value={{
+            user: { name: "dario", role: "tecnico" },
+            gateway: { status: "ok" },
+            pendingApprovals: 0,
+            unreadNotifications: 1,
+            capabilities: capabilitiesForRole("tecnico"),
+          }}
+        >
+          <Topbar
+            theme="dark"
+            labels={{
+              ...labels,
+              roleLabel: "Técnico",
+              notificationsAriaLabel: "Notificaciones, 1 no leída",
+            }}
+            onOpenDrawer={vi.fn()}
+          />
+        </SessionProvider>,
+      );
+
+      expect(screen.getByRole("button", { name: "Notificaciones, 1 no leída" })).not.toBeNull();
+      expect(container.querySelector(".notif-bell__count")?.textContent).toBe("1");
+    });
+
+    it("con N no leídas: el nombre accesible interpolado en plural y el badge muestra el número", () => {
+      const { container } = render(
+        <SessionProvider
+          value={{
+            user: { name: "marcos", role: "admin" },
+            gateway: { status: "ok" },
+            pendingApprovals: 0,
+            unreadNotifications: 4,
+            capabilities: capabilitiesForRole("admin"),
+          }}
+        >
+          <Topbar
+            theme="dark"
+            labels={{
+              ...labels,
+              roleLabel: "Admin",
+              notificationsAriaLabel: "Notificaciones, 4 no leídas",
+            }}
+            onOpenDrawer={vi.fn()}
+          />
+        </SessionProvider>,
+      );
+
+      expect(screen.getByRole("button", { name: "Notificaciones, 4 no leídas" })).not.toBeNull();
+      expect(container.querySelector(".notif-bell__count")?.textContent).toBe("4");
+    });
   });
 });

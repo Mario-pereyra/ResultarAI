@@ -19,12 +19,20 @@ describe("dev-session (provider de desarrollo del SessionContext, tarea 5.1)", (
     const admin = resolveDevSession("admin", undefined);
     expect(admin.user).toEqual({ name: "marcos", role: "admin" });
     expect(admin.pendingApprovals).toBe(3);
+    expect(admin.unreadNotifications).toBe(4);
     expect(admin.gateway.status).toBe("ok");
     expect(admin.capabilities).toContain("administracion");
 
     const funcional = resolveDevSession(undefined, "offline");
     expect(funcional.user).toEqual({ name: "lucia", role: "funcional" });
     expect(funcional.gateway.status).toBe("offline");
+    expect(funcional.unreadNotifications).toBe(1);
     expect(funcional.capabilities).not.toContain("administracion");
+  });
+
+  it('escenario "Contador de notificaciones no leídas" (tarea 6.3): valores mock por rol, mismos que design/mockups/03-shell.html', () => {
+    expect(resolveDevSession("funcional", undefined).unreadNotifications).toBe(1);
+    expect(resolveDevSession("tecnico", undefined).unreadNotifications).toBe(2);
+    expect(resolveDevSession("admin", undefined).unreadNotifications).toBe(4);
   });
 });

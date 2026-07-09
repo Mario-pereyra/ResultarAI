@@ -66,6 +66,9 @@ export default async function ShellLayout({ children }: { children: ReactNode })
       themeToDark: t("topbar.themeToDark"),
       notifications: t("topbar.notifications"),
       notificationsEmpty: t("topbar.notificationsEmpty"),
+      notificationsAriaLabel: t("topbar.notificationsAriaLabel", {
+        count: session.unreadNotifications,
+      }),
       userMenuLabel: t("topbar.userMenuLabel", { name: session.user.name, role: roleLabel }),
       myWorkspace: t("topbar.myWorkspace"),
       theme: t("topbar.theme"),

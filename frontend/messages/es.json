@@ -40,6 +40,7 @@
       "themeToDark": "Cambiar a tema oscuro",
       "notifications": "Notificaciones",
       "notificationsEmpty": "Sin novedades por ahora",
+      "notificationsAriaLabel": "{count, plural, =0 {Notificaciones, sin novedades} one {Notificaciones, # no leída} other {Notificaciones, # no leídas}}",
       "userMenuLabel": "Menú de usuario: {name}, rol {role}",
       "myWorkspace": "Mi espacio",
       "theme": "Tema",
@@ -57,6 +58,152 @@
       "technicalWhy": "El gateway del modelo no está respondiendo. El resto del shell sigue funcionando.",
       "retry": "Reintentar",
       "retrying": "Reintentando…"
+    }
+  },
+  "Styleguide": {
+    "kicker": "Sistema de diseño · v1.0",
+    "title": "Styleguide de componentes",
+    "intro": "Página de verificación visual de tokens.css y de los componentes base. Probá las 4 combinaciones con el switcher.",
+    "devNotice": "Ruta de desarrollo — no está en el sidebar ni pensada para producción.",
+    "activeCombo": "Combinación activa: {theme} · {brand}",
+    "switcher": {
+      "groupLabel": "Vista previa: cambiar tema y marca",
+      "themeButton": "Tema: {theme}",
+      "brandButton": "Marca: {brand}"
+    },
+    "themeNames": {
+      "dark": "oscuro",
+      "light": "claro"
+    },
+    "brandNames": {
+      "default": "default",
+      "totvs": "totvs"
+    },
+    "sections": {
+      "buttons": "Botones",
+      "fields": "Formularios",
+      "table": "Tabla de datos",
+      "panelTagBadge": "Panel, tags y badges de rol",
+      "toast": "Toasts",
+      "modal": "Modal",
+      "dropdown": "Dropdown",
+      "tooltip": "Tooltip",
+      "skeletonEmpty": "Skeleton y empty state",
+      "formats": "Formatos es-BO"
+    },
+    "buttons": {
+      "default": "default",
+      "focusVisible": "focus-visible (simulado con Tab)",
+      "disabled": "deshabilitado",
+      "loading": "cargando (aria-busy)",
+      "sizes": "tamaños",
+      "primary": "Aprobar escritura",
+      "secondary": "Ver evidencia",
+      "danger": "Eliminar usuario",
+      "ghost": "Cancelar",
+      "small": "Pequeño",
+      "standard": "Estándar",
+      "large": "Grande"
+    },
+    "fields": {
+      "nameLabel": "Nombre del cliente final",
+      "namePlaceholder": "Comercial Andina S.A.",
+      "nameHint": "Como figura en el contrato de servicio.",
+      "paramLabel": "Parámetro",
+      "emailLabel": "Correo de la usuaria",
+      "emailError": "Ingresá un correo válido, p. ej. lucia@resultar.bo",
+      "disabledLabel": "Campo deshabilitado",
+      "disabledValue": "Solo lectura para tu rol",
+      "envLabel": "Ambiente",
+      "envPlaceholder": "Seleccioná un ambiente…",
+      "envTest": "TEST — Comercial Andina S.A.",
+      "envProd": "PROD — Comercial Andina S.A.",
+      "envHint": "Las escrituras en PROD requieren aprobación.",
+      "commentLabel": "Comentario de aprobación",
+      "commentPlaceholder": "Obligatorio en riesgo crítico…"
+    },
+    "table": {
+      "caption": "Validación de parámetros en Comercial Andina S.A. — ambiente TEST",
+      "colParam": "Parámetro",
+      "colDescription": "Descripción",
+      "colExpected": "Esperado",
+      "colFound": "Encontrado",
+      "colStatus": "Estado",
+      "colCost": "Costo",
+      "statusOk": "ok",
+      "statusDiff": "difiere",
+      "descLocalizacion": "Localización del país",
+      "descTimbrado": "Timbrado fiscal vigente"
+    },
+    "panel": {
+      "title": "Ficha de agente",
+      "body": "Superficie estándar para cards, fichas y secciones de formulario."
+    },
+    "tags": {
+      "neutral": "neutral",
+      "active": "activo",
+      "evalScore": "eval 92%",
+      "modeloAlterno": "modelo alterno",
+      "truncado": "truncado",
+      "bloqueado": "bloqueado",
+      "needsPro": "needs_pro",
+      "riesgoBajo": "riesgo bajo",
+      "riesgoMedio": "riesgo medio",
+      "riesgoAlto": "riesgo alto",
+      "riesgoCritico": "riesgo crítico"
+    },
+    "toast": {
+      "triggerInfo": "Mostrar toast info",
+      "triggerSuccess": "Mostrar toast éxito",
+      "triggerWarn": "Mostrar toast advertencia",
+      "triggerDanger": "Mostrar toast peligro",
+      "stackLabel": "Notificaciones del styleguide",
+      "dismissLabel": "Cerrar notificación",
+      "infoTitle": "Sesión exportada",
+      "infoMessage": "El enlace se copió al portapapeles.",
+      "successTitle": "Escritura aprobada",
+      "successMessage": "MV_TIMBRE actualizado en TEST por lucia.",
+      "warnTitle": "Cuota al 82%",
+      "warnMessage": "Te queda ~20% de tu cuota mensual.",
+      "dangerTitle": "La aprobación expiró",
+      "dangerMessage": "Reabrí la solicitud para volver a intentarlo."
+    },
+    "modal": {
+      "openButton": "Abrir modal de ejemplo",
+      "title": "Eliminar usuario",
+      "closeLabel": "Cerrar",
+      "body": "Vas a eliminar la cuenta de lucia. Sus sesiones se conservan en el audit, pero la usuaria pierde el acceso de inmediato.",
+      "cancel": "Cancelar",
+      "confirmDanger": "Eliminar usuario"
+    },
+    "dropdown": {
+      "triggerLabel": "Menú de ejemplo",
+      "itemOne": "Ver evidencia",
+      "itemTwo": "Duplicar sesión",
+      "itemDanger": "Cerrar sesión"
+    },
+    "tooltip": {
+      "triggerLabel": "Pasá el mouse o enfocá con Tab",
+      "tipText": "Prefijo servido desde cache: ahorro ~90%"
+    },
+    "skeleton": {
+      "loadingLabel": "Cargando…"
+    },
+    "emptyState": {
+      "title": "Sin aprobaciones pendientes",
+      "hint": "Cuando un agente necesite escribir en Protheus, la solicitud va a aparecer acá.",
+      "ctaTitle": "Empezá una conversación",
+      "ctaHint": "Elegí un agente del catálogo o retomá una sesión reciente.",
+      "ctaAction": "Abrir catálogo"
+    },
+    "formats": {
+      "implementationNote": "Vía Intl.DateTimeFormat / Intl.NumberFormat con locale es-BO (lib/format-bo.ts), independiente del idioma de la UI.",
+      "dateLabel": "Fecha (dd/mm/aaaa)",
+      "dateTimeLabel": "Fecha-hora (dd/mm/aaaa HH:mm, 24h)",
+      "llmCostLabel": "Costo LLM (4 decimales)",
+      "aggregatedLabel": "Monto agregado (2 decimales)",
+      "percentLabel": "Porcentaje",
+      "tokensLabel": "Tokens abreviados"
     }
   }
 }

@@ -26,6 +26,12 @@ export type SessionContextValue = {
   gateway: { status: GatewayStatus };
   /** Aprobaciones pendientes visibles para el usuario (badge del sidebar). */
   pendingApprovals: number;
+  /**
+   * Notificaciones no leídas de la campana del topbar (tarea 6.3,
+   * d10-design-system-shell — contador con plural ICU, backend real en
+   * `d12-notificaciones`). Mismo criterio temporal que `pendingApprovals`.
+   */
+  unreadNotifications: number;
   /** Ya resuelto para el rol de `user` — ver `lib/capabilities.ts`. */
   capabilities: Section[];
 };

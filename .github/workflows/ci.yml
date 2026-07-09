@@ -168,6 +168,12 @@ jobs:
       - name: Audit colors
         run: npm run audit:colors
 
+      - name: Audit strings
+        run: npm run audit:strings
+
+      - name: Check contrast
+        run: npm run check:contrast
+
       - name: Typecheck
         run: npm run typecheck
 

@@ -9,7 +9,9 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "audit:colors": "node scripts/check-hardcoded-colors.mjs"
+    "audit:colors": "node scripts/check-hardcoded-colors.mjs",
+    "audit:strings": "node scripts/check-hardcoded-strings.mjs",
+    "check:contrast": "node scripts/check-contrast.ts"
   },
   "dependencies": {
     "@assistant-ui/react": "^0.14.26",

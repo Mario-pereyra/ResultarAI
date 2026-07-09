@@ -23,7 +23,13 @@ import { BellIcon, HamburgerIcon, MoonIcon, SearchIcon, SunIcon } from "./icons"
  *   `theme` vía `app/api/theme/route.ts` y refresca con `router.refresh()`
  *   (Server Components, incluido `app/layout.tsx`, se re-renderizan con el
  *   `data-theme` nuevo — sin recarga completa, sin FOUC).
- * - Campana `.notif-bell`: placeholder visual (backend real en `d12`).
+ * - Campana `.notif-bell`: contador de no leídas con plural ICU (tarea 6.3,
+ *   d10-design-system-shell) — `notificationsAriaLabel` ya viene
+ *   interpolado server-side (mismo patrón que `approvalsAriaLabel` del
+ *   sidebar); el badge visible (`.notif-bell__count`) es decorativo
+ *   (`aria-hidden`), el nombre accesible completo vive en el botón. La
+ *   lista del dropdown sigue siendo placeholder visual (backend real en
+ *   `d12-notificaciones`).
  * - Menú de usuario: `Dropdown` con `triggerContent` (avatar + nombre +
  *   `RoleBadge`) — escenario "Badge de rol visible en el menú de usuario".
  */
@@ -37,6 +43,12 @@ export type TopbarLabels = {
   themeToDark: string;
   notifications: string;
   notificationsEmpty: string;
+  /**
+   * Nombre accesible del botón-campana, ya interpolado server-side con el
+   * conteo de no leídas (plural ICU — ver app/(shell)/layout.tsx y
+   * messages/es.json `Shell.topbar.notificationsAriaLabel`).
+   */
+  notificationsAriaLabel: string;
   /** Ya interpolado server-side con nombre + rol (ver app/(shell)/layout.tsx). */
   userMenuLabel: string;
   myWorkspace: string;
@@ -53,7 +65,7 @@ export type TopbarProps = {
 };
 
 export function Topbar({ theme, labels, onOpenDrawer }: TopbarProps) {
-  const { user } = useSession();
+  const { user, unreadNotifications } = useSession();
   const router = useRouter();
   const searchRef = useRef<HTMLInputElement | null>(null);
 
@@ -106,20 +118,27 @@ export function Topbar({ theme, labels, onOpenDrawer }: TopbarProps) {
           {theme === "dark" ? <SunIcon /> : <MoonIcon />}
         </button>
 
-        <Dropdown
-          triggerLabel={labels.notifications}
-          triggerIcon={<BellIcon />}
-          triggerClassName="notif-bell"
-          align="end"
-          items={[
-            {
-              id: "empty",
-              label: labels.notificationsEmpty,
-              onSelect: () => {},
-              disabled: true,
-            },
-          ]}
-        />
+        <span className="shell-topbar__bell-wrap">
+          <Dropdown
+            triggerLabel={labels.notificationsAriaLabel}
+            triggerIcon={<BellIcon />}
+            triggerClassName="notif-bell"
+            align="end"
+            items={[
+              {
+                id: "empty",
+                label: labels.notificationsEmpty,
+                onSelect: () => {},
+                disabled: true,
+              },
+            ]}
+          />
+          {unreadNotifications > 0 ? (
+            <span className="notif-bell__count" aria-hidden="true">
+              {formatBadge(unreadNotifications)}
+            </span>
+          ) : null}
+        </span>
 
         <Dropdown
           triggerLabel={labels.userMenuLabel}
@@ -145,4 +164,9 @@ export function Topbar({ theme, labels, onOpenDrawer }: TopbarProps) {
 /** "lucia" -> "LU" (mismo criterio que design/mockups/03-shell.html). */
 function initialsFromName(name: string): string {
   return name.slice(0, 2).toUpperCase();
+}
+
+/** Mismo criterio que `formatBadge` del sidebar (badge de aprobaciones): >99 -> "99+". */
+function formatBadge(count: number): string {
+  return count > 99 ? "99+" : String(count);
 }

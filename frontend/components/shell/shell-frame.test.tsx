@@ -43,6 +43,7 @@ const labels: ShellFrameLabels = {
     themeToDark: "Cambiar a tema oscuro",
     notifications: "Notificaciones",
     notificationsEmpty: "Sin novedades por ahora",
+    notificationsAriaLabel: "Notificaciones, sin novedades",
     userMenuLabel: "Menú de usuario: lucia, rol Funcional",
     myWorkspace: "Mi espacio",
     theme: "Tema",
@@ -67,6 +68,7 @@ function sessionFor(
     user: { name: "lucia", role },
     gateway: { status: gatewayStatus },
     pendingApprovals: 0,
+    unreadNotifications: 0,
     capabilities: capabilitiesForRole(role),
   };
 }

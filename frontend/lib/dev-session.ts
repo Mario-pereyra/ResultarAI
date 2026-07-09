@@ -36,6 +36,17 @@ const MOCK_PENDING_APPROVALS: Record<Role, number> = {
   admin: 3,
 };
 
+/**
+ * Notificaciones no leídas mock por rol (tarea 6.3, d10-design-system-shell)
+ * — mismos valores que `notifs` en design/mockups/03-shell.html (funcional
+ * 1, tecnico 2, admin 4), misma fidelidad que `MOCK_PENDING_APPROVALS`.
+ */
+const MOCK_UNREAD_NOTIFICATIONS: Record<Role, number> = {
+  funcional: 1,
+  tecnico: 2,
+  admin: 4,
+};
+
 /** Rol por defecto cuando no hay cookie/query param: el de menor privilegio. */
 export function parseRole(value: string | undefined): Role {
   return (VALID_ROLES as readonly string[]).includes(value ?? "") ? (value as Role) : "funcional";
@@ -58,6 +69,7 @@ export function resolveDevSession(
     user: { name: MOCK_USER_NAME[role], role },
     gateway: { status: gatewayStatus },
     pendingApprovals: MOCK_PENDING_APPROVALS[role],
+    unreadNotifications: MOCK_UNREAD_NOTIFICATIONS[role],
     capabilities: capabilitiesForRole(role),
   };
 }

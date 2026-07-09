@@ -30,6 +30,7 @@ function sessionFor(role: SessionContextValue["user"]["role"]): SessionContextVa
     user: { name: "test", role },
     gateway: { status: "ok" },
     pendingApprovals: 0,
+    unreadNotifications: 0,
     capabilities: capabilitiesForRole(role),
   };
 }
@@ -144,6 +145,33 @@ describe("Sidebar — drawer móvil con trampa de foco (tarea 5.7)", () => {
     await user.click(scrim as Element);
 
     expect(onCloseDrawer).toHaveBeenCalledOnce();
+  });
+});
+
+describe('Sidebar — escenario "Botón con texto 25% más largo no rompe el layout" (tarea 6.2)', () => {
+  it("un label de sección un 25% más largo se renderiza completo dentro de .shell-sidebar__label, sin recorte", () => {
+    const original = "Aprobaciones";
+    const inflated = `${original}${"~".repeat(Math.ceil(original.length * 0.25))}`;
+
+    render(
+      <SessionProvider value={sessionFor("funcional")}>
+        <Sidebar
+          labels={{ ...labels, sectionLabels: { ...labels.sectionLabels, aprobaciones: inflated } }}
+          collapsed={false}
+          onToggleCollapse={vi.fn()}
+          drawerOpen={false}
+          onCloseDrawer={vi.fn()}
+        />
+      </SessionProvider>,
+    );
+
+    const label = screen.getByText(inflated);
+    expect(label.textContent).toBe(inflated);
+    expect(label.className).toBe("shell-sidebar__label");
+    // .shell-sidebar__label no tiene declaración propia en styles/shell.css
+    // (ver styles/text-expansion.test.ts): no hereda ningún ancho fijo del
+    // <a> contenedor tampoco — `.shell-sidebar__link` crece con flex, no
+    // trunca (mismo contrato verificado ahí a nivel CSS).
   });
 });
 

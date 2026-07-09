@@ -1,10 +1,21 @@
 /*
  * styles/shell.css — Shell de aplicación (tarea 5, d10-design-system-shell).
  *
- * `.ai-banner` y `.notif-bell` YA están definidos verbatim en
- * styles/tokens.css (portados 1:1 de design/mockups/tokens.css §5.25/§5.26,
- * tarea 3.3) — este archivo NO los redefine, solo los usa/extiende
- * (`.ai-banner__text--*`, `.notif-bell__count` sigue viniendo de tokens.css).
+ * `.ai-banner` y `.notif-bell`/`.notif-bell__count` se portan VERBATIM acá
+ * (más abajo) de design/mockups/tokens.css §5.25/§5.26 — no en
+ * styles/tokens.css: ese archivo documenta explícitamente que solo porta
+ * §2/§3 (tokens globales + temas), no componentes de §5 (ver su propio
+ * comentario de cabecera). Corrección de la tarea 6.3 (d10-design-system-shell):
+ * un comentario anterior de este archivo afirmaba que ya estaban portados
+ * en tokens.css, pero nunca lo estuvieron — solo sus extensiones lo estaban
+ * (`.ai-banner__text--*`, ya presentes más abajo). Única desviación del
+ * portado verbatim: `.notif-bell__count` fija un blanco puro literal en
+ * tema claro en la fuente; acá se resuelve 100% vía `var(--danger-ink)`
+ * (mismo rol semántico, ya blanco puro en ambos temas claros — mismo
+ * criterio que `.shell-sidebar__badge` más abajo) para no introducir un
+ * literal de color fuera de la capa de tokens (auditoría de colores,
+ * tarea 4.9; el valor exacto evitado está en el comentario de
+ * design/mockups/tokens.css §5.26, no se repite acá a propósito).
  *
  * El resto de clases de acá (`.shell-*`, `.skip-link`) no tiene equivalente
  * en tokens.css: design/mockups/03-shell.html las define ad-hoc en el
@@ -43,6 +54,61 @@
   transform: translateY(0);
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+/* ── Banner IA (§5.25 design/mockups/tokens.css) — ver nota de cabecera ── */
+.ai-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-4);
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+  font-size: var(--fs-caption);
+  color: var(--ink-dim);
+  text-align: center;
+}
+.ai-banner svg { width: 13px; height: 13px; color: var(--warn); flex: none; }
+
+/* ── Campana de notificaciones (§5.26) — ver nota de cabecera ────────────
+   `.notif-bell` es el disparador real (`Dropdown` de components/shell/topbar.tsx,
+   vía `triggerClassName`); `.notif-bell__count` es un hermano posicionado
+   dentro de `.shell-topbar__bell-wrap` (arriba), no un hijo del botón —
+   ver comentario de esa clase para el motivo (necesita quedar fuera del
+   `aria-hidden` interno del Dropdown solo por presentación, la campana
+   sigue anunciando el conteo vía su propio aria-label). */
+.notif-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--ink-dim);
+  cursor: pointer;
+}
+.notif-bell:hover { color: var(--ink); border-color: var(--ink-faint); }
+.notif-bell:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.notif-bell svg { width: 18px; height: 18px; }
+.notif-bell__count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: var(--r-pill);
+  background: var(--danger);
+  color: var(--danger-ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
 }
 
 /* ── Frame raíz ──────────────────────────────────────────────────────── */

@@ -142,7 +142,9 @@ html[data-theme="light"][data-brand="default"] {
   --line-strong: #b9b09a;
   --ink: #1b2130;           /* 14.0:1 sobre --bg */
   --ink-dim: #4f5868;       /* 7.2:1 sobre --panel */
-  --ink-faint: #6e7787;     /* 4.5:1 sobre --panel */
+  --ink-faint: #6d7686;     /* 4.5:1 sobre --panel — DESVÍO consciente del mockup: #6e7787
+                               da 4.44:1 real (bajo el 4.5 que declara DESIGN-SYSTEM.md §5.3);
+                               ajuste mínimo para cumplir AA. Ver BACKLOG-DESCUBRIMIENTOS. */
   --accent: #8a5c00;        /* ámbar oscurecido para texto/ícono — 5.1:1 */
   --accent-fill: #ffb000;   /* el botón primario conserva el ámbar pleno */
   --accent-ink: #181102;
@@ -170,7 +172,9 @@ html[data-theme="dark"][data-brand="totvs"] {
   --line-strong: #2f4a61;
   --ink: #eef3f8;           /* 17:1 sobre --bg */
   --ink-dim: #9fb2c4;       /* 8.1:1 */
-  --ink-faint: #74879b;     /* 5.1:1 */
+  --ink-faint: #7a8da1;     /* 4.85:1 sobre --panel — DESVÍO consciente del mockup: #74879b
+                               da 4.48:1 real (bajo el 4.8 que declara DESIGN-SYSTEM.md §5.3);
+                               ajuste mínimo para cumplir el ratio documentado. Ver BACKLOG. */
   --accent: #00dbff;        /* Azul TOTVS — 11.3:1 sobre --bg */
   --accent-fill: #00dbff;
   --accent-ink: #002233;    /* Azul Escuro sobre cian — 9.85:1 */

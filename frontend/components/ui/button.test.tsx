@@ -89,4 +89,22 @@ describe("Button", () => {
     expect(button.hasAttribute("disabled")).toBe(true);
     expect(button.hasAttribute("aria-busy")).toBe(false);
   });
+
+  // Escenario "Botón con texto 25% más largo no rompe el layout" (tarea 6.2,
+  // specs/i18n-foundation/spec.md) — lo verificable en jsdom (sin motor de
+  // layout real, ver styles/text-expansion.test.ts para el límite
+  // documentado): el texto inflado se renderiza COMPLETO (el componente no
+  // lo trunca por JS) y sin que Button le agregue un `style` de ancho fijo
+  // (deja crecer la caja, consistente con `.btn` sin `width` en CSS).
+  it('escenario "Botón con texto 25% más largo no rompe el layout": el texto inflado se renderiza completo, sin ancho fijo inline', () => {
+    const original = "Aprobar escritura";
+    const inflated = `${original}${"~".repeat(Math.ceil(original.length * 0.25))}`;
+
+    render(<Button>{inflated}</Button>);
+
+    const button = screen.getByRole("button", { name: inflated });
+    expect(button.textContent).toBe(inflated);
+    expect(button.style.width).toBe("");
+    expect(button.className.split(" ")).toEqual(expect.arrayContaining(["btn", "btn--primary"]));
+  });
 });

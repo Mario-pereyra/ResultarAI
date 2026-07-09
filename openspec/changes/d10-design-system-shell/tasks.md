@@ -41,15 +41,15 @@
 
 ## 6. i18n fundacional (i18n-foundation)
 
-- [ ] 6.1 Externalizar todos los textos del shell y de los componentes base a `messages/es.json`, redactados en voseo. Verificación: escenarios "Auditoría de strings hardcodeados" y "Textos del shell en voseo". `[modelo: haiku]`
-- [ ] 6.2 Verificar layouts con textos un 25% más largos (fixture de prueba sobre botones/labels del shell) sin desbordes ni recortes. Verificación: escenario "Botón con texto 25% más largo no rompe el layout" (test visual/snapshot). `[modelo: sonnet]`
-- [ ] 6.3 Configurar plurales ICU para el contador de notificaciones no leídas y formatos `Intl` es-BO para fecha/número en el styleguide. Verificación: escenarios "Contador de notificaciones no leídas" y "Formato de fecha en es-BO". `[modelo: sonnet]`
+- [x] 6.1 Externalizar todos los textos del shell y de los componentes base a `messages/es.json`, redactados en voseo. Verificación: escenarios "Auditoría de strings hardcodeados" y "Textos del shell en voseo". `[modelo: haiku]`
+- [x] 6.2 Verificar layouts con textos un 25% más largos (fixture de prueba sobre botones/labels del shell) sin desbordes ni recortes. Verificación: escenario "Botón con texto 25% más largo no rompe el layout" (test visual/snapshot). `[modelo: sonnet]`
+- [x] 6.3 Configurar plurales ICU para el contador de notificaciones no leídas y formatos `Intl` es-BO para fecha/número en el styleguide. Verificación: escenarios "Contador de notificaciones no leídas" y "Formato de fecha en es-BO". `[modelo: sonnet]`
 
 ## 7. Verificación de accesibilidad AA y styleguide
 
-- [ ] 7.1 Escribir `scripts/check-contrast.ts`: calcula ratios WCAG sobre los pares de `design/DESIGN-SYSTEM.md` §5.3 para las 4 combinaciones tema×brand y lo agrega al job de CI. Verificación: escenario "Verificación automatizada de contraste" en verde. `[modelo: sonnet]`
-- [ ] 7.2 Verificar foco visible (`:focus-visible`, anillo 2px + offset) y orden de tabulación igual al orden visual en todos los componentes base. Verificación: escenario "Foco visible en todo interactivo". `[modelo: sonnet]`
-- [ ] 7.3 Construir página `/styleguide` con mini-switcher de tema/brand (equivalente a `design/mockups/00-styleguide.html`) y demo de cada componente base. Verificación: escenario "Styleguide renderiza los 4 sets". `[modelo: sonnet]`
+- [x] 7.1 Escribir `scripts/check-contrast.ts`: calcula ratios WCAG sobre los pares de `design/DESIGN-SYSTEM.md` §5.3 para las 4 combinaciones tema×brand y lo agrega al job de CI. Verificación: escenario "Verificación automatizada de contraste" en verde. `[modelo: sonnet]`
+- [x] 7.2 Verificar foco visible (`:focus-visible`, anillo 2px + offset) y orden de tabulación igual al orden visual en todos los componentes base. Verificación: escenario "Foco visible en todo interactivo". `[modelo: sonnet]`
+- [x] 7.3 Construir página `/styleguide` con mini-switcher de tema/brand (equivalente a `design/mockups/00-styleguide.html`) y demo de cada componente base. Verificación: escenario "Styleguide renderiza los 4 sets". `[modelo: sonnet]`
 
 ## 8. Cierre
 

@@ -1,0 +1,98 @@
+/*
+ * app/styleguide/styleguide.css — andamiaje SOLO de la página /styleguide
+ * (tarea 7.3, d10-design-system-shell), equivalente a las clases `.sg-*`
+ * de design/mockups/00-styleguide.html §CSS local. Consume EXCLUSIVAMENTE
+ * tokens de styles/tokens.css (mismo criterio de auditoría de colores que
+ * el resto del frontend — scripts/check-hardcoded-colors.mjs también
+ * escanea app/**). No define NINGÚN componente nuevo: solo layout de
+ * demostración (contenedor de página, secciones, filas, grillas, labels
+ * de sección) — los componentes mostrados adentro son los reales de
+ * components/ui/* y components/shell/*.
+ */
+
+.sg-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--sp-8) var(--sp-6) var(--sp-10);
+}
+
+.sg-switcher {
+  position: fixed;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  z-index: var(--z-tooltip);
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  padding: var(--sp-2);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-2);
+}
+
+.sg-dev-notice {
+  display: inline-block;
+  margin-top: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-sm);
+  color: var(--ink-faint);
+  font-size: var(--fs-caption);
+}
+
+.sg-section {
+  margin-top: var(--sp-9);
+}
+.sg-section > h2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: var(--sp-2);
+}
+
+.sg-caption {
+  font-size: var(--fs-caption);
+  color: var(--ink-faint);
+  margin: var(--sp-1) 0 var(--sp-4);
+}
+
+.sg-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+  margin-bottom: var(--sp-4);
+}
+
+.sg-grid {
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+.sg-grid--wide {
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+}
+
+.sg-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-faint);
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: var(--sp-1);
+}
+
+.sg-formats-list {
+  display: grid;
+  gap: var(--sp-2);
+  max-width: 480px;
+}
+.sg-formats-list dt {
+  font-size: var(--fs-caption);
+  color: var(--ink-dim);
+}
+.sg-formats-list dd {
+  margin: 0 0 var(--sp-3);
+}
