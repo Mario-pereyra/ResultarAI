@@ -40,7 +40,7 @@ Detalle: `docs/02-arquitectura.md`. Decisiones con evidencia: `docs/adr/`.
 | `resultarai/app/` | Casos de uso y API FastAPI (transporte, sin lógica) |
 | `manifests/` | Manifiestos YAML declarativos versionados: agents, skills, tools, policies, routing, evals (conjunto de fábrica: default_chat + ejemplos) |
 | `tests/` | `core/` (unit puros del núcleo) y `contracts/` (un contract test por adapter) |
-| `frontend/` | `[llega en d10-design-system-shell: Next.js + assistant-ui, ADR-0007]` |
+| `frontend/` | Next.js 16 + TypeScript; design system (4 sets tokens tema×brand + componentes base), shell por capacidades de rol, i18n es (voseo), /styleguide |
 
 ## Comandos
 
@@ -52,6 +52,19 @@ uv run ruff format --check .  # verificar formato
 uv run mypy resultarai tests  # tipado estricto
 uv run lint-imports           # verificar fronteras arquitectónicas (import-linter)
 uv run pre-commit install     # instalar hooks pre-commit (una sola vez)
+```
+
+### Frontend (desde `frontend/`)
+
+```bash
+npm run dev              # servidor de desarrollo (Turbopack)
+npm run lint            # ESLint (next/core-web-vitals + typescript-eslint)
+npm run typecheck       # tsc --noEmit (strict)
+npm run test            # Vitest (modo run)
+npm run build           # build de producción
+npm run audit:colors    # verifica tokens y valores de color en tiempo de compilación
+npm run audit:strings   # verifica que no haya strings hardcodeados fuera de i18n
+npm run check:contrast  # valida ratios de contraste WCAG AA
 ```
 
 ## Flujo de trabajo

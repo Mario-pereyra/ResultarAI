@@ -53,5 +53,5 @@
 
 ## 8. Cierre
 
-- [ ] 8.1 Actualizar `CLAUDE.md` (Mapa del repo: agregar `frontend/`; Comandos: `npm run dev`/`lint`/`typecheck`/`build`) y `frontend/README.md` documentando el contrato temporal de `SessionContext`/`capabilities.ts` para `d11`/`d20`. Verificación: comandos copiables funcionan. `[modelo: haiku]`
+- [x] 8.1 Actualizar `CLAUDE.md` (Mapa del repo: agregar `frontend/`; Comandos: `npm run dev`/`lint`/`typecheck`/`build`) y `frontend/README.md` documentando el contrato temporal de `SessionContext`/`capabilities.ts` para `d11`/`d20`. Verificación: comandos copiables funcionan. `[modelo: haiku]`
 - [ ] 8.2 Review final del change: componentes usan solo tokens semánticos (sin hex hardcodeado), los 24 escenarios de `specs/` están cubiertos, CI en verde, consistencia con `design/`. Verificación: checklist del reviewer en el PR. `[modelo: opus]`
