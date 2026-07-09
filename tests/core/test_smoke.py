@@ -11,6 +11,7 @@ def test_core_and_subpackages_import_clean() -> None:
     import resultarai.core.ports
     import resultarai.core.registries
     import resultarai.core.routing
+    import resultarai.core.skills
 
     for module in (
         resultarai.core,
@@ -19,6 +20,7 @@ def test_core_and_subpackages_import_clean() -> None:
         resultarai.core.ports,
         resultarai.core.registries,
         resultarai.core.routing,
+        resultarai.core.skills,
     ):
         assert module is not None
 

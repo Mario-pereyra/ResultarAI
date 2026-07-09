@@ -115,4 +115,5 @@ modules = [
     "resultarai.adapters.tools_openapi",
     "resultarai.adapters.tracing_langfuse",
     "resultarai.adapters.persistence_postgres",
+    "resultarai.adapters.skills_fs",
 ]
