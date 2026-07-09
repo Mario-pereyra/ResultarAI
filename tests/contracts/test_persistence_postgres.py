@@ -7,6 +7,7 @@ import uuid6
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError, IntegrityError
 
+from resultarai.adapters.persistence_postgres import PersistenceStatePort
 from resultarai.adapters.persistence_postgres.connection import get_db_session
 from resultarai.adapters.persistence_postgres.models import (
     Attachment,
@@ -789,3 +790,205 @@ def test_audit_log_correction_link() -> None:
         assert db_correction.corrected_event is not None
         assert db_correction.corrected_event.id == initial_id
         assert db_correction.corrected_event.effect == "deny"
+
+
+def test_state_port_basic_lifecycle() -> None:
+    """Ciclo de vida de estado básico: guarda, carga y verifica."""
+    port = PersistenceStatePort()
+    thread_id = "thread-basic-lifecycle"
+
+    # Define state
+    messages_list = [
+        {
+            "id": str(uuid6.uuid7()),
+            "role": "user",
+            "content": "Hello world",
+            "parent_id": None,
+            "model_profile": "profile-1",
+            "created_at": datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+        },
+        {
+            "id": str(uuid6.uuid7()),
+            "role": "assistant",
+            "content": "Hi there!",
+            "parent_id": None,
+            "model_profile": "profile-1",
+            "created_at": datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+        },
+    ]
+
+    # Set parent_id of the second message to the first message's ID
+    messages_list[1]["parent_id"] = messages_list[0]["id"]
+
+    state = {
+        "model_profile": "profile-1",
+        "forked_from_id": None,
+        "some_metadata": "some_value",
+        "checkpoints": {"step": 2, "status": "running"},
+        "messages": messages_list,
+    }
+
+    # Save state
+    port.save_state(thread_id, state)
+
+    # Load state
+    loaded = port.load_state(thread_id)
+    assert loaded is not None
+
+    # Verify that it is identical
+    assert loaded == state
+
+
+def test_state_port_branching() -> None:
+    """Guarda un estado base, hace un fork en otra sesión y verifica.
+
+    Comprueba que ambas estén separadas y correctas.
+    """
+    port = PersistenceStatePort()
+    base_thread = "thread-base"
+    # new thread pointing to base_thread as forked_from_id
+    fork_thread = "thread-fork"
+
+    msg1_id = str(uuid6.uuid7())
+    msg2_id = str(uuid6.uuid7())
+
+    base_state = {
+        "model_profile": "profile-1",
+        "forked_from_id": None,
+        "chat_name": "Main Chat",
+        "messages": [
+            {
+                "id": msg1_id,
+                "role": "user",
+                "content": "Base message 1",
+                "parent_id": None,
+                "model_profile": "profile-1",
+                "created_at": datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+            },
+            {
+                "id": msg2_id,
+                "role": "assistant",
+                "content": "Base message 2",
+                "parent_id": msg1_id,
+                "model_profile": "profile-1",
+                "created_at": datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+            },
+        ],
+    }
+
+    port.save_state(base_thread, base_state)
+
+    msg3_fork_id = str(uuid6.uuid7())
+    fork_state = {
+        "model_profile": "profile-1",
+        "forked_from_id": base_thread,
+        "chat_name": "Forked Chat",
+        "messages": [
+            {
+                "id": msg3_fork_id,
+                "role": "user",
+                "content": "Forked message",
+                "parent_id": msg2_id,
+                "model_profile": "profile-1",
+                "created_at": datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+            }
+        ],
+    }
+
+    port.save_state(fork_thread, fork_state)
+
+    # Load both and verify
+    loaded_base = port.load_state(base_thread)
+    loaded_fork = port.load_state(fork_thread)
+
+    assert loaded_base is not None
+    assert loaded_fork is not None
+
+    assert loaded_base["forked_from_id"] is None
+    assert loaded_base["chat_name"] == "Main Chat"
+    assert len(loaded_base["messages"]) == 2
+    assert loaded_base["messages"][0]["id"] == msg1_id
+    assert loaded_base["messages"][1]["id"] == msg2_id
+
+    assert loaded_fork["forked_from_id"] == base_thread
+    assert loaded_fork["chat_name"] == "Forked Chat"
+    assert len(loaded_fork["messages"]) == 1
+    assert loaded_fork["messages"][0]["id"] == msg3_fork_id
+    assert loaded_fork["messages"][0]["parent_id"] == msg2_id
+
+
+def test_state_port_chronology_and_stickiness() -> None:
+    """Valida ordenación cronológica por UUIDv7 y rechazo de cambio de model_profile."""
+    port = PersistenceStatePort()
+    thread_id = "thread-chronology-stickiness"
+
+    # Generate UUIDv7s in chronological order
+    id1 = str(uuid6.uuid7())
+    time.sleep(0.005)
+    id2 = str(uuid6.uuid7())
+    time.sleep(0.005)
+    id3 = str(uuid6.uuid7())
+
+    state1 = {
+        "model_profile": "profile-1",
+        "forked_from_id": None,
+        "messages": [
+            {
+                "id": id3,
+                "role": "user",
+                "content": "Third message chronologically",
+                "parent_id": id2,
+                "model_profile": "profile-1",
+                "created_at": datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+            },
+            {
+                "id": id1,
+                "role": "user",
+                "content": "First message chronologically",
+                "parent_id": None,
+                "model_profile": "profile-1",
+                "created_at": datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+            },
+            {
+                "id": id2,
+                "role": "assistant",
+                "content": "Second message chronologically",
+                "parent_id": id1,
+                "model_profile": "profile-1",
+                "created_at": datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+            },
+        ],
+    }
+
+    # Save state
+    port.save_state(thread_id, state1)
+
+    # Load state and check order
+    loaded = port.load_state(thread_id)
+    assert loaded is not None
+    messages = loaded["messages"]
+    assert len(messages) == 3
+    assert messages[0]["id"] == id1
+    assert messages[1]["id"] == id2
+    assert messages[2]["id"] == id3
+
+    # Now validate stickiness: try to save state with a different model_profile on the same session
+    state_bad = {"model_profile": "different-profile", "messages": []}
+    with pytest.raises(ValueError, match="Cannot change model_profile"):
+        port.save_state(thread_id, state_bad)
+
+    # Try to save a message with mismatched model_profile
+    state_mismatched_msg = {
+        "model_profile": "profile-1",
+        "messages": [
+            {
+                "id": str(uuid6.uuid7()),
+                "role": "user",
+                "content": "Mismatched message",
+                "model_profile": "profile-mismatch",
+                "created_at": datetime.datetime.now(datetime.UTC).replace(tzinfo=None),
+            }
+        ],
+    }
+    with pytest.raises(IntegrityError):
+        port.save_state(thread_id, state_mismatched_msg)

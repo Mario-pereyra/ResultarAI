@@ -57,6 +57,7 @@ class Session(Base):
     forked_from_id: Mapped[str | None] = mapped_column(
         String(255), ForeignKey("sessions.id"), nullable=True
     )
+    state_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     # Relationships
     forked_from: Mapped["Session | None"] = relationship("Session", remote_side=[id])
