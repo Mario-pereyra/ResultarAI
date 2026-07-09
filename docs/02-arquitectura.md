@@ -73,7 +73,7 @@ Los contextos nuevos no están en el blueprint v2.4 (documento de referencia del
 
 La regla que sostiene todo lo demás. **Verificada con import-linter en CI**, no con disciplina (config en [05-estructura-y-convenciones.md](05-estructura-y-convenciones.md)):
 
-1. `core/` no importa `adapters/` ni `app/` ni ningún framework (langgraph, litellm, langfuse, fastapi, httpx…). Solo stdlib + Pydantic.
+1. `core/` no importa `adapters/` ni `app/` ni ningún framework (langgraph, litellm, langfuse, fastapi, httpx…). Solo stdlib + Pydantic, más PyYAML como parser de los manifiestos (formato de datos, no framework).
 2. `adapters/` importa `core/` (para implementar sus ports). Un adapter no importa otro adapter.
 3. `app/` importa `core/` y compone adapters vía inyección. Nadie importa `app/`.
 4. Los manifiestos YAML (`manifests/`) no son código: se cargan y validan contra los schemas de `core/manifests/`.

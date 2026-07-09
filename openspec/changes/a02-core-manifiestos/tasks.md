@@ -26,7 +26,7 @@
 
 - [x] 4.1 Implementar la función única de validación en `core/` (schemas + referencias cruzadas) y su comando CLI vía uv (sin red). Verificación: `tests/contracts/test_validate_cli.py` prueba exit 0 con manifiestos válidos, exit ≠0 con Manifest inválido y con referencia colgante. `[modelo: sonnet]`
 - [x] 4.2 Implementar la validación fail-fast al arranque en `app/` reutilizando la función de 4.1 (aborta si algún Manifest falla; `draft` no impide arrancar). Verificación: `tests/contracts/test_startup_failfast.py` prueba arranque exitoso, abortos por schema y por referencia colgante. `[modelo: sonnet]`
-- [ ] 4.3 Añadir a `.github/workflows/ci.yml` un job que valide los manifiestos en cada push/PR a `main` reutilizando el mismo CLI de 4.1. Verificación: el job pasa en verde sobre este PR y falla al introducir un Manifest inválido (test manual documentado en el PR). `[modelo: sonnet]`
+- [x] 4.3 Añadir a `.github/workflows/ci.yml` un job que valide los manifiestos en cada push/PR a `main` reutilizando el mismo CLI de 4.1. Verificación: el job pasa en verde sobre este PR y falla al introducir un Manifest inválido (test manual documentado en el PR). `[modelo: sonnet]`
 
 ## 5. Cierre
 

@@ -7,7 +7,7 @@
 
 ```
 resultarai/
-├── core/                        # El hexágono. Solo stdlib + Pydantic.
+├── core/                        # El hexágono. Solo stdlib + Pydantic (+ PyYAML para manifiestos).
 │   ├── manifests/               # Schemas Pydantic de los 6 manifiestos (ver 04)
 │   ├── registries/              # AgentRegistry, SkillRegistry, ToolRegistry
 │   ├── policy/                  # PolicyGate (función pura, deny-by-default)

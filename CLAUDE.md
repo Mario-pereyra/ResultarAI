@@ -6,7 +6,7 @@ Plataforma interna de IA de Resultar Soluciones (partner TOTVS Bolivia): chat go
 
 ## Estado actual
 
-**Greenfield en construcción.** Documentación y paquete de diseño UX (`design/`) completos; esqueleto de paquetes, tooling y CI creados. **Pivote 2026-07-09:** producto completo genérico "de fábrica" primero (Etapas A–E), personalización Protheus después (Etapa P) — ver `docs/07-roadmap.md`. Etapa activa: **A — Fundación** (change `a01-fundacion-repo`; grupos 1–3 completos). *(Actualizar esta línea al avanzar de etapa.)*
+**Greenfield en construcción.** Documentación y paquete de diseño UX (`design/`) completos; esqueleto, tooling, CI, schemas de manifiestos y registries en verde. **Pivote 2026-07-09:** producto completo genérico "de fábrica" primero (Etapas A–E), personalización Protheus después (Etapa P) — ver `docs/07-roadmap.md`. Etapa activa: **A — Fundación** (a01 archivado; change `a02-core-manifiestos` en cierre). *(Actualizar esta línea al avanzar de etapa.)*
 
 ## Arquitectura en 60 segundos
 
@@ -16,7 +16,7 @@ Detalle: `docs/02-arquitectura.md`. Decisiones con evidencia: `docs/adr/`.
 
 ## Reglas duras (no negociables)
 
-1. `core/` no importa frameworks ni adapters (verificado con import-linter; solo stdlib + Pydantic).
+1. `core/` no importa frameworks ni adapters (verificado con import-linter; solo stdlib + Pydantic, más PyYAML como parser de manifiestos).
 2. Toda llamada a modelo pasa por LiteLLM. Nunca SDKs de proveedor directos.
 3. Tools solo vía skills. El Default Chat nunca ejecuta tools directamente.
 4. Policy Gate deny-by-default, evaluado en cada paso; toda decisión va al audit log (append-only).
@@ -38,7 +38,7 @@ Detalle: `docs/02-arquitectura.md`. Decisiones con evidencia: `docs/adr/`.
 | `resultarai/core/` | Núcleo hexagonal: manifiestos Pydantic, registries, Policy Gate, Skill Router, ports |
 | `resultarai/adapters/` | 6 adapters (vacíos aún): llm_litellm, runtime_langgraph, tools_mcp, tools_openapi, tracing_langfuse, persistence_postgres |
 | `resultarai/app/` | Casos de uso y API FastAPI (transporte, sin lógica) |
-| `manifests/` | Manifiestos YAML declarativos versionados: agents, skills, tools, policies, routing, evals — aún vacíos |
+| `manifests/` | Manifiestos YAML declarativos versionados: agents, skills, tools, policies, routing, evals (conjunto de fábrica: default_chat + ejemplos) |
 | `tests/` | `core/` (unit puros del núcleo) y `contracts/` (un contract test por adapter) |
 | `frontend/` | `[llega en d10-design-system-shell: Next.js + assistant-ui, ADR-0007]` |
 
