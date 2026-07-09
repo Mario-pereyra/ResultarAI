@@ -1,0 +1,106 @@
+name: CI
+
+# Disparadores: push/PR hacia main, y push a ramas claude/** para que el
+# desarrollo actual (que ocurre en esas ramas, vía PRs de este mismo change)
+# tenga CI corriendo desde ya. Decisión práctica documentada en la tarea
+# a01-fundacion-repo 3.1.
+on:
+  push:
+    branches:
+      - main
+      - "claude/**"
+  pull_request:
+    branches:
+      - main
+
+env:
+  # Alineada con la versión de uv usada localmente (`uv --version`).
+  UV_VERSION: "0.8.17"
+
+jobs:
+  # lint y format se agrupan en un solo job porque ambos son ruff, comparten
+  # el mismo entorno/dependencias y son casi instantáneos: separarlos no
+  # gana paralelismo real, solo duplica el tiempo de setup (checkout + uv
+  # sync). types, boundaries y tests sí quedan en jobs paralelos separados.
+  lint-format:
+    name: Lint & Format (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Sync dependencies
+        run: uv sync --locked
+
+      - name: Ruff check
+        run: uv run ruff check .
+
+      - name: Ruff format check
+        run: uv run ruff format --check .
+
+  types:
+    name: Types (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Sync dependencies
+        run: uv sync --locked
+
+      - name: Mypy
+        run: uv run mypy resultarai tests
+
+  boundaries:
+    name: Boundaries (lint-imports)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Sync dependencies
+        run: uv sync --locked
+
+      - name: Lint imports
+        run: uv run lint-imports
+
+  tests:
+    name: Tests (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Sync dependencies
+        run: uv sync --locked
+
+      - name: Pytest
+        run: uv run pytest

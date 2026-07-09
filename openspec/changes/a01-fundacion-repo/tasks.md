@@ -18,7 +18,7 @@
 
 ## 3. CI y ciclo local
 
-- [ ] 3.1 Crear `.github/workflows/ci.yml`: jobs lint/format/tipos/fronteras/tests con cache de uv, disparado en push y PR a main. Verificación: workflow en verde en GitHub sobre este mismo PR. `[modelo: sonnet]`
+- [x] 3.1 Crear `.github/workflows/ci.yml`: jobs lint/format/tipos/fronteras/tests con cache de uv, disparado en push y PR a main. Verificación: workflow en verde en GitHub sobre este mismo PR. `[modelo: sonnet]`
 - [ ] 3.2 Crear `.pre-commit-config.yaml` (ruff, ruff-format, chequeos de higiene) y documentar `pre-commit install`. Verificación: escenario "Commit con error de lint rechazado localmente". `[modelo: haiku]`
 
 ## 4. Cierre
