@@ -31,4 +31,4 @@
 
 ## 5. Cierre
 
-- [ ] 5.1 Review final del change: conformidad con la spec MCP 2025-11-25, clasificación inmutable en runtime, toda invocación por Policy Gate + `AuditEvent`, cero lógica MCP en `core/` (import-linter KEPT) y coherencia specs↔tasks. Verificación: checklist del reviewer en el PR con los 5 comandos de calidad en verde. `[modelo: opus]`
+- [x] 5.1 Review final del change: conformidad con la spec MCP 2025-11-25, clasificación inmutable en runtime, toda invocación por Policy Gate + `AuditEvent`, cero lógica MCP en `core/` (import-linter KEPT) y coherencia specs↔tasks. Verificación: checklist del reviewer en el PR con los 5 comandos de calidad en verde. `[modelo: opus]`

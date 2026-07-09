@@ -29,7 +29,7 @@ from typing import Any
 import pytest
 
 from resultarai.adapters.skills_fs.loader import FilesystemSkillPackageAdapter
-from resultarai.adapters.tools_mcp.governed import GovernedToolExecutor
+from resultarai.adapters.tools_mcp.governed import EndpointResolutionError, GovernedToolExecutor
 from resultarai.adapters.tools_mcp.session import ToolCallOutcome
 from resultarai.adapters.tools_mcp.transports import StdioTransportConfig, TransportConfig
 from resultarai.core.audit import AuditEvent, ToolCallStatus, project_visible_tool_call
@@ -168,6 +168,38 @@ class TestReadWithoutAllowingPolicyIsBlocked:
         assert result.duration_ms is None
         assert len(events) == 1
         assert events[0].effect == "deny"
+
+
+class TestEndpointResolutionFailureIsAudited:
+    """Un `allow` cuyo `endpoint_ref` no resuelve audita la decision antes de propagar.
+
+    Cubre el hallazgo LOW del review final de c09: toda decision del Policy Gate emite su
+    `AuditEvent`, incluso cuando un error de configuracion interno (endpoint_resolver sin
+    el `endpoint_ref` del binding) impide abrir el transport. No hay `tools/call`.
+    """
+
+    def test_allow_with_unresolvable_endpoint_audits_before_raising(
+        self, registries: Registries
+    ) -> None:
+        events: list[AuditEvent] = []
+        executor = GovernedToolExecutor(
+            tool_registry=registries.tools,
+            active_policies=list(registries.policies.invocable()),
+            endpoint_resolver={},  # sin mapeo: error de configuracion interno
+            audit_sink=events,
+        )
+
+        with pytest.raises(EndpointResolutionError) as excinfo:
+            _invoke(executor, "example_echo", {"text": "hola"})
+
+        assert _ENDPOINT_REF in str(excinfo.value)
+        # La decision allow quedo auditada aunque no hubo tools/call.
+        assert len(events) == 1
+        event = events[0]
+        assert event.effect == "allow"
+        assert event.tool == "example_echo"
+        assert event.result_summary is not None
+        assert "error de configuracion antes de tools/call" in event.result_summary
 
 
 class TestWriteAlwaysEscalatesToHitl:

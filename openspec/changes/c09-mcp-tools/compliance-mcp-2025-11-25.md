@@ -55,6 +55,6 @@ El SDK 1.28.1 declara `2025-11-25` como `LATEST_PROTOCOL_VERSION` y la incluye e
 |---|---|
 | `uv sync` (con `mcp==1.28.1`) | Verde — `+ mcp==1.28.1` instalado (122 paquetes resueltos). |
 | `uv run lint-imports` | 3 contratos KEPT, 0 broken. La regla "El nucleo no conoce el mundo exterior" ahora incluye `mcp` en `forbidden_modules` (core no puede importar el SDK MCP). |
-| `uv run pytest` | 274 passed. |
+| `uv run pytest` | 274 passed (al momento de la tarea 1.1; al cierre del change: 339 passed). |
 | `uv run ruff check .` | All checks passed. |
-| `uv run ruff format --check .` | 124 files already formatted. |
+| `uv run ruff format --check .` | 124 files already formatted (al cierre del change: 153). |

@@ -293,7 +293,17 @@ class GovernedToolExecutor:
         """
         transport = self._endpoint_resolver.get(binding.endpoint_ref)
         if transport is None:
-            raise EndpointResolutionError(binding.endpoint_ref, binding.manifest_id)
+            # Error de configuracion interno tras un `allow`: no hubo `tools/call`, pero la
+            # decision igual queda auditada (toda decision emite su AuditEvent) antes de
+            # propagar la excepcion (hallazgo LOW del review final de c09).
+            error = EndpointResolutionError(binding.endpoint_ref, binding.manifest_id)
+            event = create_audit_event(
+                request,
+                decision,
+                result_summary=f"error de configuracion antes de tools/call: {error}",
+            )
+            self._emit(event)
+            raise error
 
         client = McpToolClient(transport)
         start = time.perf_counter()
