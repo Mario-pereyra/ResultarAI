@@ -70,6 +70,10 @@ init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+
 [tool.importlinter]
 root_package = "resultarai"
 include_external_packages = true
