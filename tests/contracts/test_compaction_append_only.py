@@ -3,6 +3,7 @@
 from typing import Any, cast
 
 from langchain_core.runnables import RunnableConfig
+
 from resultarai.adapters.runtime_langgraph import GraphState, default_chat_graph
 from tests.contracts.fixtures.doubles import (
     DummyLLMPort,
@@ -37,19 +38,22 @@ def test_compaction_is_append_only_and_preserves_history(
 
     initial_messages = list(session_state_over_limit["messages"])
 
-    initial_state = cast(GraphState, {
-        **session_state_over_limit,
-        "model_profile_id": session_state_over_limit["model_profile"],
-        "model_profile_window": 100,
-        "thread_id": "thread_append_only",
-        "user": "user_abc",
-        "tenant": "tenant_xyz",
-        "agent": "agent_foo",
-        "environment": "production",
-        "prompt": "New Prompt",
-        "status": "active",
-        "intent": "general_question",
-    })
+    initial_state = cast(
+        GraphState,
+        {
+            **session_state_over_limit,
+            "model_profile_id": session_state_over_limit["model_profile"],
+            "model_profile_window": 100,
+            "thread_id": "thread_append_only",
+            "user": "user_abc",
+            "tenant": "tenant_xyz",
+            "agent": "agent_foo",
+            "environment": "production",
+            "prompt": "New Prompt",
+            "status": "active",
+            "intent": "general_question",
+        },
+    )
 
     result = default_chat_graph.invoke(initial_state, config=config)
 

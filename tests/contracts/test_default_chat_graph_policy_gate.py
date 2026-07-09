@@ -3,6 +3,7 @@
 from datetime import datetime
 
 from langchain_core.runnables import RunnableConfig
+
 from resultarai.adapters.runtime_langgraph import GraphState, default_chat_graph
 from resultarai.core.audit import AuditEvent
 from resultarai.core.policy import PolicyDecision

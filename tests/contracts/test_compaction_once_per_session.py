@@ -3,6 +3,7 @@
 from typing import Any, cast
 
 from langchain_core.runnables import RunnableConfig
+
 from resultarai.adapters.runtime_langgraph import GraphState, default_chat_graph
 from tests.contracts.fixtures.doubles import (
     DummyLLMPort,
@@ -38,20 +39,23 @@ def test_already_compacted_session_does_not_compact_again(
         }
     }
 
-    initial_state = cast(GraphState, {
-        **session_state_over_limit,
-        "already_compacted": True,  # Mark as already compacted
-        "model_profile_id": session_state_over_limit["model_profile"],
-        "model_profile_window": 100,  # Usage is 82, which would normally trigger compaction
-        "thread_id": "thread_already_compacted",
-        "user": "user_abc",
-        "tenant": "tenant_xyz",
-        "agent": "agent_foo",
-        "environment": "production",
-        "prompt": "Hello",
-        "status": "active",
-        "intent": "general_question",
-    })
+    initial_state = cast(
+        GraphState,
+        {
+            **session_state_over_limit,
+            "already_compacted": True,  # Mark as already compacted
+            "model_profile_id": session_state_over_limit["model_profile"],
+            "model_profile_window": 100,  # Usage is 82, which would normally trigger compaction
+            "thread_id": "thread_already_compacted",
+            "user": "user_abc",
+            "tenant": "tenant_xyz",
+            "agent": "agent_foo",
+            "environment": "production",
+            "prompt": "Hello",
+            "status": "active",
+            "intent": "general_question",
+        },
+    )
 
     result = default_chat_graph.invoke(initial_state, config=config)
 

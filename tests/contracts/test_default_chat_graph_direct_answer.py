@@ -1,6 +1,7 @@
 """Contract test verifying direct answer workflow in default_chat_graph."""
 
 from langchain_core.runnables import RunnableConfig
+
 from resultarai.adapters.runtime_langgraph import GraphState, default_chat_graph
 from tests.contracts.fixtures.doubles import (
     DummyLLMPort,

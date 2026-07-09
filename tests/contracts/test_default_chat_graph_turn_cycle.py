@@ -1,6 +1,7 @@
 """Contract test verifying turn cycle trace events and turn_id coherence."""
 
 from langchain_core.runnables import RunnableConfig
+
 from resultarai.adapters.runtime_langgraph import GraphState, default_chat_graph
 from resultarai.core.manifests.base import ManifestStatus
 from resultarai.core.manifests.routing import RoutingAction, RoutingManifest, RoutingRule

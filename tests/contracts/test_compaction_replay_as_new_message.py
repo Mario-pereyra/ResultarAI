@@ -6,6 +6,7 @@ without rolling back compaction.
 from typing import Any, cast
 
 from langchain_core.runnables import RunnableConfig
+
 from resultarai.adapters.runtime_langgraph import GraphState, default_chat_graph
 from tests.contracts.fixtures.doubles import (
     DummyLLMPort,
@@ -43,19 +44,22 @@ def test_subsequent_turn_after_compaction_keeps_compacted_history(
     }
 
     # --- TURN 1 (Triggers Compaction) ---
-    state_turn1 = cast(GraphState, {
-        **session_state_over_limit,
-        "model_profile_id": session_state_over_limit["model_profile"],
-        "model_profile_window": 100,
-        "thread_id": "thread_replay",
-        "user": "user_abc",
-        "tenant": "tenant_xyz",
-        "agent": "agent_foo",
-        "environment": "production",
-        "prompt": "Prompt 1",
-        "status": "active",
-        "intent": "general_question",
-    })
+    state_turn1 = cast(
+        GraphState,
+        {
+            **session_state_over_limit,
+            "model_profile_id": session_state_over_limit["model_profile"],
+            "model_profile_window": 100,
+            "thread_id": "thread_replay",
+            "user": "user_abc",
+            "tenant": "tenant_xyz",
+            "agent": "agent_foo",
+            "environment": "production",
+            "prompt": "Prompt 1",
+            "status": "active",
+            "intent": "general_question",
+        },
+    )
 
     result_turn1 = default_chat_graph.invoke(state_turn1, config=config)
 
@@ -66,10 +70,13 @@ def test_subsequent_turn_after_compaction_keeps_compacted_history(
 
     # --- TURN 2 (Subsequent Turn) ---
     llm_port.default_text = "Reply 2"
-    state_turn2 = cast(GraphState, {
-        **result_turn1,
-        "prompt": "Prompt 2",
-    })
+    state_turn2 = cast(
+        GraphState,
+        {
+            **result_turn1,
+            "prompt": "Prompt 2",
+        },
+    )
 
     result_turn2 = default_chat_graph.invoke(state_turn2, config=config)
 
