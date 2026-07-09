@@ -46,7 +46,8 @@ class ManifestRegistry[M: BaseManifest]:
     de adapters. Las referencias cruzadas (tarea 2.2) viven en `cross_references.py`; el
     ciclo de vida y kill switch por `status` (tarea 2.3) vive aqui, como
     `is_invocable`/`get_invocable`/`invocable`; la consulta generica por `status` (tarea
-    2.4, listar todos los `deprecated`, etc.) queda abierta.
+    2.4, listar todos los `deprecated`, etc.) es `by_status`, sobre la que `invocable()`
+    esta implementado como el caso particular `status: active`.
     """
 
     def __init__(self, manifests: Iterable[M]) -> None:
@@ -92,18 +93,34 @@ class ManifestRegistry[M: BaseManifest]:
             return manifest
         return None
 
+    def by_status(self, status: ManifestStatus) -> tuple[M, ...]:
+        """Todos los Manifests catalogados con ese `status`, en orden de insercion.
+
+        Consulta generica del catalogo (tarea 2.4): sirve tanto para listar los
+        invocables (`status: active`) como para trazabilidad sobre cualquier otro
+        estado (p. ej. todos los `deprecated`, o todos los `draft`). Operacion pura de
+        lectura -- nunca muta `self._catalog` ni marca nada como invocable; consultar un
+        `deprecated` con `by_status` no lo reactiva. Si ningun Manifest catalogado tiene
+        ese `status` devuelve una tupla vacia, nunca un error.
+        """
+        return tuple(manifest for manifest in self._catalog.values() if manifest.status == status)
+
     def invocable(self) -> tuple[M, ...]:
         """Todos los Manifests catalogados con `status: active`, en orden de insercion.
 
         Operacion pura de lectura (no muta el catalogo). Excluye `draft`, `validated` y
         `deprecated` -- el kill switch de un `active` a `deprecated` lo saca de esta
         coleccion en la siguiente construccion del Registry, aunque siga en `get()`.
+
+        Implementado sobre `by_status` (tarea 2.4): `invocable()` es el caso particular
+        `by_status(ManifestStatus.ACTIVE)`. Se mantiene como metodo propio (en vez de que
+        el resto del codigo llame a `by_status(ACTIVE)` directamente) porque "invocable"
+        es el nombre de dominio explicito que usan `is_invocable`/`get_invocable`, y no
+        toda consulta por `status: active` es conceptualmente una consulta de
+        invocabilidad -- mantener el nombre evita que quien lea el codigo tenga que saber
+        que `ACTIVE` es sinonimo de invocable.
         """
-        return tuple(
-            manifest
-            for manifest in self._catalog.values()
-            if manifest.status == ManifestStatus.ACTIVE
-        )
+        return self.by_status(ManifestStatus.ACTIVE)
 
     def __contains__(self, manifest_id: str) -> bool:
         return manifest_id in self._catalog
