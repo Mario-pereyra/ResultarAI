@@ -1,0 +1,42 @@
+## Context
+
+`b04-persistencia-postgres` deja el modelo de datos (sesiones/mensajes append-only con `parent_id`, stickiness de `model_profile`), `b05-gateway-modelos` deja el contrato de salida del gateway (cascada, cache hit/miss, etiqueta "modelo alterno", evento de escalación), `b06-runtime-grafos` deja el graph template de respuesta directa invocable por turno, `b07-observabilidad` deja las trazas y el feedback ligado a traza, y `c09-mcp-tools` deja el contrato `tool-call-visibility`. Ninguno de esos changes expone HTTP ni UI. `d13` es el primer slice vertical que los conecta: `app/api` + `app/use_cases/chat/` en el backend, y las vistas 05/06/08/09/10/12 de `design/VISTAS/02-chat.md` en el frontend (`frontend/`, sobre el shell de `d10-design-system-shell`).
+
+El chat es la superficie de mayor tráfico del producto y la que sostiene la economía cache-first (transparencia de costo, stickiness de modelo). Cualquier decisión aquí sobre transporte de streaming, modelo de ramas en la API y sanitización de markdown condiciona a todos los changes de Etapa D que se apoyan en esta misma superficie (`d14` attachments, `d16` cuotas, `d17` HITL, `e23` memoria).
+
+## Goals / Non-Goals
+
+**Goals:**
+
+- Definir el transporte de streaming (SSE) con reconexión y heartbeat, y cómo se traduce el contrato de salida de `b05`/`b06` a eventos de dominio consumibles por la UI.
+- Definir el modelo de la API para ramas (edición, regeneración, escalación) como operaciones explícitas sobre `parent_id`, sin que el frontend necesite conocer el modelo relacional de `b04`.
+- Definir cómo la UI aplica las capas por rol (Funcional/Técnico/Admin) sin duplicar componentes ni bifurcar el árbol de renderizado.
+- Definir la estrategia de sanitización del markdown renderizado.
+
+**Non-Goals:**
+
+- No se diseña el modelo de datos de sesiones/mensajes/ramas: ya está fijado por `b04-persistencia-postgres`.
+- No se diseña la cascada de fallback, el cálculo de costo ni la detección del marcador de escalación: ya están fijados por `b05-gateway-modelos`.
+- No se diseña el pipeline de attachments, el enforcement de cuotas ni las tarjetas HITL: quedan en `d14`, `d16`, `d17` respectivamente (ver "No-objetivos" del proposal).
+
+## Decisions
+
+1. **SSE (Server-Sent Events) sobre WebSocket para el streaming de turno.** El chat es unidireccional servidor→cliente por turno (el cliente solo envía el mensaje inicial y, aparte, una cancelación vía un endpoint HTTP normal); SSE da reconexión nativa del navegador (`EventSource`), heartbeat simple como comentario de protocolo, y no exige gestionar el ciclo de vida bidireccional de un socket para un caso de uso que no lo necesita. Alternativa WebSocket descartada: complejidad de estado adicional sin beneficio (no hay mensajes servidor→cliente fuera de la respuesta del turno actual); se reconsiderará si un change futuro necesita push bidireccional real (p. ej. notificaciones en vivo, fuera de alcance aquí).
+2. **Reconexión por `Last-Event-ID` + identificador de turno en curso.** Cada evento SSE lleva un `id` incremental por turno; al reconectar, el cliente envía `Last-Event-ID` (soporte nativo de `EventSource`) y el servidor reproduce desde el buffer del turno en curso (mantenido en el propio proceso que orquesta el turno, respaldado por lo ya persistido en `b04` para los fragmentos ya cerrados). Alternativa "reiniciar el turno al reconectar" descartada: duplicaría costo de generación y violaría la transparencia de costo (el usuario pagaría dos veces por el mismo turno).
+3. **Heartbeat como comentario SSE (`: heartbeat`) cada N segundos configurables**, no como evento de datos, para no interferir con el parseo de eventos de dominio del cliente ni inflar el log de eventos persistidos.
+4. **Modelo de la API de ramas: `POST /sessions/{id}/messages` para turno normal y edición, distinguidos por si el payload declara `edits_message_id`.** Editar reutiliza el mismo endpoint de envío de turno con ese campo opcional en vez de un endpoint `PATCH` separado, porque semánticamente ambas operaciones son "crear un mensaje nuevo en la rama" — la única diferencia es de qué `parent_id` cuelga. Regenerar es un endpoint dedicado (`POST /messages/{id}/regenerate`) porque no lleva texto de usuario nuevo. Alternativa de un único endpoint genérico "crear rama" para las tres operaciones (edición/regeneración/escalación) descartada: cada una tiene invariantes propias (autoría, perfil de destino) mejor expresadas como operaciones nombradas que como un payload polimórfico difícil de validar.
+5. **La escalación crea una sesión nueva enlazada, no una rama dentro de la misma sesión**, coherente con la stickiness de `model_profile` de `b04`/`b05` (una sesión = un perfil). La sesión escalada guarda una referencia a la sesión/turno de origen para la nota-enlace bidireccional de la vista 08; no hereda el historial literal, solo un resumen del contexto (evita romper el prefijo cacheable de la sesión Pro, coherente con cache-first).
+6. **Sanitización de markdown con una lista blanca de nodos/atributos aplicada al AST antes de renderizar** (no post-procesado de HTML ya inyectado en el DOM), tanto para el texto del agente como para el eco del texto del usuario. Se ejecuta en el cliente (assistant-ui ya parsea a AST) reforzada por una política de CSP en el shell (`d10-design-system-shell`, sin reabrir esa decisión aquí); nunca se usa `dangerouslySetInnerHTML`/`innerHTML` directo con el markdown crudo.
+7. **Las capas por rol se resuelven en un único árbol de componentes con "slots" condicionados por capacidad del rol**, nunca con vistas de chat separadas por rol (coherente con `design/FUNCIONALIDADES.md`: "una sola UI compartida"). El backend expone los campos de telemetría solo si el rol de la sesión los tiene habilitados (el backend no confía en que el frontend los oculte): la ausencia del campo en la respuesta, no una bandera de visibilidad, es lo que determina que Funcional no vea telemetría.
+8. **El aviso de regeneración costosa y el conteo de "modelo alterno" se calculan server-side** (cantidad de mensajes a reprocesar, si el turno usó el perfil primario o uno de fallback) y viajan como datos en la respuesta; la UI no reimplementa esa lógica para evitar desincronización con el modelo real de ramas/cascada.
+
+## Risks / Trade-offs
+
+- [SSE no soporta cuerpos de petición del cliente tras abrir la conexión, lo que fuerza a la cancelación a ser un endpoint HTTP separado en vez de un mensaje sobre el mismo canal] → Mitigación: es el patrón estándar de assistant-ui/Vercel AI SDK para streaming; la cancelación como `POST /messages/{id}/cancel` es simple y no necesita compartir canal.
+- [Mantener el buffer de un turno en curso en memoria del proceso complica el reinicio del backend a mitad de un stream] → Mitigación: los fragmentos ya emitidos se van persistiendo incrementalmente en `b04` (append), de forma que un reinicio pierde como máximo el fragmento no confirmado en vuelo, no el turno completo; el cliente reconecta y ve el turno como "detenido", pudiendo regenerar.
+- [Sanitización client-side de markdown puede quedar desactualizada si assistant-ui cambia su AST] → Mitigación: pinnear la versión de assistant-ui y cubrir la sanitización con un test de contrato (`tests/contracts/` del lado frontend) que verifica que un payload adversarial conocido no se renderiza como HTML activo.
+- [Ocultar telemetría solo por rol de sesión, sin verificación server-side, filtraría datos si un token de rol se falsifica] → Mitigación: la decisión de qué campos incluir se toma en `app/api` a partir del rol de la sesión de identidad (server-side), no de un parámetro de la petición ni de una bandera del cliente.
+
+## Open Questions
+
+*(ninguna — las decisiones de transporte y modelo de API quedan tomadas en este change; `d14`/`d16`/`d17` extienden esta misma superficie sin reabrir estas decisiones)*

@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-07-09
+goal: Cliente MCP (spec 2025-11-25) detrás de ToolPort, binding con Tool
+  Registry con clasificación fija, ejecución gobernada por Policy Gate, tool
+  calls visibles y MCP server de ejemplo de fábrica

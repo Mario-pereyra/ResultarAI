@@ -6,7 +6,7 @@ Plataforma interna de IA de Resultar Soluciones (partner TOTVS Bolivia): chat go
 
 ## Estado actual
 
-**Greenfield en fase de diseño.** Documentación y paquete de diseño UX (`design/`) completos; sin código todavía. **Pivote 2026-07-09:** producto completo genérico "de fábrica" primero (Etapas A–E), personalización Protheus después (Etapa P) — ver `docs/07-roadmap.md`. Etapa activa: **A — Fundación** (change `01-fundacion-repo`). *(Actualizar esta línea al avanzar de etapa.)*
+**Greenfield en fase de diseño.** Documentación y paquete de diseño UX (`design/`) completos; sin código todavía. **Pivote 2026-07-09:** producto completo genérico "de fábrica" primero (Etapas A–E), personalización Protheus después (Etapa P) — ver `docs/07-roadmap.md`. Etapa activa: **A — Fundación** (change `a01-fundacion-repo`). *(Actualizar esta línea al avanzar de etapa.)*
 
 ## Arquitectura en 60 segundos
 

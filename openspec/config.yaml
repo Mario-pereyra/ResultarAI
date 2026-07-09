@@ -44,6 +44,6 @@ rules:
     - Vistas y flujos deben referenciar el archivo de design/ que los define (VISTAS/, FLUJOS.md, ANEXO-ATTACHMENTS.md)
   tasks:
     - Tareas de máximo ~2 horas, con criterio de verificación observable
-    - Toda tarea declara su escalón de ejecución con el sufijo "[modelo: haiku|sonnet|opus]" según la escalera de /asignar-modelo (docs/07-roadmap.md)
+    - 'Toda tarea declara su escalón de ejecución con el sufijo "[modelo: haiku|sonnet|opus]" según la escalera de /asignar-modelo (docs/07-roadmap.md)'
     - Toda tarea que toque core/ debe indicar el test que la cubre
     - Toda tarea que agregue una capacidad debe incluir su manifiesto YAML y su validación
