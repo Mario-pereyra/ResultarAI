@@ -142,7 +142,12 @@ def receive(state: GraphState, config: RunnableConfig) -> dict[str, Any]:
     if trace_port:
         trace_port.trace_step(
             step_name="receive",
-            inputs={"prompt": prompt, "turn_id": turn_id},
+            inputs={
+                "prompt": prompt,
+                "turn_id": turn_id,
+                "user_id": state.get("user") or "",
+                "session_id": state.get("thread_id") or "",
+            },
             outputs={"messages": new_messages, "turn_id": turn_id},
         )
 
@@ -190,6 +195,7 @@ def policy_gate_respond(state: GraphState, config: RunnableConfig) -> dict[str, 
     policy_port = configurable.get("policy_port")
     registries = configurable.get("registries")
     state_port = configurable.get("state_port")
+    trace_port = configurable.get("trace_port")
 
     if not policy_port:
         raise ValueError("policy_port is required for policy gate respond")
@@ -228,6 +234,17 @@ def policy_gate_respond(state: GraphState, config: RunnableConfig) -> dict[str, 
     if state_port:
         state_port.save_state(state.get("thread_id") or "", {**state, **updated_state})
 
+    if trace_port:
+        trace_port.trace_step(
+            step_name="policy_gate",
+            inputs={"action_request": action_request, "turn_id": state.get("turn_id")},
+            outputs={
+                "policy_decision": decision,
+                "status": status,
+                "turn_id": state.get("turn_id"),
+            },
+        )
+
     return updated_state
 
 
@@ -237,6 +254,7 @@ def policy_gate_activate_skill(state: GraphState, config: RunnableConfig) -> dic
     policy_port = configurable.get("policy_port")
     registries = configurable.get("registries")
     state_port = configurable.get("state_port")
+    trace_port = configurable.get("trace_port")
 
     if not policy_port:
         raise ValueError("policy_port is required for policy gate activate skill")
@@ -271,6 +289,17 @@ def policy_gate_activate_skill(state: GraphState, config: RunnableConfig) -> dic
 
     if state_port:
         state_port.save_state(state.get("thread_id") or "", {**state, **updated_state})
+
+    if trace_port:
+        trace_port.trace_step(
+            step_name="policy_gate",
+            inputs={"action_request": action_request, "turn_id": state.get("turn_id")},
+            outputs={
+                "policy_decision": decision,
+                "status": status,
+                "turn_id": state.get("turn_id"),
+            },
+        )
 
     return updated_state
 
