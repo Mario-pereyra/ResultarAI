@@ -24,10 +24,10 @@
 
 ## 4. MCP Server de ejemplo de fábrica y manifiestos
 
-- [ ] 4.1 MCP Server de ejemplo de utilidades ejecutable por stdio con Tools de lectura (fecha/hora, cálculo, echo), cada una con `inputSchema` válido; sin tocar el ERP. Verificación: test de "El server de ejemplo expone lectura y escritura simulada" (parte lectura). `[modelo: sonnet]`
-- [ ] 4.2 Tool de "escritura" simulada en el server de ejemplo (sin efecto real) para ejercer el camino `escalate_hitl`. Verificación: test de "La escritura simulada no produce efecto real". `[modelo: sonnet]`
-- [ ] 4.3 `ToolManifest` de fábrica en `manifests/tools/` que bindean el server de ejemplo (1 lectura + 1 escritura simulada) con clasificación fija por `version` (`operation_type`, `risk.level`); validación contra el schema de `a02`. Verificación: los manifiestos validan en CI y pasan la validación cruzada (`tool_name` existe en el server). `[modelo: haiku]`
-- [ ] 4.4 Fixtures de prueba: MCP Server de prueba (stdio y HTTP) y respuestas JSON-RPC canónicas (paginación, `isError`, Protocol Error) para los tests del cliente, sin red externa. Verificación: los fixtures cargan y los tests de la sección 1 corren en verde offline. `[modelo: haiku]`
+- [x] 4.1 MCP Server de ejemplo de utilidades ejecutable por stdio con Tools de lectura (fecha/hora, cálculo, echo), cada una con `inputSchema` válido; sin tocar el ERP. Verificación: test de "El server de ejemplo expone lectura y escritura simulada" (parte lectura). `[modelo: sonnet]`
+- [x] 4.2 Tool de "escritura" simulada en el server de ejemplo (sin efecto real) para ejercer el camino `escalate_hitl`. Verificación: test de "La escritura simulada no produce efecto real". `[modelo: sonnet]`
+- [x] 4.3 `ToolManifest` de fábrica en `manifests/tools/` que bindean el server de ejemplo (1 lectura + 1 escritura simulada) con clasificación fija por `version` (`operation_type`, `risk.level`); validación contra el schema de `a02`. Verificación: los manifiestos validan en CI y pasan la validación cruzada (`tool_name` existe en el server). `[modelo: haiku]`
+- [x] 4.4 Fixtures de prueba: MCP Server de prueba (stdio y HTTP) y respuestas JSON-RPC canónicas (paginación, `isError`, Protocol Error) para los tests del cliente, sin red externa. Verificación: los fixtures cargan y los tests de la sección 1 corren en verde offline. `[modelo: haiku]`
 
 ## 5. Cierre
 

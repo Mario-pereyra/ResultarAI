@@ -1,0 +1,36 @@
+id: example_record_note
+name: Registro de Nota Simulada
+status: active
+version: 1.0.0
+
+type: mcp_tool
+adapter: mcp
+
+mcp:
+  server: example_utilities_server
+  tool_name: record_note
+  spec_revision: "2025-11-25"
+  endpoint_ref: example_mcp_endpoint
+
+risk:
+  level: critical
+  operation_type: write
+
+permissions:
+  mode: read_write
+  requires_human_approval: true
+
+security:
+  allow_sql_freeform: false
+  allow_dynamic_table_access: false
+  mask_sensitive_fields: true
+
+audit:
+  log_request: true
+  log_response_summary: true
+  log_user: true
+  log_tenant: true
+
+evals:
+  status: placeholder
+  template: example_record_note_eval
