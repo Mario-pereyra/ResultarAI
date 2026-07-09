@@ -1,5 +1,6 @@
 """LiteLLM adapter client implementing the LLMPort protocol."""
 
+import re
 from typing import Any
 
 import litellm
@@ -7,6 +8,60 @@ import litellm
 from resultarai.core.model_profile import ModelProfile
 from resultarai.core.ports.llm import LLMPort, LLMResponse
 from resultarai.core.ports.llm_errors import LLMCascadeExhaustedError
+
+
+def get_eligible_text(text: str) -> str:
+    """Removes all blocks delimited by <adjunto id="...">...</adjunto> from the text.
+
+    Blocks are matched by ID. If a tag is not properly closed with matching id, everything from
+    that tag to the end of the text is removed (fail-closed).
+    """
+    open_tags: list[tuple[int, int, str]] = []
+    for m in re.finditer(r'<adjunto\s+[^>]*id=["\']?([a-zA-Z0-9_\-]+)["\']?[^>]*>', text):
+        open_tags.append((m.start(), m.end(), m.group(1)))
+
+    if not open_tags:
+        return text
+
+    ranges_to_remove: list[tuple[int, int]] = []
+    for i, tag in enumerate(open_tags):
+        start_idx = tag[0]
+        end_opening = tag[1]
+        next_open_start = open_tags[i + 1][0] if i + 1 < len(open_tags) else len(text)
+
+        search_space = text[end_opening:next_open_start]
+        close_matches = list(re.finditer(r"</adjunto>", search_space))
+
+        if close_matches:
+            last_close = close_matches[-1]
+            end_idx = end_opening + last_close.end()
+            ranges_to_remove.append((start_idx, end_idx))
+        else:
+            ranges_to_remove.append((start_idx, len(text)))
+            break
+
+    ranges_to_remove.sort()
+    merged_ranges: list[tuple[int, int]] = []
+    for r in ranges_to_remove:
+        if not merged_ranges:
+            merged_ranges.append(r)
+        else:
+            prev_start, prev_end = merged_ranges[-1]
+            if r[0] <= prev_end:
+                merged_ranges[-1] = (prev_start, max(prev_end, r[1]))
+            else:
+                merged_ranges.append(r)
+
+    result = []
+    last_idx = 0
+    for r_start, r_end in merged_ranges:
+        if r_start > last_idx:
+            result.append(text[last_idx:r_start])
+        last_idx = max(last_idx, r_end)
+    if last_idx < len(text):
+        result.append(text[last_idx:])
+
+    return "".join(result)
 
 
 class LiteLLMClient(LLMPort):
@@ -18,6 +73,13 @@ class LiteLLMClient(LLMPort):
 
     def generate(self, prompt: str, **kwargs: Any) -> LLMResponse:
         """Generate response text from a given prompt, using the fallback cascade."""
+        escalation_enabled = True
+        agent = kwargs.get("agent")
+        if agent is not None:
+            if hasattr(agent, "escalation"):
+                escalation_enabled = getattr(agent.escalation, "enabled", True)
+        elif "escalation_enabled" in kwargs:
+            escalation_enabled = kwargs["escalation_enabled"]
         fallback_cascade = kwargs.get("fallback_cascade", [])
         if not fallback_cascade:
             raise LLMCascadeExhaustedError(
@@ -118,6 +180,12 @@ class LiteLLMClient(LLMPort):
 
                 is_alternate = profile_id != first_profile_id
 
+                needs_pro = False
+                if escalation_enabled:
+                    eligible_text = get_eligible_text(text)
+                    if "<<<NEEDS_PRO>>>" in eligible_text:
+                        needs_pro = True
+
                 return LLMResponse(
                     text=text,
                     model_profile_id=profile_id,
@@ -127,7 +195,7 @@ class LiteLLMClient(LLMPort):
                     cache_hit_tokens=cache_hit_tokens,
                     cache_miss_tokens=cache_miss_tokens,
                     cost_usd=cost_usd,
-                    needs_pro=False,
+                    needs_pro=needs_pro,
                 )
 
             except Exception as e:
