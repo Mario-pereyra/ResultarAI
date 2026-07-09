@@ -5,9 +5,10 @@ Cubre la Requirement "Invocación tipada de Tools vía tools/call"
 
 - "Invocación de lectura autorizada devuelve resultado tipado": `echo` y
   `calculate` del server de ejemplo (por stdio) devuelven un
-  `ToolCallOutcome` con `is_error is False`, `content` correcto y
-  `structured_content` no vacío (FastMCP genera `outputSchema`/
-  `structuredContent` incluso para Tools que devuelven texto plano).
+  `ToolCallOutcome` (el tipo de éxito, que por construcción no puede ser un
+  `isError: true`), con `content` correcto y `structured_content` no vacío
+  (FastMCP genera `outputSchema`/`structuredContent` incluso para Tools que
+  devuelven texto plano).
 - "Argumentos que no cumplen el inputSchema no se envían": una invocación con
   argumentos inválidos lanza `ToolArgumentValidationError` ANTES de tocar
   `ClientSession.call_tool` — se prueba con un spy que falla el test si
@@ -28,7 +29,7 @@ import pytest
 
 from resultarai.adapters.tools_mcp.descriptors import ToolDescriptor
 from resultarai.adapters.tools_mcp.errors import ToolArgumentValidationError
-from resultarai.adapters.tools_mcp.session import McpToolSession
+from resultarai.adapters.tools_mcp.session import McpToolSession, ToolCallOutcome
 from resultarai.adapters.tools_mcp.transports import StdioTransportConfig
 
 _SERVER_MODULE = "resultarai.adapters.tools_mcp.example_server"
@@ -56,7 +57,9 @@ class TestAuthorizedReadInvocationReturnsTypedOutcome:
 
         outcome = anyio.run(_run)
 
-        assert outcome.is_error is False
+        # El tipo de éxito `ToolCallOutcome` no puede representar `isError:true`
+        # (aserción más fuerte que el antiguo `is_error is False`).
+        assert isinstance(outcome, ToolCallOutcome)
         assert outcome.content == "hola mundo"
         # El descriptor de `echo` declara outputSchema (FastMCP lo genera); el
         # SDK ya valida structuredContent contra ese schema dentro de
@@ -72,7 +75,7 @@ class TestAuthorizedReadInvocationReturnsTypedOutcome:
 
         outcome = anyio.run(_run)
 
-        assert outcome.is_error is False
+        assert isinstance(outcome, ToolCallOutcome)
         assert outcome.content == "8"
 
 

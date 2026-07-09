@@ -57,8 +57,8 @@ class TestExecuteWithAllowRunsEndToEnd:
 
         outcome = client.execute("echo", {"text": "hola execute"}, decision)
 
+        # `ToolCallOutcome` es el tipo de éxito: no puede portar `isError:true`.
         assert isinstance(outcome, ToolCallOutcome)
-        assert outcome.is_error is False
         assert outcome.content == "hola execute"
 
     def test_allow_decision_with_unknown_tool_name_raises(self, tmp_path: Path) -> None:

@@ -19,13 +19,28 @@ from dataclasses import dataclass
 from typing import Any, Literal
 
 import anyio
+from mcp.shared.exceptions import McpError
 
 from resultarai.adapters.tools_mcp.errors import UnknownToolError
-from resultarai.adapters.tools_mcp.session import McpToolSession, ToolCallOutcome
+from resultarai.adapters.tools_mcp.session import (
+    McpToolSession,
+    ToolCallOutcome,
+    ToolExecutionFailure,
+    ToolProtocolFailure,
+)
 from resultarai.adapters.tools_mcp.transports import TransportConfig
 from resultarai.core.policy import PolicyDecision
 
 __all__ = ["McpToolClient", "ToolExecutionRejected"]
+
+# Resultado observable del `ToolPort` (`McpToolClient.execute`). Tres casos
+# distintos que ocurren tras contactar al server con decisión `allow`:
+# `ToolCallOutcome` (éxito), `ToolExecutionFailure` (`isError: true`) y
+# `ToolProtocolFailure` (error JSON-RPC). El cuarto, `ToolExecutionRejected`,
+# ocurre cuando la Policy no autoriza y NUNCA se toca el server.
+type ToolExecutionResult = (
+    ToolCallOutcome | ToolExecutionFailure | ToolProtocolFailure | ToolExecutionRejected
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,15 +76,28 @@ class McpToolClient:
         tool_name: str,
         arguments: dict[str, Any],
         decision: PolicyDecision,
-    ) -> ToolCallOutcome | ToolExecutionRejected:
+    ) -> ToolExecutionResult:
         """Ejecuta `tool_name` solo si `decision.effect == "allow"` (firma exacta de `ToolPort`).
 
         Con `allow`: ejecuta una sesión MCP completa (`initialize` →
         `tools/list` para resolver el descriptor de `tool_name` →
-        validación de `arguments` → `tools/call`) vía `anyio.run` y devuelve
-        el `ToolCallOutcome`. Si `tool_name` no aparece en el `tools/list`
-        del server, lanza `UnknownToolError` (el mapeo fino a Protocol Error
-        lo hace la tarea 1.7).
+        validación de `arguments` → `tools/call`) vía `anyio.run` y distingue
+        los tres desenlaces posibles como VALORES tipados (nunca lanzando el
+        fallo hacia arriba), de modo que el contrato observable del `ToolPort`
+        separe los tres casos sin ambigüedad (Requirement "Manejo de errores
+        diferenciado"):
+
+        - éxito (`isError: false`) → `ToolCallOutcome`;
+        - Tool Execution Error (`isError: true`) → `ToolExecutionFailure`,
+          conservando el mensaje accionable de la Tool;
+        - Protocol Error JSON-RPC (`McpError`, p. ej. `-32602`) →
+          `ToolProtocolFailure` con `code`/`message` del server.
+
+        `UnknownToolError` conserva su semántica local: si `tool_name` no está
+        en el `tools/list` del server, se detecta ANTES de emitir `tools/call`
+        y se lanza (no se contacta al server para esa Tool). El caso en que el
+        propio server rechaza un `name` con `-32602` se cubre por el camino
+        `McpError` → `ToolProtocolFailure`.
 
         Con `deny`/`escalate_hitl`: devuelve `ToolExecutionRejected` de
         inmediato, sin tocar el transport.
@@ -80,10 +108,19 @@ class McpToolClient:
 
         return anyio.run(self._execute_allowed, tool_name, arguments)
 
-    async def _execute_allowed(self, tool_name: str, arguments: dict[str, Any]) -> ToolCallOutcome:
-        async with McpToolSession(self._transport) as session:
-            descriptors = await session.list_tools()
-            descriptor = next((d for d in descriptors if d.name == tool_name), None)
-            if descriptor is None:
-                raise UnknownToolError(tool_name)
-            return await session.call_tool(tool_name, arguments, descriptor)
+    async def _execute_allowed(
+        self, tool_name: str, arguments: dict[str, Any]
+    ) -> ToolCallOutcome | ToolExecutionFailure | ToolProtocolFailure:
+        try:
+            async with McpToolSession(self._transport) as session:
+                descriptors = await session.list_tools()
+                descriptor = next((d for d in descriptors if d.name == tool_name), None)
+                if descriptor is None:
+                    raise UnknownToolError(tool_name)
+                return await session.call_tool(tool_name, arguments, descriptor)
+        except McpError as exc:
+            # Protocol Error JSON-RPC del server (Tool desconocida server-side,
+            # request mal formado, error interno): se mapea a valor tipado, no
+            # se propaga. `UnknownToolError` (fallo local, no McpError) sí sigue
+            # propagándose, conservando su semántica.
+            return ToolProtocolFailure.from_mcp_error(tool_name, exc)

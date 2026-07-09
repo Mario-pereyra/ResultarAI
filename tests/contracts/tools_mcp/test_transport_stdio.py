@@ -28,7 +28,7 @@ import anyio
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from resultarai.adapters.tools_mcp.session import McpToolSession
+from resultarai.adapters.tools_mcp.session import McpToolSession, ToolCallOutcome
 from resultarai.adapters.tools_mcp.transports import StdioTransportConfig
 
 _SERVER_MODULE = "resultarai.adapters.tools_mcp.example_server"
@@ -48,6 +48,9 @@ class TestStdioTransportEndToEndViaMcpToolSession:
                     descriptors = await session.list_tools()
                     echo = next(d for d in descriptors if d.name == "echo")
                     outcome = await session.call_tool("echo", {"text": "por stdio"}, echo)
+                    # El éxito es un `ToolCallOutcome` (tipo que no puede ser un
+                    # `isError: true`); narrowing para acceder a `.content`.
+                    assert isinstance(outcome, ToolCallOutcome)
                     return tuple(d.name for d in descriptors), outcome.content
 
         names, content = anyio.run(_run)

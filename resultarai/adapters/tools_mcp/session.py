@@ -29,6 +29,7 @@ from typing import Any, NotRequired, Self, TypedDict
 # tipado) y por eso el import se ignora explícitamente para mypy --strict.
 import jsonschema  # type: ignore[import-untyped]
 from mcp import ClientSession
+from mcp.shared.exceptions import McpError
 from mcp.types import CallToolResult, InitializeResult, PaginatedRequestParams, TextContent
 
 from resultarai.adapters.tools_mcp.descriptors import ToolDescriptor, parse_tool_descriptor
@@ -38,10 +39,13 @@ from resultarai.adapters.tools_mcp.transports import TransportConfig, open_trans
 __all__ = [
     "McpToolSession",
     "ToolCallOutcome",
+    "ToolExecutionFailure",
     "ToolLister",
+    "ToolProtocolFailure",
     "ToolsPage",
     "ensure_tools_capability",
     "paginate_tool_descriptors",
+    "parse_call_tool_result",
 ]
 
 
@@ -101,7 +105,14 @@ def ensure_tools_capability(init_result: InitializeResult) -> None:
 
 @dataclass(frozen=True, slots=True)
 class ToolCallOutcome:
-    """Resultado tipado y ya parseado de una invocación `tools/call`.
+    """Resultado tipado de una invocación `tools/call` **exitosa** (`isError: false`).
+
+    Un `ToolCallOutcome` representa SIEMPRE un éxito: no tiene campo `is_error`,
+    así que por construcción NUNCA puede confundirse con un Tool Execution
+    Error. El caso `isError: true` es un tipo distinto (`ToolExecutionFailure`)
+    y el fallo de protocolo JSON-RPC es otro más (`ToolProtocolFailure`);
+    `parse_call_tool_result` decide cuál emitir según `CallToolResult.isError`
+    (Requirement "Manejo de errores diferenciado", tarea 1.7).
 
     - `content`: texto plano de todos los bloques `TextContent` del
       `CallToolResult`, concatenados con saltos de línea. Otros tipos de
@@ -113,26 +124,89 @@ class ToolCallOutcome:
       de `ClientSession.call_tool` (`_validate_tool_result`, verificado en
       `compliance-mcp-2025-11-25.md` punto 3) antes de devolver el resultado;
       este tipo no repite esa validación.
-    - `is_error`: `isError` del `CallToolResult`. Un `is_error=True` es un
-      Tool Execution Error (spec §Error Handling), NUNCA un éxito — la tarea
-      1.7 refina el modelo de error encima de este campo.
     - `raw`: el `CallToolResult` original del SDK, por si algún consumidor
       necesita el detalle completo (otros tipos de bloque, `_meta`, etc.).
     """
 
     content: str
     structured_content: dict[str, Any] | None
-    is_error: bool
     raw: CallToolResult
 
 
-def _parse_call_tool_result(result: CallToolResult) -> ToolCallOutcome:
-    """Parsea un `CallToolResult` del SDK en un `ToolCallOutcome`."""
-    text_parts = [block.text for block in result.content if isinstance(block, TextContent)]
+@dataclass(frozen=True, slots=True)
+class ToolExecutionFailure:
+    """Tool Execution Error: la Tool se ejecutó y devolvió `CallToolResult` con `isError: true`.
+
+    Es un fallo *de la Tool*, no del protocolo: el `tools/call` llegó al server
+    y volvió con un resultado, solo que ese resultado señala que la ejecución
+    falló (spec §Tool Execution Errors). NUNCA es un éxito — es un tipo
+    distinto de `ToolCallOutcome`, de modo que confundirlos es imposible
+    (Escenario "Tool Execution Error con feedback accionable").
+
+    - `message`: el texto accionable del `content` (bloques `TextContent`
+      concatenados), conservado ÍNTEGRO para que el modelo pueda reaccionar
+      —no se trunca ni se resume aquí.
+    - `structured_content`: `structuredContent` del resultado si el server lo
+      incluyó junto al error, tal cual.
+    - `raw`: el `CallToolResult` crudo del SDK (con `isError=True`), para la
+      capa de auditoría de la sección 2.
+    """
+
+    tool_name: str
+    message: str
+    structured_content: dict[str, Any] | None
+    raw: CallToolResult
+
+
+@dataclass(frozen=True, slots=True)
+class ToolProtocolFailure:
+    """Protocol Error JSON-RPC: el server respondió `tools/call` con un error de protocolo.
+
+    Mecanismo de error DISTINTO del Tool Execution Error: aquí la petición
+    misma falló a nivel JSON-RPC (Tool desconocida, request mal formado, error
+    interno del server), el SDK lo señala lanzando `mcp.shared.exceptions.
+    McpError` (con `ErrorData: code/message`) en vez de devolver un
+    `CallToolResult`. No hay resultado de Tool que exponer, solo el `code`
+    JSON-RPC (p. ej. `-32602` = INVALID_PARAMS) y el `message` del server
+    (Escenario "Protocol Error de Tool desconocida").
+
+    `code`/`message` quedan disponibles para que la capa de auditoría de la
+    sección 2 los registre en el `AuditEvent`.
+    """
+
+    tool_name: str
+    code: int
+    message: str
+
+    @classmethod
+    def from_mcp_error(cls, tool_name: str, error: McpError) -> ToolProtocolFailure:
+        """Construye el fallo tipado desde el `McpError` (JSON-RPC) del SDK."""
+        return cls(tool_name=tool_name, code=error.error.code, message=error.error.message)
+
+
+def parse_call_tool_result(
+    tool_name: str, result: CallToolResult
+) -> ToolCallOutcome | ToolExecutionFailure:
+    """Parsea un `CallToolResult` del SDK en el tipo tipado que corresponde.
+
+    Función pura (sin server ni red): mapea el resultado a `ToolCallOutcome`
+    cuando `isError` es falso, o a `ToolExecutionFailure` cuando es verdadero.
+    El `isError: true` NUNCA se confunde con un éxito: es un tipo de retorno
+    distinto (Requirement "Manejo de errores diferenciado"). Los Protocol
+    Errors JSON-RPC no llegan aquí: el SDK los lanza como `McpError` antes de
+    producir un `CallToolResult`.
+    """
+    text = "\n".join(block.text for block in result.content if isinstance(block, TextContent))
+    if result.isError:
+        return ToolExecutionFailure(
+            tool_name=tool_name,
+            message=text,
+            structured_content=result.structuredContent,
+            raw=result,
+        )
     return ToolCallOutcome(
-        content="\n".join(text_parts),
+        content=text,
         structured_content=result.structuredContent,
-        is_error=result.isError,
         raw=result,
     )
 
@@ -232,8 +306,17 @@ class McpToolSession:
         name: str,
         arguments: dict[str, Any],
         descriptor: ToolDescriptor,
-    ) -> ToolCallOutcome:
-        """Invoca `tools/call` tras validar `arguments` contra `descriptor.input_schema`."""
+    ) -> ToolCallOutcome | ToolExecutionFailure:
+        """Invoca `tools/call` tras validar `arguments` contra `descriptor.input_schema`.
+
+        Devuelve `ToolCallOutcome` en el éxito o `ToolExecutionFailure` cuando
+        el server responde con `isError: true` (Tool Execution Error). Los
+        Protocol Errors JSON-RPC (`McpError`) NO se capturan aquí: se dejan
+        propagar como excepción —son fallos de la petición, no resultados de la
+        Tool— y el `McpToolClient` (frontera del `ToolPort`) los mapea a
+        `ToolProtocolFailure`. Así la sesión refleja fielmente el modelo de
+        error dual del SDK (excepción vs `isError`).
+        """
         _validate_arguments_or_raise(name, arguments, descriptor)
         result = await self.session.call_tool(name, arguments)
-        return _parse_call_tool_result(result)
+        return parse_call_tool_result(name, result)

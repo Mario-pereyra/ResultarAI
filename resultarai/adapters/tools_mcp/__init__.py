@@ -16,8 +16,11 @@ from resultarai.adapters.tools_mcp.errors import (
 from resultarai.adapters.tools_mcp.session import (
     McpToolSession,
     ToolCallOutcome,
+    ToolExecutionFailure,
+    ToolProtocolFailure,
     ensure_tools_capability,
     paginate_tool_descriptors,
+    parse_call_tool_result,
 )
 from resultarai.adapters.tools_mcp.transports import (
     StdioTransportConfig,
@@ -36,11 +39,14 @@ __all__ = [
     "ToolArgumentValidationError",
     "ToolCallOutcome",
     "ToolDescriptor",
+    "ToolExecutionFailure",
     "ToolExecutionRejected",
+    "ToolProtocolFailure",
     "TransportConfig",
     "UnknownToolError",
     "ensure_tools_capability",
     "open_transport",
     "paginate_tool_descriptors",
+    "parse_call_tool_result",
     "parse_tool_descriptor",
 ]

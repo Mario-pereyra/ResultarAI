@@ -2,12 +2,18 @@
 
 Cubren los fallos de las tareas 1.2-1.6: capability `tools` ausente,
 argumentos que no cumplen el `inputSchema`, y `tool_name` inexistente en el
-`tools/list` del server conectado. El mapeo fino a Protocol Error vs Tool
-Execution Error (JSON-RPC `-32602` vs `CallToolResult.isError: true`) lo
-añade la tarea 1.7 (Requirement "Manejo de errores diferenciado" del
-`openspec/changes/c09-mcp-tools/specs/mcp-tools/spec.md") sobre esta misma
-jerarquía; estas excepciones ya distinguen claramente "no se llegó a llamar
-al server" (aquí) de "el server respondió con un error" (tarea 1.7).
+`tools/list` del server conectado. Estas excepciones modelan "no se llegó a
+llamar al server" (fallos LOCALes, previos a `tools/call`).
+
+El caso "el server SÍ respondió con un error" es distinto y NO se modela como
+excepción sino como resultado tipado del `ToolPort` (tarea 1.7, Requirement
+"Manejo de errores diferenciado" en
+`openspec/changes/c09-mcp-tools/specs/mcp-tools/spec.md`): `session.py` define
+`ToolExecutionFailure` (`CallToolResult.isError: true`) y `ToolProtocolFailure`
+(error JSON-RPC `McpError`, p. ej. `-32602`). `UnknownToolError` de aquí sigue
+siendo el chequeo LOCAL (la Tool no está en el `tools/list`), previo a emitir
+la petición; el rechazo server-side de un `name` con `-32602` lo captura el
+camino `ToolProtocolFailure`.
 """
 
 from __future__ import annotations

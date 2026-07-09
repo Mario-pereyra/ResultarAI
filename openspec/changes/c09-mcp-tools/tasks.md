@@ -8,7 +8,7 @@
 - [x] 1.4 Invocación tipada: `tools/call` con validación de `arguments` contra `inputSchema`; parseo de `CallToolResult` (`content`/`structuredContent`/`isError`) y validación de `structuredContent` contra `outputSchema`. Verificación: tests de "Invocación de lectura autorizada devuelve resultado tipado" y "Argumentos que no cumplen el inputSchema no se envían". `[modelo: sonnet]`
 - [x] 1.5 Transport stdio: lanzar el MCP Server como subproceso, intercambio JSON-RPC newline-delimited por `stdin`/`stdout`, `stderr` tratado como logging. Verificación: test del escenario "MCP Server local por stdio" contra el server de ejemplo. `[modelo: sonnet]`
 - [x] 1.6 Transport Streamable HTTP: endpoint único POST + GET/SSE; headers `MCP-Protocol-Version` y `MCP-Session-Id` en cada request tras `initialize`; aceptar `application/json` y `text/event-stream`. Verificación: test del escenario "MCP Server remoto por Streamable HTTP" contra un server de prueba HTTP mínimo. `[modelo: sonnet]`
-- [ ] 1.7 Manejo de errores diferenciado: mapear Protocol Errors (JSON-RPC, p. ej. `-32602`) y Tool Execution Errors (`isError: true`) a resultados tipados distintos del `ToolPort`, sin confundir `isError: true` con éxito. Verificación: tests de "Protocol Error de Tool desconocida" y "Tool Execution Error con feedback accionable". `[modelo: opus]`
+- [x] 1.7 Manejo de errores diferenciado: mapear Protocol Errors (JSON-RPC, p. ej. `-32602`) y Tool Execution Errors (`isError: true`) a resultados tipados distintos del `ToolPort`, sin confundir `isError: true` con éxito. Verificación: tests de "Protocol Error de Tool desconocida" y "Tool Execution Error con feedback accionable". `[modelo: opus]`
 
 ## 2. Binding con el Tool Registry y ejecución gobernada
 

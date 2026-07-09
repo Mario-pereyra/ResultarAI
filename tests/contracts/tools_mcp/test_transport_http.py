@@ -19,7 +19,11 @@ from __future__ import annotations
 
 import anyio
 
-from resultarai.adapters.tools_mcp.session import McpToolSession
+from resultarai.adapters.tools_mcp.session import (
+    McpToolSession,
+    ToolCallOutcome,
+    ToolExecutionFailure,
+)
 from resultarai.adapters.tools_mcp.transports import StreamableHttpTransportConfig
 from tests.contracts.tools_mcp.fixtures.http_test_server import run_http_test_server
 
@@ -30,7 +34,7 @@ class TestStreamableHttpTransportEndToEnd:
     """Escenario 'MCP Server remoto por Streamable HTTP'."""
 
     def test_initialize_list_and_call_ping_reuse_the_same_session(self) -> None:
-        async def _run() -> tuple[tuple[str, ...], str, bool]:
+        async def _run() -> tuple[tuple[str, ...], ToolCallOutcome | ToolExecutionFailure]:
             with run_http_test_server() as base_url:
                 with anyio.fail_after(_TIMEOUT_SECONDS):
                     async with McpToolSession(
@@ -42,10 +46,12 @@ class TestStreamableHttpTransportEndToEnd:
                         # si el Session-Id no se propagara, el server stateful
                         # de prueba la rechazaría.
                         outcome = await session.call_tool("ping", {}, ping)
-                        return tuple(d.name for d in descriptors), outcome.content, outcome.is_error
+                        return tuple(d.name for d in descriptors), outcome
 
-        names, content, is_error = anyio.run(_run)
+        names, outcome = anyio.run(_run)
 
         assert names == ("ping",)
-        assert content == "pong"
-        assert is_error is False
+        # El tipo `ToolCallOutcome` garantiza por construcción `isError: false`
+        # (aserción más fuerte que el antiguo `is_error is False`).
+        assert isinstance(outcome, ToolCallOutcome)
+        assert outcome.content == "pong"
