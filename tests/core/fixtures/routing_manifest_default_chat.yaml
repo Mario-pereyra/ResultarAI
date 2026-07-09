@@ -1,0 +1,10 @@
+id: default_routing
+status: active
+version: 1.0.0
+
+rules:
+  - intent: erp_query
+    action: activate_skill
+    target: erp_query_skill
+  - intent: general_question
+    action: answer_directly
