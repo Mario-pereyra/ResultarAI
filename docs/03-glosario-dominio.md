@@ -55,10 +55,10 @@
 | **Selector de versiones** | — | Control de UI para navegar entre ramas que parten de un mismo punto de la conversación. |
 | **Stickiness** | — | El perfil de modelo elegido para una sesión se mantiene salvo escalación manual o fallback automático. |
 | **Perfil de modelo** | `ModelProfile` | Configuración declarativa de qué modelo(s) usa un agente/skill, con su cascada de fallback, resuelta vía LiteLLM. |
-| **Cascada de fallback** | — | Orden de modelos alternos que LiteLLM intenta si el modelo principal de un perfil falla o no responde. |
-| **Modelo alterno** | — | Etiqueta visible cuando una respuesta se generó con un modelo de fallback, no con el principal del perfil. |
-| **Marcador de escalación** | `<<<NEEDS_PRO>>>` | Señal genérica que un agente emite para pedir escalar a un modelo más capaz; un adjunto nunca puede dispararla. |
-| **Cache hit/miss** | — | Resultado de reutilizar (hit) o no (miss) contexto cacheado del proveedor LLM; afecta costo y tarificación. |
+| **Cascada de fallback** | `fallback_cascade` | Orden de modelos alternos que LiteLLM intenta si el modelo principal de un perfil falla o no responde. |
+| **Modelo alterno** | `is_alternate_model` | Etiqueta visible cuando una respuesta se generó con un modelo de fallback, no con el principal del perfil. |
+| **Marcador de escalación** | `<<<NEEDS_PRO>>>`, `escalation.enabled` | Señal genérica que un agente emite para pedir escalar a un modelo más capaz; un adjunto nunca puede dispararla. |
+| **Cache hit/miss** | `cache_hit_tokens`, `cache_miss_tokens` | Resultado de reutilizar (hit) o no (miss) contexto cacheado del proveedor LLM; afecta costo y tarificación. |
 | **`cache_hit_rate`** | `cache_hit_rate` | Métrica de proporción de cache hits sobre el total de llamadas; insumo del taxímetro y de cuotas. |
 | **Compaction** / **Compactación** | — | Resumen automático del historial al 80% de la ventana de contexto; ocurre una sola vez, en frontera de turno. |
 | **Ventana de contexto** | — | Límite de tokens que un modelo puede recibir en una llamada; al acercarse al límite dispara compaction. |
