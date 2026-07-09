@@ -13,7 +13,7 @@
 
 - [x] 2.1 Implementar el cargador YAML→schema y la construcción de los Registries (`AgentRegistry`, `SkillRegistry`, `ToolRegistry` y los de Policy/Routing/Eval) desde `manifests/`, con detección de `id` duplicado; sin importar adapters. Verificación: `tests/core/test_registry_loading.py` carga manifiestos válidos, falla ante `id` duplicado y ante YAML inválido; `uv run lint-imports` KEPT. `[modelo: sonnet]`
 - [x] 2.2 Implementar la validación de referencias cruzadas (Agent→Skill `active`, Skill→Tool `active`, `*`→Eval/Policy/Routing existentes; referencias colgantes prohibidas). Verificación: `tests/core/test_cross_references.py` resuelve un conjunto completo y falla ante Tool inexistente, Skill `deprecated` habilitada y Eval template inexistente. `[modelo: sonnet]`
-- [ ] 2.3 Implementar el ciclo de vida y el kill switch por `status` (solo `active` invocable; `draft` no se carga; `deprecated` catalogado no invocable; `active` requiere paso previo por `validated`). Verificación: `tests/core/test_lifecycle.py` cubre los 4 escenarios del requirement de ciclo de vida. `[modelo: sonnet]`
+- [x] 2.3 Implementar el ciclo de vida y el kill switch por `status` (solo `active` invocable; `draft` no se carga; `deprecated` catalogado no invocable; `active` requiere paso previo por `validated`). Verificación: `tests/core/test_lifecycle.py` cubre los 4 escenarios del requirement de ciclo de vida. `[modelo: sonnet]`
 - [ ] 2.4 Implementar la consulta pura por `status` en los Registries (lista `active`, `deprecated`, colección vacía sin error, sin mutar el catálogo). Verificación: `tests/core/test_query_by_status.py` cubre los 4 escenarios del requirement de consulta. `[modelo: sonnet]`
 
 ## 3. Manifiestos de fábrica de ejemplo (`manifests/`)
