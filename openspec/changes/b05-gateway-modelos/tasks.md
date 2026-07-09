@@ -3,7 +3,7 @@
 ## 1. Contrato del port y errores (core)
 
 - [x] 1.1 Definir/extender en `resultarai/core/ports/` el schema de salida de `LLMPort` requerido por este change: texto de respuesta, perfil usado, `is_alternate_model` + perfil primario + motivo, contadores de cache hit/miss (o ausentes), costo calculado, evento de escalación (`needs_pro`). Verificación: `tests/core/test_llm_port_contract.py` valida presencia y tipos de cada campo, sin red ni frameworks. `[modelo: opus]`
-- [ ] 1.2 Definir la jerarquía de errores tipados del port (p. ej. cascada agotada, perfil sin proveedor disponible) en `resultarai/core/ports/`. Verificación: `tests/core/test_llm_port_errors.py` instancia cada error y confirma que expone perfiles intentados y causa. `[modelo: opus]`
+- [x] 1.2 Definir la jerarquía de errores tipados del port (p. ej. cascada agotada, perfil sin proveedor disponible) en `resultarai/core/ports/`. Verificación: `tests/core/test_llm_port_errors.py` instancia cada error y confirma que expone perfiles intentados y causa. `[modelo: opus]`
 
 ## 2. Perfiles de modelo y cascada (configuración)
 
