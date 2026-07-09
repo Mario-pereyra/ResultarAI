@@ -10,7 +10,7 @@
 
 ## 2. Esqueleto Python y tooling
 
-- [ ] 2.1 Crear `pyproject.toml` (uv): metadata, Python ≥3.12, dependencia pydantic v2; grupo dev con ruff, mypy, pytest, import-linter, pre-commit. Verificación: `uv sync` termina sin errores. `[modelo: sonnet]`
+- [x] 2.1 Crear `pyproject.toml` (uv): metadata, Python ≥3.12, dependencia pydantic v2; grupo dev con ruff, mypy, pytest, import-linter, pre-commit. Verificación: `uv sync` termina sin errores. `[modelo: sonnet]`
 - [x] 2.2 Crear el árbol de paquetes de docs/05 (`resultarai/core|adapters|app`, `manifests/{agents,skills,tools,policies,routing,evals}/`, `tests/{core,contracts}/`) con `__init__.py`, `py.typed` y `.gitkeep` donde aplique. Verificación: escenario "Árbol de paquetes importable" de la spec. `[modelo: haiku]`
 - [ ] 2.3 Configurar ruff (lint + format) y mypy estricto en `pyproject.toml` según docs/05. Verificación: `uv run ruff check .` y `uv run mypy .` en verde. `[modelo: sonnet]`
 - [ ] 2.4 Configurar import-linter con los 3 contratos de docs/05 (core sin frameworks; capas app→adapters→core; independencia de adapters). Verificación: escenarios "Violación de frontera detectada" y "Árbol limpio pasa" (test manual documentado en el PR). `[modelo: sonnet]`
