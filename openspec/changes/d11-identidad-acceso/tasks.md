@@ -21,58 +21,58 @@
 
 ## 3. Casos de uso y endpoints — autenticación
 
-- [ ] 3.1 Caso de uso + `POST /api/auth/login`: verifica credenciales, aplica rate limiting, crea sesión, detecta primer login. Verificación: tests de login exitoso, contraseña incorrecta, usuario inexistente y cuenta suspendida devuelven el mismo error genérico. `[modelo: sonnet]`
-- [ ] 3.2 `POST /api/auth/totp/verify` (segundo paso, obligatorio para Admin): acepta código TOTP o código de respaldo, cuenta reintentos contra el rate limiter. Verificación: test de código correcto, incorrecto y de respaldo (con invalidación tras uso). `[modelo: sonnet]`
-- [ ] 3.3 `POST /api/auth/logout`: revoca la sesión actual del lado del servidor. Verificación: test de logout seguido de una petición con la misma cookie → 401. `[modelo: sonnet]`
-- [ ] 3.4 `POST /api/auth/password` (cambio propio): valida contraseña actual + política server-side de la nueva, revoca otras sesiones activas. Verificación: test de cambio exitoso con revocación de sesiones ajenas, y rechazo por incumplir política. `[modelo: sonnet]`
-- [ ] 3.5 Endpoints de configuración personal de TOTP (activar/desactivar) para Técnico/Funcional, respetando `totp_required` fijado por el Admin. Verificación: test de activar/desactivar y de rechazo si `totp_required=true`. `[modelo: sonnet]`
-- [ ] 3.6 Orquestación del wizard de primer acceso: endpoint(s) de estado de progreso y paso de preferencias (idioma/tema) persistidas en la cuenta. Verificación: test E2E del flujo completo (contraseña → TOTP según rol → acuerdo → shell) y de retomar el wizard en el paso pendiente tras cerrar sesión a mitad de camino. `[modelo: sonnet]`
+- [x] 3.1 Caso de uso + `POST /api/auth/login`: verifica credenciales, aplica rate limiting, crea sesión, detecta primer login. Verificación: tests de login exitoso, contraseña incorrecta, usuario inexistente y cuenta suspendida devuelven el mismo error genérico. `[modelo: sonnet]`
+- [x] 3.2 `POST /api/auth/totp/verify` (segundo paso, obligatorio para Admin): acepta código TOTP o código de respaldo, cuenta reintentos contra el rate limiter. Verificación: test de código correcto, incorrecto y de respaldo (con invalidación tras uso). `[modelo: sonnet]`
+- [x] 3.3 `POST /api/auth/logout`: revoca la sesión actual del lado del servidor. Verificación: test de logout seguido de una petición con la misma cookie → 401. `[modelo: sonnet]`
+- [x] 3.4 `POST /api/auth/password` (cambio propio): valida contraseña actual + política server-side de la nueva, revoca otras sesiones activas. Verificación: test de cambio exitoso con revocación de sesiones ajenas, y rechazo por incumplir política. `[modelo: sonnet]`
+- [x] 3.5 Endpoints de configuración personal de TOTP (activar/desactivar) para Técnico/Funcional, respetando `totp_required` fijado por el Admin. Verificación: test de activar/desactivar y de rechazo si `totp_required=true`. `[modelo: sonnet]`
+- [x] 3.6 Orquestación del wizard de primer acceso: endpoint(s) de estado de progreso y paso de preferencias (idioma/tema) persistidas en la cuenta. Verificación: test E2E del flujo completo (contraseña → TOTP según rol → acuerdo → shell) y de retomar el wizard en el paso pendiente tras cerrar sesión a mitad de camino. `[modelo: sonnet]`
 
 ## 4. Casos de uso y endpoints — gestión de usuarios y grupos (Admin)
 
-- [ ] 4.1 `POST /api/admin/users` (alta): genera contraseña temporal de un solo uso, la devuelve solo en esta respuesta, marca la cuenta para forzar el wizard. Verificación: test de alta + que ninguna consulta posterior puede recuperar la contraseña temporal. `[modelo: sonnet]`
-- [ ] 4.2 `POST /api/admin/users/{id}/suspend`: revoca todas las sesiones activas de la cuenta. Verificación: test de suspensión seguida de intento de login (mensaje genérico) y de petición con sesión previa (401). `[modelo: sonnet]`
-- [ ] 4.3 `POST /api/admin/users/{id}/role`: cambia el rol, bloqueado si el actor es el propio usuario objetivo. Verificación: test "usuario no puede cambiar su propio rol" y test de cambio válido ejecutado por otro Admin. `[modelo: sonnet]`
-- [ ] 4.4 `POST /api/admin/users/{id}/reset-password`: genera contraseña temporal de un solo uso, revoca sesiones activas, fuerza wizard en el siguiente login. Verificación: test de reset completo end-to-end. `[modelo: sonnet]`
-- [ ] 4.5 `POST /api/admin/users/{id}/sessions/revoke` (individual o total). Verificación: test "sesión revocada → 401" para ambos casos. `[modelo: sonnet]`
-- [ ] 4.6 `POST /api/admin/users/{id}/require-totp`: marca TOTP obligatorio y fuerza el enrolamiento en el siguiente login. Verificación: test de exigencia seguida de login que fuerza el paso TOTP sin opción de "más tarde". `[modelo: sonnet]`
-- [ ] 4.7 Endpoints de grupos: crear grupo, agregar/quitar miembros. Verificación: test de creación, alta y baja de miembro. `[modelo: sonnet]`
-- [ ] 4.8 Autorización de todos los endpoints `/api/admin/*` restringida a rol Admin, reutilizando el resolvedor de sesión de la tarea 2.3. Verificación: test "usuario no-Admin → 403" sobre cada grupo de endpoints de esta sección. `[modelo: sonnet]`
+- [x] 4.1 `POST /api/admin/users` (alta): genera contraseña temporal de un solo uso, la devuelve solo en esta respuesta, marca la cuenta para forzar el wizard. Verificación: test de alta + que ninguna consulta posterior puede recuperar la contraseña temporal. `[modelo: sonnet]`
+- [x] 4.2 `POST /api/admin/users/{id}/suspend`: revoca todas las sesiones activas de la cuenta. Verificación: test de suspensión seguida de intento de login (mensaje genérico) y de petición con sesión previa (401). `[modelo: sonnet]`
+- [x] 4.3 `POST /api/admin/users/{id}/role`: cambia el rol, bloqueado si el actor es el propio usuario objetivo. Verificación: test "usuario no puede cambiar su propio rol" y test de cambio válido ejecutado por otro Admin. `[modelo: sonnet]`
+- [x] 4.4 `POST /api/admin/users/{id}/reset-password`: genera contraseña temporal de un solo uso, revoca sesiones activas, fuerza wizard en el siguiente login. Verificación: test de reset completo end-to-end. `[modelo: sonnet]`
+- [x] 4.5 `POST /api/admin/users/{id}/sessions/revoke` (individual o total). Verificación: test "sesión revocada → 401" para ambos casos. `[modelo: sonnet]`
+- [x] 4.6 `POST /api/admin/users/{id}/require-totp`: marca TOTP obligatorio y fuerza el enrolamiento en el siguiente login. Verificación: test de exigencia seguida de login que fuerza el paso TOTP sin opción de "más tarde". `[modelo: sonnet]`
+- [x] 4.7 Endpoints de grupos: crear grupo, agregar/quitar miembros. Verificación: test de creación, alta y baja de miembro. `[modelo: sonnet]`
+- [x] 4.8 Autorización de todos los endpoints `/api/admin/*` restringida a rol Admin, reutilizando el resolvedor de sesión de la tarea 2.3. Verificación: test "usuario no-Admin → 403" sobre cada grupo de endpoints de esta sección. `[modelo: sonnet]`
 
 ## 5. Acuerdo de uso auditado
 
-- [ ] 5.1 `GET /api/me/agreement/status`: compara la última aceptación del usuario contra la versión vigente. Verificación: test devuelve "pendiente" sin aceptación previa o con versión desactualizada, "vigente" en caso contrario. `[modelo: sonnet]`
-- [ ] 5.2 `POST /api/me/agreement/accept`: registra usuario (de sesión) + versión vigente + timestamp; rechaza si no llega una aceptación explícita. Verificación: test de aceptación exitosa y test de rechazo sin checkbox marcado (payload sin la aceptación explícita). `[modelo: sonnet]`
-- [ ] 5.3 Endpoint Admin para publicar nueva versión del texto del acuerdo, marcando a los usuarios con aceptación previa como pendientes de re-aceptación. Verificación: test de publicación de versión nueva + usuarios existentes pasan a "pendiente". `[modelo: sonnet]`
-- [ ] 5.4 Middleware/guard que bloquea cualquier ruta del shell fuera de login/wizard cuando la aceptación del usuario está desactualizada o ausente. Verificación: test de redirección forzada al paso de acuerdo. `[modelo: sonnet]`
+- [x] 5.1 `GET /api/me/agreement/status`: compara la última aceptación del usuario contra la versión vigente. Verificación: test devuelve "pendiente" sin aceptación previa o con versión desactualizada, "vigente" en caso contrario. `[modelo: sonnet]`
+- [x] 5.2 `POST /api/me/agreement/accept`: registra usuario (de sesión) + versión vigente + timestamp; rechaza si no llega una aceptación explícita. Verificación: test de aceptación exitosa y test de rechazo sin checkbox marcado (payload sin la aceptación explícita). `[modelo: sonnet]`
+- [x] 5.3 Endpoint Admin para publicar nueva versión del texto del acuerdo, marcando a los usuarios con aceptación previa como pendientes de re-aceptación. Verificación: test de publicación de versión nueva + usuarios existentes pasan a "pendiente". `[modelo: sonnet]`
+- [x] 5.4 Middleware/guard que bloquea cualquier ruta del shell fuera de login/wizard cuando la aceptación del usuario está desactualizada o ausente. Verificación: test de redirección forzada al paso de acuerdo. `[modelo: sonnet]`
 
 ## 6. Auditoría de identidad
 
-- [ ] 6.1 Integrar el registro append-only de eventos de identidad (alta, baja, suspensión, cambio de rol, reset, revocación de sesiones, exigencia de TOTP, aceptación de acuerdo) sobre el mecanismo de la tarea 1.7. Verificación: test que cada mutación de las secciones 4 y 5 genera exactamente un evento auditado, y que el mecanismo no permite `UPDATE`/`DELETE`. `[modelo: sonnet]`
+- [x] 6.1 Integrar el registro append-only de eventos de identidad (alta, baja, suspensión, cambio de rol, reset, revocación de sesiones, exigencia de TOTP, aceptación de acuerdo) sobre el mecanismo de la tarea 1.7. Verificación: test que cada mutación de las secciones 4 y 5 genera exactamente un evento auditado, y que el mecanismo no permite `UPDATE`/`DELETE`. `[modelo: sonnet]`
 
 ## 7. UI — Login y primer acceso
 
-- [ ] 7.1 Vista Login (`01-login.html`) conforme a `design/VISTAS/01-acceso-shell.md`: formulario usuario/contraseña, paso TOTP, estados de carga/error genérico/`ACCOUNT_LOCKED`/`AUTH_OFFLINE`. Verificación: recorrido manual contra el mockup; cada estado de error del backend se refleja en la UI correspondiente. `[modelo: sonnet]`
-- [ ] 7.2 Wizard Primer acceso (`02-primer-acceso.html`): paso 1 contraseña con medidor de fortaleza y checklist de requisitos, paso 2 TOTP (QR + clave manual + códigos de respaldo, saltable solo para no-Admin), paso 3 acuerdo de uso con checkbox bloqueante. Verificación: recorrido E2E de los 3 pasos contra el backend; botón "Aceptar y entrar" permanece deshabilitado sin checkbox marcado. `[modelo: sonnet]`
-- [ ] 7.3 Persistencia de progreso del wizard entre sesiones (retoma en el paso pendiente). Verificación: test E2E de cerrar sesión a mitad del wizard y retomar sin repetir pasos completados. `[modelo: sonnet]`
-- [ ] 7.4 Externalización i18n de los textos de login y wizard (mensajes de error, hints, política de contraseña, resumen del acuerdo) según `design/VISTAS/01-acceso-shell.md`, catálogo ES con reserva para PT-BR. Verificación: ningún string de estas vistas queda hardcodeado fuera del catálogo i18n. `[modelo: haiku]`
+- [x] 7.1 Vista Login (`01-login.html`) conforme a `design/VISTAS/01-acceso-shell.md`: formulario usuario/contraseña, paso TOTP, estados de carga/error genérico/`ACCOUNT_LOCKED`/`AUTH_OFFLINE`. Verificación: recorrido manual contra el mockup; cada estado de error del backend se refleja en la UI correspondiente. `[modelo: sonnet]`
+- [x] 7.2 Wizard Primer acceso (`02-primer-acceso.html`): paso 1 contraseña con medidor de fortaleza y checklist de requisitos, paso 2 TOTP (QR + clave manual + códigos de respaldo, saltable solo para no-Admin), paso 3 acuerdo de uso con checkbox bloqueante. Verificación: recorrido E2E de los 3 pasos contra el backend; botón "Aceptar y entrar" permanece deshabilitado sin checkbox marcado. `[modelo: sonnet]`
+- [x] 7.3 Persistencia de progreso del wizard entre sesiones (retoma en el paso pendiente). Verificación: test E2E de cerrar sesión a mitad del wizard y retomar sin repetir pasos completados. `[modelo: sonnet]`
+- [x] 7.4 Externalización i18n de los textos de login y wizard (mensajes de error, hints, política de contraseña, resumen del acuerdo) según `design/VISTAS/01-acceso-shell.md`, catálogo ES con reserva para PT-BR. Verificación: ningún string de estas vistas queda hardcodeado fuera del catálogo i18n. `[modelo: haiku]`
 
 ## 8. UI — Consola admin (alta de usuarios y grupos)
 
-- [ ] 8.1 Modal "Crear usuario" (`31-admin-usuarios.html`) con pantalla de confirmación que muestra la contraseña temporal una única vez. Verificación: recorrido E2E de alta completo (Flujo A pasos 1–2). `[modelo: sonnet]`
-- [ ] 8.2 Modal "Crear grupo" (`32-admin-grupos.html`) con asignación de miembros. Verificación: E2E de creación de grupo y alta/baja de miembro. `[modelo: sonnet]`
-- [ ] 8.3 Lista funcional mínima de cuentas con acciones básicas (suspender, resetear, revocar sesiones, exigir TOTP) — sin el tablero completo de `d19-admin-operacion`. Verificación: cada acción dispara su endpoint y la lista refleja el nuevo estado sin recargar la página. `[modelo: sonnet]`
-- [ ] 8.4 Externalización i18n de las pantallas de alta admin de esta sección. Verificación: ningún string hardcodeado fuera del catálogo i18n. `[modelo: haiku]`
+- [x] 8.1 Modal "Crear usuario" (`31-admin-usuarios.html`) con pantalla de confirmación que muestra la contraseña temporal una única vez. Verificación: recorrido E2E de alta completo (Flujo A pasos 1–2). `[modelo: sonnet]`
+- [x] 8.2 Modal "Crear grupo" (`32-admin-grupos.html`) con asignación de miembros. Verificación: E2E de creación de grupo y alta/baja de miembro. `[modelo: sonnet]`
+- [x] 8.3 Lista funcional mínima de cuentas con acciones básicas (suspender, resetear, revocar sesiones, exigir TOTP) — sin el tablero completo de `d19-admin-operacion`. Verificación: cada acción dispara su endpoint y la lista refleja el nuevo estado sin recargar la página. `[modelo: sonnet]`
+- [x] 8.4 Externalización i18n de las pantallas de alta admin de esta sección. Verificación: ningún string hardcodeado fuera del catálogo i18n. `[modelo: haiku]`
 
 ## 9. Tests de seguridad explícitos
 
-- [ ] 9.1 Test de fuerza bruta → rate limit: intentos fallidos consecutivos bloquean la cuenta (`ACCOUNT_LOCKED`) y se liberan por tiempo o por acción del Admin. Verificación: suite en verde, incluida la liberación por ambas vías. `[modelo: opus]`
-- [ ] 9.2 Test de sesión revocada o expirada → 401 en cualquier endpoint autenticado de las secciones 3, 4 y 5. Verificación: suite en verde. `[modelo: opus]`
-- [ ] 9.3 Test de body con `userId` ajeno → ignorado en al menos un endpoint de cada sección (auth, admin, acuerdo). Verificación: suite en verde. `[modelo: opus]`
-- [ ] 9.4 Test de atributos de cookie (`Secure`/`HttpOnly`/`SameSite`) y de rechazo de mutaciones sin token CSRF válido. Verificación: suite en verde. `[modelo: opus]`
+- [x] 9.1 Test de fuerza bruta → rate limit: intentos fallidos consecutivos bloquean la cuenta (`ACCOUNT_LOCKED`) y se liberan por tiempo o por acción del Admin. Verificación: suite en verde, incluida la liberación por ambas vías. `[modelo: opus]`
+- [x] 9.2 Test de sesión revocada o expirada → 401 en cualquier endpoint autenticado de las secciones 3, 4 y 5. Verificación: suite en verde. `[modelo: opus]`
+- [x] 9.3 Test de body con `userId` ajeno → ignorado en al menos un endpoint de cada sección (auth, admin, acuerdo). Verificación: suite en verde. `[modelo: opus]`
+- [x] 9.4 Test de atributos de cookie (`Secure`/`HttpOnly`/`SameSite`) y de rechazo de mutaciones sin token CSRF válido. Verificación: suite en verde. `[modelo: opus]`
 
 ## 10. Cierre
 
-- [ ] 10.1 Actualizar `docs/03-glosario-dominio.md`: agregar los términos nuevos de este change (Rol Admin/Técnico/Funcional, Sesión, TOTP, Acuerdo de uso, Cuenta, Grupo/equipo, Contraseña temporal de un solo uso) y, según lo resuelto en la tarea 1.7, documentar si `AuditEvent` amplía su definición o si `identity_audit_log` queda como término propio. Verificación: todos los términos usados en `specs/` de este change existen en el glosario. `[modelo: sonnet]`
-- [ ] 10.2 Actualizar `CLAUDE.md`: avanzar la línea "Etapa activa" si corresponde al estado real del roadmap al momento de aplicar este change. Verificación: línea coherente con `docs/07-roadmap.md`. `[modelo: haiku]`
-- [ ] 10.3 Review final del change: specs↔diseño↔código consistentes; los 4 escenarios de seguridad (fuerza bruta, sesión revocada, `userId` ajeno, CSRF/cookies) cubiertos por tests reales; Flujo A completo end-to-end (alta → primer login → acuerdo → shell); dependencias (`a01`–`a03`, `b04`, `d10`) archivadas antes de mergear. Verificación: checklist del reviewer en el PR. `[modelo: opus]`
+- [x] 10.1 Actualizar `docs/03-glosario-dominio.md`: agregar los términos nuevos de este change (Rol Admin/Técnico/Funcional, Sesión, TOTP, Acuerdo de uso, Cuenta, Grupo/equipo, Contraseña temporal de un solo uso) y, según lo resuelto en la tarea 1.7, documentar si `AuditEvent` amplía su definición o si `identity_audit_log` queda como término propio. Verificación: todos los términos usados en `specs/` de este change existen en el glosario. `[modelo: sonnet]`
+- [x] 10.2 Actualizar `CLAUDE.md`: avanzar la línea "Etapa activa" si corresponde al estado real del roadmap al momento de aplicar este change. Verificación: línea coherente con `docs/07-roadmap.md`. `[modelo: haiku]`
+- [x] 10.3 Review final del change: specs↔diseño↔código consistentes; los 4 escenarios de seguridad (fuerza bruta, sesión revocada, `userId` ajeno, CSRF/cookies) cubiertos por tests reales; Flujo A completo end-to-end (alta → primer login → acuerdo → shell); dependencias (`a01`–`a03`, `b04`, `d10`) archivadas antes de mergear. Verificación: checklist del reviewer en el PR. `[modelo: opus]`

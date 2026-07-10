@@ -10,6 +10,7 @@ libres de efectos en import. Los nombres de cookies/headers y los helpers para
 fijarlas se re-exportan aquí para que la sección 3 (endpoints) los reutilice.
 """
 
+from resultarai.app.identity.audit import log_identity_audit_event
 from resultarai.app.identity.csrf import (
     CSRF_COOKIE,
     CSRF_HEADER,
@@ -23,6 +24,7 @@ from resultarai.app.identity.dependency import (
     get_db,
     get_session_config,
     require_admin,
+    require_completed_wizard,
 )
 from resultarai.app.identity.passwords import (
     MIN_PASSWORD_LENGTH,
@@ -100,11 +102,14 @@ __all__ = [
     "hash_password",
     "is_account_locked",
     "issue_csrf_token",
+    # audit
+    "log_identity_audit_event",
     "needs_rehash",
     "normalize_account_ref",
     "password_policy_violations",
     "record_failed_attempt",
     "require_admin",
+    "require_completed_wizard",
     "require_csrf",
     "revoke_all_sessions",
     "revoke_session",

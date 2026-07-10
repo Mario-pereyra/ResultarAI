@@ -45,3 +45,33 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* 5.13 Error card — errores accionables (QUOTA, VPN_OFFLINE, …) */
+.error-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--sp-3);
+  align-items: start;
+  background: color-mix(in srgb, var(--danger) 7%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-radius: var(--r-md);
+  padding: var(--sp-4);
+}
+.error-card__icon { color: var(--danger); display: flex; margin-top: 2px; }
+.error-card__icon svg { width: 18px; height: 18px; }
+.error-card__code {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  color: var(--danger);
+  margin-bottom: 2px;
+}
+.error-card__title { font-size: var(--fs-body); font-weight: 600; margin: 0 0 2px; }
+.error-card__why { font-size: var(--fs-small); color: var(--ink-dim); margin: 0; }
+.error-card__why:not(:last-child) { margin-bottom: var(--sp-3); }
+.error-card__actions { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.error-card--warn {
+  background: color-mix(in srgb, var(--warn) 8%, var(--panel));
+  border-color: color-mix(in srgb, var(--warn) 40%, transparent);
+}
+.error-card--warn .error-card__icon, .error-card--warn .error-card__code { color: var(--warn); }

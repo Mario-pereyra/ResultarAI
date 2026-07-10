@@ -32,6 +32,7 @@ __all__ = [
     "get_db",
     "get_session_config",
     "require_admin",
+    "require_completed_wizard",
 ]
 
 
@@ -73,6 +74,25 @@ def get_current_user(
     user = db.get(User, auth.user_id)
     if user is None or user.status != "active":
         raise HTTPException(status_code=401, detail="Sesión inválida o expirada.")
+    return user
+
+
+def require_completed_wizard(
+    user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[DbSession, Depends(get_db)],
+) -> User:
+    """Exige que el usuario haya completado el wizard de primer acceso y acuerdo.
+
+    Lanza 403 con 'AGREEMENT_PENDING' si falta firmar el acuerdo de uso,
+    o 'WIZARD_PENDING' si falta cambiar contraseña o enrolar TOTP.
+    """
+    from resultarai.app.use_cases.identity import get_wizard_status
+
+    status = get_wizard_status(db, user)
+    if status["pending_steps"]:
+        if status["agreement_acceptance_pending"]:
+            raise HTTPException(status_code=403, detail="AGREEMENT_PENDING")
+        raise HTTPException(status_code=403, detail="WIZARD_PENDING")
     return user
 
 

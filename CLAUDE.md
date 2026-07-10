@@ -6,7 +6,7 @@ Plataforma interna de IA de Resultar Soluciones (partner TOTVS Bolivia): chat go
 
 ## Estado actual
 
-**Greenfield en construcción.** Documentación y paquete de diseño UX (`design/`) completos; esqueleto, tooling, CI, schemas de manifiestos y registries en verde. **Pivote 2026-07-09:** producto completo genérico "de fábrica" primero (Etapas A–E), personalización Protheus después (Etapa P) — ver `docs/07-roadmap.md`. Etapa activa: **D — Producto de fábrica (UI + plataforma)** (`d11-identidad-acceso` en curso; `d10` archivado). *(Actualizar esta línea al avanzar de etapa.)*
+**Greenfield en construcción.** Documentación y paquete de diseño UX (`design/`) completos; esqueleto, tooling, CI, schemas de manifiestos y registries en verde. **Pivote 2026-07-09:** producto completo genérico "de fábrica" primero (Etapas A–E), personalización Protheus después (Etapa P) — ver `docs/07-roadmap.md`. Etapa activa: **D — Producto de fábrica (UI + plataforma)** (`d12-notificaciones` en curso; `d11` archivado). *(Actualizar esta línea al avanzar de etapa.)*
 
 ## Arquitectura en 60 segundos
 
@@ -83,3 +83,14 @@ npm run check:contrast  # valida ratios de contraste WCAG AA
 | `docs/06-seguridad-gobernanza.md` | Policy Gate, riesgo/HITL, audit log, data boundaries, plan-then-execute, evals |
 | `docs/07-roadmap.md` | Fases → changes OpenSpec sugeridos |
 | `docs/adr/0001…0009` | Decisiones: estilo, DDD, stack, manifiestos, deployables, OpenSpec, frontend, auth, specs oficiales |
+
+<!-- CODEGRAPH_START -->
+## CodeGraph
+
+In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:
+
+- **MCP tool** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them, including dynamic-dispatch hops grep can't follow. Name a file or symbol in the query to read its current line-numbered source. If it's listed but deferred, load it by name via tool search.
+- **Shell** (always works): `codegraph explore "<symbol names or question>"` prints the same output.
+
+If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
+<!-- CODEGRAPH_END -->

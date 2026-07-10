@@ -29,6 +29,7 @@
 | **Adapter** | `adapters/` | Implementación de un port contra una tecnología concreta. Traduce, no decide. |
 | **HITL** | `requires_human_approval` | Human-in-the-loop: aprobación humana previa para acciones de riesgo. |
 | **Audit Log** | `AuditEvent` | Registro append-only e inmutable de decisiones del Policy Gate y tool calls. |
+| **Identity Audit Log** / **Auditoría de identidad** | `IdentityAuditEvent` | Registro append-only e inmutable de eventos de identidad (alta, suspensión, cambio de rol, reset de contraseña, revocación de sesiones, exigencia de TOTP, y aceptación de acuerdo). |
 | **Agent Skill** / **Paquete de skill** | `SkillPackage` | Carpeta con `SKILL.md` que implementa la spec oficial **Agent Skills** (agentskills.io): instrucciones con progressive disclosure y `allowed-tools`. El Skill Manifest la referencia y le añade la capa de gobernanza (política, riesgo). |
 | **Progressive disclosure** | — | Divulgación progresiva de instrucciones dentro de un Agent Skill: el contenido detallado se carga solo cuando la skill se activa, no de entrada. |
 | **`allowed-tools`** | `allowed-tools` | Declaración, dentro de un Agent Skill, de qué tools puede usar; el Skill Router y el Policy Gate la respetan como techo, nunca la amplían. |

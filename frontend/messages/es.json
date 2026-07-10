@@ -205,5 +205,166 @@
       "percentLabel": "Porcentaje",
       "tokensLabel": "Tokens abreviados"
     }
+  },
+  "Login": {
+    "title": "ResultarAI",
+    "signIn": "Iniciar sesión",
+    "usernameLabel": "Usuario",
+    "usernamePlaceholder": "Ingresá tu usuario",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "Ingresá tu contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "submit": "Ingresar",
+    "signingIn": "Ingresando...",
+    "infoHint": "Las cuentas las crea el administrador de tu organización.",
+    "step2Title": "Verificación en dos pasos",
+    "step2Sub": "Hola {name}, ingresá el código TOTP de tu aplicación para continuar.",
+    "totpLabel": "Código de verificación",
+    "totpPlaceholder": "000000",
+    "totpVerify": "Verificar",
+    "totpVerifying": "Verificando...",
+    "back": "Volver",
+    "errors": {
+      "invalidCredentials": "Usuario o contraseña incorrectos.",
+      "accountLocked": "Cuenta bloqueada temporalmente. Demasiados intentos fallidos. Se desbloquea en 15 min o pedile al administrador que la libere.",
+      "authOffline": "El servicio no está disponible. Intentá de nuevo en unos minutos.",
+      "totpInvalid": "Código incorrecto o vencido — los códigos rotan cada 30 s. Intentos restantes: {count}"
+    }
+  },
+  "PrimerAcceso": {
+    "title": "Primer acceso",
+    "step": "Paso {current} de {total}",
+    "step1Title": "Contraseña nueva",
+    "step1Sub": "Establecé una contraseña segura para tu cuenta.",
+    "currentPassword": "Contraseña actual (temporal)",
+    "newPassword": "Contraseña nueva",
+    "repeatPassword": "Repetir contraseña",
+    "strength": {
+      "label": "Fortaleza:",
+      "debil": "débil",
+      "regular": "regular",
+      "buena": "buena",
+      "fuerte": "fuerte"
+    },
+    "rules": {
+      "length": "Mínimo 12 caracteres",
+      "cases": "Mayúscula y minúscula",
+      "number": "Al menos un número",
+      "symbol": "Al menos un símbolo (ej. !@#$%^&*)"
+    },
+    "changePasswordBtn": "Cambiar contraseña",
+    "step2Title": "Configuración de segundo factor (TOTP)",
+    "step2Sub": "Escaneá el código QR con tu aplicación autenticadora o ingresá la clave manual.",
+    "scanQr": "Escaneá el código QR:",
+    "manualKey": "Clave manual:",
+    "codeLabel": "Código de 6 dígitos",
+    "codePlaceholder": "000000",
+    "verifyBtn": "Confirmar y enrolar",
+    "skipBtn": "Configurar más tarde",
+    "adminWarning": "Tu rol requiere verificación en dos pasos.",
+    "backupCodesTitle": "Códigos de respaldo generados",
+    "backupCodesDesc": "Guardá estos códigos en un lugar seguro. Te permitirán acceder si perdés tu dispositivo. Cada código sirve una sola vez.",
+    "backupCodesSaved": "Ya guardé los códigos",
+    "step3Title": "Acuerdo de uso",
+    "step3Sub": "Leé y aceptá los términos y condiciones de uso del sistema.",
+    "agreementCheckbox": "Leí y acepto el acuerdo de uso",
+    "agreementAuditNote": "Tu aceptación queda registrada con fecha, hora y versión del acuerdo.",
+    "acceptBtn": "Aceptar y entrar",
+    "errors": {
+      "passwordsDoNotMatch": "Las contraseñas no coinciden.",
+      "totpFailed": "Código incorrecto o vencido — los códigos rotan cada 30 s.",
+      "timeSyncHint": "Si el problema persiste, verificá la hora del teléfono."
+    }
+  },
+  "Administracion": {
+    "title": "Administración",
+    "kicker": "Consola admin",
+    "searchPlaceholder": "Buscar username o nombre...",
+    "filterRole": "Rol",
+    "filterRoleAll": "Todos los roles",
+    "filterStatus": "Estado",
+    "filterStatusAll": "Todos los estados",
+    "createUserBtn": "Crear usuario",
+    "createGroupBtn": "Crear grupo",
+    "userTable": {
+      "username": "USERNAME",
+      "name": "NOMBRE",
+      "role": "ROL",
+      "status": "ESTADO",
+      "totp": "TOTP",
+      "actions": "ACCIONES"
+    },
+    "actions": {
+      "changeRole": "Editar rol",
+      "credentials": "Credenciales",
+      "resetPassword": "Restablecer contraseña",
+      "suspend": "Suspender",
+      "activate": "Activar",
+      "requireTotp": "Exigir TOTP",
+      "optionalTotp": "TOTP opcional",
+      "revokeSessions": "Revocar sesiones",
+      "revokeAll": "Revocar todas",
+      "revokeCurrent": "Revocar actual"
+    },
+    "status": {
+      "active": "ACTIVO",
+      "suspended": "SUSPENDIDO",
+      "totpYes": "SÍ",
+      "totpNo": "NO",
+      "totpPending": "PENDIENTE"
+    },
+    "roles": {
+      "admin": "Admin",
+      "tecnico": "Técnico",
+      "funcional": "Funcional"
+    },
+    "createUserModal": {
+      "title": "Crear usuario",
+      "username": "Username",
+      "displayName": "Nombre para mostrar",
+      "email": "Correo electrónico",
+      "role": "Rol",
+      "group": "Grupo",
+      "requireTotp": "Requerir TOTP en el primer acceso",
+      "requireTotpHintAdmin": "Obligatorio para Admin",
+      "submit": "Crear usuario",
+      "successTitle": "Usuario creado con éxito",
+      "successDesc": "Copiá la contraseña temporal. Se muestra una sola vez y no se puede recuperar.",
+      "tempPassword": "Contraseña temporal",
+      "copyBtn": "Copiar",
+      "copied": "¡Copiado!",
+      "close": "Cerrar"
+    },
+    "createGroupModal": {
+      "title": "Crear grupo",
+      "name": "Nombre del grupo",
+      "description": "Descripción",
+      "members": "Miembros del grupo",
+      "addMembers": "Agregar miembros",
+      "noMembers": "No hay miembros en el grupo.",
+      "submit": "Crear grupo"
+    },
+    "resetPasswordModal": {
+      "title": "Restablecer contraseña",
+      "desc": "Vas a restablecer la contraseña para {username}. Se generará una contraseña temporal de un solo uso y se revocarán las sesiones activas.",
+      "successTitle": "Contraseña restablecida",
+      "successDesc": "Copiá la contraseña temporal generada. Se muestra una sola vez.",
+      "submit": "Restablecer",
+      "close": "Cerrar"
+    },
+    "suspendModal": {
+      "title": "Suspender usuario",
+      "desc": "Vas a suspender la cuenta de {username}. Se revocarán todas sus sesiones activas de inmediato.",
+      "confirmText": "Escribí {username} para confirmar",
+      "submit": "Suspender usuario"
+    },
+    "revokeSessionsModal": {
+      "title": "Revocar sesiones",
+      "desc": "Vas a revocar las sesiones del usuario {username}.",
+      "all": "Todas las sesiones",
+      "allDesc": "Cierra la sesión en todos los dispositivos.",
+      "submit": "Revocar"
+    }
   }
 }

@@ -99,8 +99,12 @@ def test_corrupt_signature_is_rejected() -> None:
     with get_db_session() as db:
         created = create_session(db, user_id, _CONFIG, now=t0)
 
-    last = created.cookie_value[-1]
-    tampered = created.cookie_value[:-1] + ("A" if last != "A" else "B")
+    parts = created.cookie_value.split(".")
+    sig = parts[2]
+    first_char = sig[0]
+    new_first = "A" if first_char != "A" else "B"
+    tampered_sig = new_first + sig[1:]
+    tampered = f"{parts[0]}.{parts[1]}.{tampered_sig}"
     with get_db_session() as db:
         assert validate_session(db, tampered, _CONFIG, now=t0) is None
 
