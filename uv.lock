@@ -2446,6 +2446,7 @@ dev = [
     { name = "pytest" },
     { name = "ruff" },
     { name = "types-pyyaml" },
+    { name = "uvicorn" },
 ]
 
 [package.metadata]
@@ -2476,6 +2477,7 @@ dev = [
     { name = "pytest" },
     { name = "ruff" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20260518" },
+    { name = "uvicorn", specifier = ">=0.51.0" },
 ]
 
 [[package]]

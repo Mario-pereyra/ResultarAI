@@ -237,6 +237,20 @@ def _iter_sse_bytes(
     datos) y vuelve a esperar. Necesario porque `events` es un iterador SÍNCRONO: sin un
     hilo productor no hay forma de "esperar con un tope" la siguiente pieza y emitir un
     heartbeat mientras tanto desde el mismo hilo que la produce.
+
+    **Bug real descubierto por la tarea 9.4 (corte físico de conexión, ver
+    `openspec/BACKLOG-DESCUBRIMIENTOS.md`):** con un `TestClient` (que bufferiza el
+    body completo) este generador siempre lo consume hasta el final el mismo hilo de
+    la petición, así que el `finally` de abajo nunca corre en el hilo `producer`. Con
+    un corte FÍSICO de la conexión (socket real) contra un servidor `uvicorn`, este
+    generador puede quedar abandonado por Starlette (`OSError` al intentar escribir un
+    heartbeat sobre el socket ya cerrado, ver `StreamingResponse.__call__`) y
+    finalizarse más tarde por el recolector de basura -- en CUALQUIER hilo, incluido,
+    por una carrera de temporización, el propio hilo `producer` (observado en un test
+    real: `RuntimeError: cannot join current thread`, silenciado por Python como
+    "Exception ignored in: <generator...>" durante la finalización). El chequeo de
+    abajo evita ese `RuntimeError`: si el hilo que está cerrando este generador ES
+    `producer`, no hay nada que esperar (por definición, ya terminó su trabajo).
     """
     pending: queue.Queue[tuple[str, Any]] = queue.Queue()
 
@@ -268,7 +282,8 @@ def _iter_sse_bytes(
                 raise payload
             yield _format_sse(payload)
     finally:
-        producer.join(timeout=1.0)
+        if threading.current_thread() is not producer:
+            producer.join(timeout=1.0)
 
 
 @router.post("/sessions/{session_id}/messages/stream")

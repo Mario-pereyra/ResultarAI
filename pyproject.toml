@@ -33,6 +33,7 @@ dev = [
     "pre-commit",
     "types-pyyaml>=6.0.12.20260518",
     "httpx>=0.28.1",
+    "uvicorn>=0.51.0",
 ]
 
 [build-system]
