@@ -263,6 +263,95 @@
   color: var(--warn);
 }
 
+/* ── Fila de telemetría por turno (tareas 4.2/4.3, vista 06 §2) ──────────
+   Se agrega DENTRO de `.msg-meta` (misma fila de metadatos), nunca en un
+   panel aparte -- ver `components/chat/turn-telemetry-row.tsx`. */
+.msg-meta__cost {
+  color: var(--money);
+}
+
+.msg-meta a {
+  color: var(--info);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ── Taxímetro de sesión (tarea 4.2, `.taximeter`, vista 06 §2) ─────────
+   Portado desde design/mockups/tokens.css §5.19. */
+.chat-taximeter-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--sp-3) var(--sp-4) 0;
+}
+
+.taximeter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-3);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.taximeter__label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.taximeter__value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--money);
+  font-variant-numeric: tabular-nums;
+}
+
+.taximeter__detail {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-faint);
+}
+
+/* ── Chips de cache — hit/miss/write (tareas 4.2/4.3, solo Técnico/Admin)
+   Portado desde design/mockups/tokens.css §5.15. */
+.chip-cache {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  border-radius: var(--r-xs);
+}
+.chip-cache::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.chip-cache--hit {
+  color: var(--money);
+  background: color-mix(in srgb, var(--money) 12%, transparent);
+}
+.chip-cache--miss {
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+}
+.chip-cache--write {
+  color: var(--info);
+  background: color-mix(in srgb, var(--info) 12%, transparent);
+}
+
 /* ── Cursor de bloque parpadeante (tarea 3.1) ───────────────────────── */
 .chat-cursor {
   display: inline-block;

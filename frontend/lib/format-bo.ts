@@ -15,11 +15,13 @@
  * una instancia futura configure otro país (Etapa P), este locale pasa a
  * ser configuración de instancia real, no next-intl.
  *
- * Los 6 helpers de abajo cubren las filas de la tabla §9.8 que el producto
+ * Los helpers de abajo cubren las filas de la tabla §9.8 que el producto
  * consume hoy (fecha, fecha-hora, costo LLM, monto agregado, porcentaje,
- * tokens abreviados); "relativo" y "duración" no tienen consumidor real
- * todavía (taxímetro/HITL llegan en changes posteriores) y se agregan
- * cuando haga falta, no especulativamente.
+ * tokens abreviados); "relativo" ya tiene consumidor propio
+ * (`lib/chat/format-time.ts`, fuera de este módulo). "Duración" llega acá
+ * recién con `formatLatencySecondsBO` (d13-chat-conversacion, tareas
+ * 4.2/4.3: latencia de turno de la vista 06, `3,2 s`) -- no se agregó
+ * especulativamente antes por no tener consumidor real.
  */
 
 const INSTANCE_LOCALE = "es-BO";
@@ -73,15 +75,43 @@ export function formatPercentBO(ratio: number): string {
 }
 
 /**
- * Abreviado k/M, 1 decimal — fila "Tokens" (ej. `12,4k tok`). El CLDR de
- * es-BO agrega un espacio antes de la unidad compacta ("12,4 k"); se quita
- * acá porque el formato del design no lo lleva.
+ * Número abreviado k/M, 1 decimal, SIN unidad (ej. `41,2k`) — pieza
+ * compartida por `formatTokensBO` (que le agrega "tok") y los chips de
+ * cache `HIT`/`MISS`/`WRITE` de la vista 06 (`HIT · 41,2k`): el chip ya es
+ * de tokens por contexto, repetir "tok" ahí sería ruido (d13-chat-conversacion,
+ * tareas 4.2/4.3). El CLDR de es-BO agrega un espacio antes de la unidad
+ * compacta ("41,2 k"); se quita acá porque el formato del design no lo lleva.
+ *
+ * DESVÍO documentado: el CLDR de `Intl` para `es` usa mayúscula ("K") para
+ * el escalón de millar (1.000-9.999, ej. `1,8 K`) pero minúscula ("k") para
+ * el escalón de decena de millar en adelante (10.000+, ej. `41,2 k`) —
+ * inconsistencia real de los datos CLDR, no un bug de esta función. El
+ * design (`design/DESIGN-SYSTEM.md` §9.8) pide SIEMPRE minúscula
+ * (`12,4k tok`), así que se normaliza acá con `toLowerCase()` -- sin efecto
+ * sobre los dígitos/coma decimal, que nunca llevan mayúsculas.
  */
-export function formatTokensBO(count: number): string {
+export function formatCompactNumberBO(count: number): string {
   const abbreviated = new Intl.NumberFormat(INSTANCE_LOCALE, {
     notation: "compact",
     compactDisplay: "short",
     maximumFractionDigits: 1,
   }).format(count);
-  return `${abbreviated.replace(/\s+/g, "")} tok`;
+  return abbreviated.replace(/\s+/g, "").toLowerCase();
+}
+
+/** Abreviado k/M, 1 decimal, con unidad — fila "Tokens" (ej. `12,4k tok`). */
+export function formatTokensBO(count: number): string {
+  return `${formatCompactNumberBO(count)} tok`;
+}
+
+/**
+ * Segundos con 1 decimal, coma decimal — latencia de turno de la vista 06
+ * (ej. `3,2 s`, a partir de `telemetry.latency_ms` en milisegundos).
+ */
+export function formatLatencySecondsBO(milliseconds: number): string {
+  const number = new Intl.NumberFormat(INSTANCE_LOCALE, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  }).format(milliseconds / 1000);
+  return `${number} s`;
 }

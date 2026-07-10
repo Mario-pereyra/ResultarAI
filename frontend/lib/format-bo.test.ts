@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   formatAggregatedAmountBO,
+  formatCompactNumberBO,
   formatDateBO,
   formatDateTimeBO,
+  formatLatencySecondsBO,
   formatLlmCostBO,
   formatPercentBO,
   formatTokensBO,
@@ -40,5 +42,18 @@ describe("format-bo — formatos es-BO de design/DESIGN-SYSTEM.md §9.8 (tarea 6
   it("tokens abreviados: k/M con 1 decimal, sin espacio antes de la unidad", () => {
     expect(formatTokensBO(12400)).toBe("12,4k tok");
     expect(formatTokensBO(820)).toBe("820 tok");
+  });
+
+  it("número abreviado (tareas 4.2/4.3, chips de cache): siempre minúscula, incluso en el escalón de millar (1.000-9.999) donde el CLDR de es-BO devuelve mayúscula", () => {
+    // Desvío documentado en el docstring de `formatCompactNumberBO`: el
+    // CLDR de `Intl` produce "1,8 K" (mayúscula) para este escalón y
+    // "41,2 k" (minúscula) para el escalón siguiente -- normalizado acá.
+    expect(formatCompactNumberBO(1800)).toBe("1,8k");
+    expect(formatCompactNumberBO(41200)).toBe("41,2k");
+    expect(formatCompactNumberBO(900)).toBe("900");
+  });
+
+  it("latencia de turno: segundos con 1 decimal, coma decimal (vista 06)", () => {
+    expect(formatLatencySecondsBO(3200)).toBe("3,2 s");
   });
 });

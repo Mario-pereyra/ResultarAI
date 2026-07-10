@@ -2,11 +2,12 @@
 
 import type { ReactNode } from "react";
 import { formatAbsoluteTime, formatRelativeTime } from "@/lib/chat/format-time";
-import type { ChatRole } from "@/lib/chat/types";
+import type { ChatRole, TurnTelemetry } from "@/lib/chat/types";
 import { useAutoScroll } from "@/lib/chat/use-auto-scroll";
 import { ActivityIndicator, type ActivityIndicatorLabels } from "./activity-indicator";
 import { FeedbackActions, type FeedbackActionsLabels } from "./feedback-actions";
 import { MarkdownContent } from "./markdown-content";
+import { TurnTelemetryRow, type TurnTelemetryLabels } from "./turn-telemetry-row";
 
 export interface ChatMessageItem {
   id: string;
@@ -15,6 +16,11 @@ export interface ChatMessageItem {
   createdAt?: string;
   /** `"stopped"` cuando el turno se detuvo antes de completar (tarea 1.7). */
   status?: string;
+  /** Telemetría del turno (tareas 4.2/4.3) -- SOLO presente para Técnico/Admin,
+   * ver `TurnTelemetry`. Ausente (no `undefined` explícito, sino la clave
+   * nunca poblada) para Funcional y para mensajes de usuario: decisión 7 de
+   * `design.md`, la ausencia del dato es la señal que decide el render. */
+  telemetry?: TurnTelemetry;
 }
 
 export type StreamingTurnStatus = "streaming" | "done" | "error";
@@ -39,6 +45,8 @@ export interface MessageColumnLabels {
   newMessages: string;
   /** Acciones 👍/👎 bajo cada respuesta completada (tarea 3.6). */
   feedback: FeedbackActionsLabels;
+  /** Fila de telemetría por turno (tareas 4.2/4.3) -- ver `TurnTelemetryRow`. */
+  telemetry: TurnTelemetryLabels;
 }
 
 export interface MessageColumnProps {
@@ -116,6 +124,7 @@ export function MessageColumn({
                   message={message}
                   stoppedCaption={labels.stoppedCaption}
                   feedbackLabels={labels.feedback}
+                  telemetryLabels={labels.telemetry}
                 />
               </li>
             ))}
@@ -153,10 +162,12 @@ function ChatMessageRow({
   message,
   stoppedCaption,
   feedbackLabels,
+  telemetryLabels,
 }: {
   message: ChatMessageItem;
   stoppedCaption: string;
   feedbackLabels: FeedbackActionsLabels;
+  telemetryLabels: TurnTelemetryLabels;
 }) {
   if (message.role === "user") {
     return (
@@ -183,6 +194,12 @@ function ChatMessageRow({
             <time dateTime={message.createdAt} title={formatAbsoluteTime(message.createdAt)}>
               {formatRelativeTime(message.createdAt)}
             </time>
+          ) : null}
+          {/* Tareas 4.2/4.3: misma fila de metadatos del turno (vista 06 §2),
+              nunca un panel aparte -- ver docstring de `TurnTelemetryRow`
+              para por qué no hace falta un chequeo de rol acá. */}
+          {message.telemetry ? (
+            <TurnTelemetryRow telemetry={message.telemetry} labels={telemetryLabels} />
           ) : null}
         </div>
         {/* Tarea 3.6: acciones de turno visibles recién acá -- este mensaje

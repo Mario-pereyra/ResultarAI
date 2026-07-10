@@ -427,6 +427,27 @@
       "loading": "Cargando conversación…",
       "loadError": "No pudimos cargar esta conversación.",
       "sendError": "Se perdió la conexión con el turno y no se pudo reconectar."
+    },
+    "taximeter": {
+      "label": "Sesión",
+      "srLabelPrefix": "Costo de sesión:",
+      "degradedTooltip": "costo estimado, telemetría diferida"
+    },
+    "telemetry": {
+      "cacheHit": "HIT",
+      "cacheMiss": "MISS",
+      "cacheWrite": "WRITE",
+      "cacheHitAriaLabelPrefix": "cache hit,",
+      "cacheHitAriaLabelSuffix": "tokens cacheados",
+      "cacheMissAriaLabelPrefix": "cache miss,",
+      "cacheMissAriaLabelSuffix": "tokens sin cache",
+      "cacheWriteAriaLabelPrefix": "prefijo escrito al cache,",
+      "cacheWriteAriaLabelSuffix": "tokens",
+      "cacheHitTooltip": "prefijo servido desde cache: ahorro ~90% en esos tokens",
+      "cacheMissTooltip": "tokens procesados sin cache (primera vez)",
+      "cacheWriteTooltip": "prefijo escrito al cache para los próximos turnos",
+      "viewTrace": "ver traza",
+      "viewTraceAriaLabel": "Ver traza de este turno en Langfuse"
     }
   }
 }

@@ -20,6 +20,22 @@ const LABELS = {
     skip: "Omitir",
     error: "No pudimos registrar tu voto. Probá de nuevo.",
   },
+  telemetry: {
+    cacheHit: "HIT",
+    cacheMiss: "MISS",
+    cacheWrite: "WRITE",
+    cacheHitAriaLabelPrefix: "cache hit,",
+    cacheHitAriaLabelSuffix: "tokens cacheados",
+    cacheMissAriaLabelPrefix: "cache miss,",
+    cacheMissAriaLabelSuffix: "tokens sin cache",
+    cacheWriteAriaLabelPrefix: "prefijo escrito al cache,",
+    cacheWriteAriaLabelSuffix: "tokens",
+    cacheHitTooltip: "prefijo servido desde cache: ahorro ~90% en esos tokens",
+    cacheMissTooltip: "tokens procesados sin cache (primera vez)",
+    cacheWriteTooltip: "prefijo escrito al cache para los próximos turnos",
+    viewTrace: "ver traza",
+    viewTraceAriaLabel: "Ver traza de este turno en Langfuse",
+  },
 };
 
 // Shape del evento `done` para el rol Funcional (tarea 4.1 del backend,

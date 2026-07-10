@@ -29,9 +29,9 @@
 ## 4. UI — capa de telemetría Técnico/Admin (vista 06)
 
 - [x] 4.1 Backend: el contrato de salida del turno incluye costo, perfil, latencia y chips de cache hit/miss/write solo cuando el rol de la sesión de identidad es Técnico o Admin; el campo está ausente (no vacío) para Funcional. Verificación: test de contrato que confirma la ausencia total del campo para una sesión Funcional. `[modelo: sonnet]`
-- [ ] 4.2 UI: taxímetro de sesión en el header (Técnico/Admin) + fila de telemetría por turno con chips de cache y costo. Verificación: prueba de componente con datos de dos turnos que confirma la suma acumulada del taxímetro. `[modelo: sonnet]`
-- [ ] 4.3 UI: enlace "ver traza" visible solo para Admin, ausente para Técnico. Verificación: prueba de componente por rol que confirma la ausencia del enlace en Técnico. `[modelo: sonnet]`
-- [ ] 4.4 Estado degradado: si la traza no está disponible, taxímetro con `~` y tooltip "costo estimado" (solo Admin). Verificación: prueba de componente con traza no disponible simulada. `[modelo: haiku]`
+- [x] 4.2 UI: taxímetro de sesión en el header (Técnico/Admin) + fila de telemetría por turno con chips de cache y costo. Verificación: prueba de componente con datos de dos turnos que confirma la suma acumulada del taxímetro. `[modelo: sonnet]`
+- [x] 4.3 UI: enlace "ver traza" visible solo para Admin, ausente para Técnico. Verificación: prueba de componente por rol que confirma la ausencia del enlace en Técnico. `[modelo: sonnet]`
+- [x] 4.4 Estado degradado: si la traza no está disponible, taxímetro con `~` y tooltip "costo estimado" (solo Admin). Verificación: prueba de componente con traza no disponible simulada. `[modelo: haiku]`
 
 ## 5. UI — modelo alterno, escalación y ramas (vistas 06/08/09)
 

@@ -48,5 +48,26 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
     loading: t("session.loading"),
     loadError: t("session.loadError"),
     sendError: t("session.sendError"),
+    taximeter: {
+      label: t("taximeter.label"),
+      srLabelPrefix: t("taximeter.srLabelPrefix"),
+      degradedTooltip: t("taximeter.degradedTooltip"),
+    },
+    telemetry: {
+      cacheHit: t("telemetry.cacheHit"),
+      cacheMiss: t("telemetry.cacheMiss"),
+      cacheWrite: t("telemetry.cacheWrite"),
+      cacheHitAriaLabelPrefix: t("telemetry.cacheHitAriaLabelPrefix"),
+      cacheHitAriaLabelSuffix: t("telemetry.cacheHitAriaLabelSuffix"),
+      cacheMissAriaLabelPrefix: t("telemetry.cacheMissAriaLabelPrefix"),
+      cacheMissAriaLabelSuffix: t("telemetry.cacheMissAriaLabelSuffix"),
+      cacheWriteAriaLabelPrefix: t("telemetry.cacheWriteAriaLabelPrefix"),
+      cacheWriteAriaLabelSuffix: t("telemetry.cacheWriteAriaLabelSuffix"),
+      cacheHitTooltip: t("telemetry.cacheHitTooltip"),
+      cacheMissTooltip: t("telemetry.cacheMissTooltip"),
+      cacheWriteTooltip: t("telemetry.cacheWriteTooltip"),
+      viewTrace: t("telemetry.viewTrace"),
+      viewTraceAriaLabel: t("telemetry.viewTraceAriaLabel"),
+    },
   };
 }
