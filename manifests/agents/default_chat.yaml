@@ -42,3 +42,4 @@ fallback_cascade:
   - anthropic_claude_haiku
 escalation:
   enabled: true
+  target_profile: openai_gpt_4o_pro

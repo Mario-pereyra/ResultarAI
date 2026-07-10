@@ -60,6 +60,24 @@ class Session(Base):
         String(255), ForeignKey("sessions.id"), nullable=True
     )
     state_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+    # Dueño de la sesion (d13-chat-conversacion, tarea 1.1). Nullable porque las filas
+    # previas de b04 (creadas antes de que existiera "dueno") no tienen usuario asociado;
+    # toda sesion nueva creada por POST /sessions siempre lo setea.
+    owner_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id"), nullable=True
+    )
+    # Id del agente del catalogo (AgentManifest.id) que origino la sesion. No es una FK
+    # real: los manifiestos viven versionados en YAML, no en esta base (regla dura 6).
+    agent_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Titulo automatico (a partir del primer intercambio, tarea 2.2) o editado a mano por
+    # el usuario. Nulo hasta que se genere.
+    title: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # True si el usuario edito el titulo manualmente: evita que un turno nuevo lo
+    # sobreescriba con la generacion automatica (tarea 2.2).
+    title_edited: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    # Marca de tiempo de la ultima actividad (turno enviado) de la sesion; el listado de
+    # sesiones propias (tarea 2.1) la usa para mostrar/ordenar por "ultima actividad".
+    last_activity_at: Mapped[datetime.datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationships
     forked_from: Mapped["Session | None"] = relationship("Session", remote_side=[id])
@@ -84,6 +102,17 @@ class Message(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, nullable=False, default=get_utc_now
     )
+    # Estado del mensaje (d13, tarea 1.7): 'complete' es un turno terminado con
+    # normalidad; 'stopped' marca una respuesta detenida por el usuario a mitad de
+    # generacion (POST /messages/{id}/cancel), que queda disponible para regenerar sin
+    # perderse. `server_default` protege las filas ya existentes de b04 al aplicar esta
+    # migracion additiva: quedan 'complete' sin necesitar un backfill manual.
+    status: Mapped[str] = mapped_column(String(50), nullable=False, server_default="complete")
+    # Metadatos del turno (d13, tarea 1.5): costo, perfil efectivamente usado, si hubo
+    # modelo alterno, chips de cache hit/miss/write, compaction y escalacion -- lo que el
+    # evento de cierre del stream SSE adjunta al mensaje de respuesta persistido. Nulo
+    # para mensajes de usuario y para filas previas a este change.
+    turn_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     # Relationships
     session: Mapped["Session"] = relationship("Session", back_populates="messages")
@@ -493,4 +522,3 @@ class Notification(Base):
         Index("ix_notifications_recipient_created", "recipient_id", "created_at"),
         Index("ix_notifications_recipient_read", "recipient_id", "read_at"),
     )
-

@@ -65,6 +65,13 @@ class AgentEvals(_StrictModel):
 
 class AgentEscalation(_StrictModel):
     enabled: bool = True
+    # Perfil de modelo de destino de la escalacion manual (d13-chat-conversacion,
+    # tarea 1.4/1.8): el evento de dominio de escalacion que traduce el marcador
+    # `<<<NEEDS_PRO>>>` (`escalation-marker` de b05) lo expone para que la UI ofrezca
+    # "Continuar con Pro" y, en la tarea 1.8, para crear la sesion/rama escalada con
+    # este `model_profile`. Campo additivo, opcional para no romper manifiestos
+    # existentes que no lo declaren.
+    target_profile: str | None = None
 
 
 class AgentManifest(BaseManifest):
