@@ -206,7 +206,7 @@ describe("AdminContent", () => {
   });
 
   it("crea un nuevo usuario y muestra la contraseña temporal en el modal de éxito", async () => {
-    const fetchMock = vi.fn().mockImplementation(async (url: string, options?: any) => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string, options?: RequestInit) => {
       const isPost = options?.method === "POST" || options?.method === "post";
       if (url.includes("/api/admin/users") && url.endsWith("/users") && isPost) {
         return {
@@ -269,7 +269,7 @@ describe("AdminContent", () => {
   });
 
   it("crea un grupo agregando miembros seleccionados", async () => {
-    const fetchMock = vi.fn().mockImplementation(async (url: string, options?: any) => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string, options?: RequestInit) => {
       const isPost = options?.method === "POST" || options?.method === "post";
       if (url.includes("/api/admin/groups") && url.endsWith("/groups") && isPost) {
         return {

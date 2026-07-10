@@ -25,6 +25,16 @@ const labels: TopbarLabels = {
   theme: "Tema",
   logout: "Cerrar sesión",
   roleLabel: "Funcional",
+  notificationsEmptyHint: "Acá vas a ver aprobaciones, avisos de cuota y novedades del sistema.",
+  notificationsError: "No se pudieron cargar las notificaciones",
+  notificationsRetry: "Reintentar",
+  notificationsMarkAllRead: "Marcar leídas",
+  notificationsViewAll: "Ver todas",
+  notificationsView: "Ver",
+  notificationsClose: "Cerrar notificaciones",
+  notificationsKickerCuotas: "Cuotas",
+  notificationsKickerSistema: "Sistema",
+  notificationsKickerAprobaciones: "Aprobaciones",
 };
 
 function sessionFor(

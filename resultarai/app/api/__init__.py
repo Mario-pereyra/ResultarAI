@@ -13,6 +13,7 @@ from resultarai.adapters.persistence_postgres.models import User
 from resultarai.app.api.admin import router as admin_router
 from resultarai.app.api.auth import router as auth_router
 from resultarai.app.api.me import router as me_router
+from resultarai.app.api.notifications import router as notifications_router
 from resultarai.app.identity import (
     SESSION_COOKIE,
     SessionConfig,
@@ -95,6 +96,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(me_router)
     app.include_router(admin_router)
+    app.include_router(notifications_router)
 
     # Inyección de dependencias
     app.dependency_overrides[get_db] = get_db_override

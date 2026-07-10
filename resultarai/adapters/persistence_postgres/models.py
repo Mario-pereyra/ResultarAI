@@ -470,3 +470,27 @@ class IdentityAuditEvent(Base):
         DateTime, nullable=False, default=get_utc_now
     )
     details: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+
+
+class Notification(Base):
+    """Notificación dirigida a un usuario concreto (d12)."""
+
+    __tablename__ = "notifications"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid6.uuid7)
+    recipient_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    type: Mapped[str] = mapped_column(String(100), nullable=False)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    deep_link: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    read_at: Mapped[datetime.datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, nullable=False, default=get_utc_now
+    )
+
+    __table_args__ = (
+        Index("ix_notifications_recipient_created", "recipient_id", "created_at"),
+        Index("ix_notifications_recipient_read", "recipient_id", "read_at"),
+    )
+

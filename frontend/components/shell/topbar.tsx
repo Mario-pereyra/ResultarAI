@@ -6,7 +6,8 @@ import { Dropdown } from "@/components/ui/dropdown";
 import { RoleBadge } from "@/components/ui/role-badge";
 import { useSession } from "@/lib/session-context";
 import type { Theme } from "@/lib/theme";
-import { BellIcon, HamburgerIcon, MoonIcon, SearchIcon, SunIcon } from "./icons";
+import { HamburgerIcon, MoonIcon, SearchIcon, SunIcon } from "./icons";
+import { NotificationPanel } from "./notification-panel";
 
 /**
  * Topbar (tarea 5.4, d10-design-system-shell).
@@ -43,19 +44,22 @@ export type TopbarLabels = {
   themeToDark: string;
   notifications: string;
   notificationsEmpty: string;
-  /**
-   * Nombre accesible del botón-campana, ya interpolado server-side con el
-   * conteo de no leídas (plural ICU — ver app/(shell)/layout.tsx y
-   * messages/es.json `Shell.topbar.notificationsAriaLabel`).
-   */
   notificationsAriaLabel: string;
-  /** Ya interpolado server-side con nombre + rol (ver app/(shell)/layout.tsx). */
   userMenuLabel: string;
   myWorkspace: string;
   theme: string;
   logout: string;
-  /** Texto visible del rol de la sesión actual (Admin/Técnico/Funcional). */
   roleLabel: string;
+  notificationsEmptyHint: string;
+  notificationsError: string;
+  notificationsRetry: string;
+  notificationsMarkAllRead: string;
+  notificationsViewAll: string;
+  notificationsView: string;
+  notificationsClose: string;
+  notificationsKickerCuotas: string;
+  notificationsKickerSistema: string;
+  notificationsKickerAprobaciones: string;
 };
 
 export type TopbarProps = {
@@ -117,29 +121,7 @@ export function Topbar({ theme, labels, onOpenDrawer }: TopbarProps) {
         >
           {theme === "dark" ? <SunIcon /> : <MoonIcon />}
         </button>
-
-        <span className="shell-topbar__bell-wrap">
-          <Dropdown
-            triggerLabel={labels.notificationsAriaLabel}
-            triggerIcon={<BellIcon />}
-            triggerClassName="notif-bell"
-            align="end"
-            items={[
-              {
-                id: "empty",
-                label: labels.notificationsEmpty,
-                onSelect: () => {},
-                disabled: true,
-              },
-            ]}
-          />
-          {unreadNotifications > 0 ? (
-            <span className="notif-bell__count" aria-hidden="true">
-              {formatBadge(unreadNotifications)}
-            </span>
-          ) : null}
-        </span>
-
+        <NotificationPanel labels={labels} initialCount={unreadNotifications} />
         <Dropdown
           triggerLabel={labels.userMenuLabel}
           align="end"
@@ -166,7 +148,4 @@ function initialsFromName(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
-/** Mismo criterio que `formatBadge` del sidebar (badge de aprobaciones): >99 -> "99+". */
-function formatBadge(count: number): string {
-  return count > 99 ? "99+" : String(count);
-}
+
