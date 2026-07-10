@@ -19,6 +19,11 @@ dependencies = [
     "itsdangerous>=2.2.0",
     "pyotp>=2.10.0",
     "cryptography>=49.0.0",
+    "openpyxl>=3.1.5",
+    "python-calamine>=0.7.0",
+    "pypdf>=6.14.2",
+    "mammoth>=1.12.0",
+    "presidio-analyzer>=2.2.363",
 ]
 
 [project.scripts]
@@ -32,6 +37,7 @@ dev = [
     "import-linter",
     "pre-commit",
     "types-pyyaml>=6.0.12.20260518",
+    "types-openpyxl>=3.1.5.20260518",
     "httpx>=0.28.1",
     "uvicorn>=0.51.0",
 ]
@@ -90,6 +96,13 @@ init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
 
+# mammoth (extractor DOCX, d14) no publica stubs ni py.typed; el resto de las
+# libs de extracción (pypdf, python-calamine, presidio-analyzer) sí tipan y
+# openpyxl se cubre con types-openpyxl.
+[[tool.mypy.overrides]]
+module = ["mammoth", "mammoth.*"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers --strict-config"
@@ -106,6 +119,7 @@ forbidden_modules = [
     "resultarai.adapters", "resultarai.app",
     "langgraph", "litellm", "langfuse", "fastapi", "httpx",
     "sqlalchemy", "alembic", "psycopg", "uuid6", "mcp",
+    "openpyxl", "python_calamine", "pypdf", "mammoth", "presidio_analyzer",
 ]
 
 [[tool.importlinter.contracts]]
@@ -124,4 +138,8 @@ modules = [
     "resultarai.adapters.tracing_langfuse",
     "resultarai.adapters.persistence_postgres",
     "resultarai.adapters.skills_fs",
+    "resultarai.adapters.extraction_spreadsheet",
+    "resultarai.adapters.extraction_pdf",
+    "resultarai.adapters.extraction_docx",
+    "resultarai.adapters.extraction_text",
 ]
