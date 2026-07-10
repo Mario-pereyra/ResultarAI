@@ -42,7 +42,7 @@ fallback_cascade:
   - anthropic_claude_haiku
 escalation:
   enabled: true
-  target_profile: openai_gpt_4o_pro
+  target_profile: deepseek_v4_pro
 starter_prompts:
   - "Ayudame a redactar un resumen ejecutivo de una reunión"
   - "Explicame en simple un concepto que no entiendo"

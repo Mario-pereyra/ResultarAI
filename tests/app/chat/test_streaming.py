@@ -360,7 +360,7 @@ def test_escalation_marker_split_across_fragments_never_leaks(
 
     escalation_data = json.loads(events[escalation_index]["data"])
     assert escalation_data["reason"]
-    assert escalation_data["target_profile"] == "openai_gpt_4o_pro"
+    assert escalation_data["target_profile"] == "deepseek_v4_pro"
 
     done_data = json.loads(events[-1]["data"])
     assert done_data["escalation"] == escalation_data

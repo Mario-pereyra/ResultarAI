@@ -17,3 +17,28 @@
   cache_hit_rate: 0.0000001
   cache_miss_rate: 0.0000005
   active: true
+
+# Perfiles DeepSeek V4 para desarrollo (DEEPSEEK_API_KEY en .env): el `model` lleva el
+# prefijo `deepseek/` completo porque el adapter LiteLLM pasa `profile.model` literal a
+# `litellm.completion` y el provider nativo de DeepSeek exige ese prefijo. Tarifas de
+# input por token (hit = cache read, miss = input normal) según la tabla oficial de
+# precios de LiteLLM (model_prices_and_context_window.json).
+- id: deepseek_v4_pro
+  provider: deepseek
+  model: deepseek/deepseek-v4-pro
+  parameters:
+    temperature: 0.0
+    max_tokens: 4096
+  cache_hit_rate: 0.000000003625
+  cache_miss_rate: 0.000000435
+  active: true
+
+- id: deepseek_v4_flash
+  provider: deepseek
+  model: deepseek/deepseek-v4-flash
+  parameters:
+    temperature: 0.0
+    max_tokens: 4096
+  cache_hit_rate: 0.0000000028
+  cache_miss_rate: 0.00000014
+  active: true

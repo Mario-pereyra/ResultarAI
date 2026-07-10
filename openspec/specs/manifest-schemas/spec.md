@@ -54,6 +54,25 @@ El `AgentManifest` SHALL declarar los campos obligatorios de `docs/04-manifiesto
 - **WHEN** un Agent Manifest omite `enabled_skills` o `evals`
 - **THEN** la validación falla nombrando el campo obligatorio ausente
 
+### Requirement: Campos additivos del Agent Manifest para la experiencia de chat
+
+El `AgentManifest` SHALL admitir dos campos additivos introducidos por `d13-chat-conversacion`: `starter_prompts` (lista de textos que la UI del chat ofrece como sugerencias clicables en una sesión nueva, ver `chat-experience`; default lista vacía) y `escalation.target_profile` (identificador del perfil de modelo de destino de la escalación manual; default nulo). Ambos campos MUST ser opcionales con default inerte: un Agent Manifest que no los declare MUST seguir validando sin cambios (compatibilidad additiva). Cuando `escalation.target_profile` está declarado, MUST resolver a un perfil de modelo existente y activo en la validación de referencias cruzadas (`manifest-registries`).
+
+#### Scenario: Agent sin los campos nuevos sigue siendo válido
+
+- **WHEN** se valida un Agent Manifest que no declara `starter_prompts` ni `escalation.target_profile`
+- **THEN** el schema lo acepta con `starter_prompts` como lista vacía y `escalation.target_profile` nulo, sin activar comportamiento alguno
+
+#### Scenario: starter_prompts expone las sugerencias tipadas
+
+- **WHEN** un Agent Manifest declara `starter_prompts` con una lista de textos
+- **THEN** el schema los expone tipados para que la UI del chat los muestre como sugerencias de inicio
+
+#### Scenario: target_profile declarado habilita el destino de la escalación
+
+- **WHEN** un Agent Manifest declara `escalation.target_profile` con el id de un perfil de modelo del catálogo
+- **THEN** el schema lo expone para que la escalación manual cree la sesión/rama escalada en ese perfil
+
 ### Requirement: Skill Manifest como envoltorio de gobernanza de un paquete Agent Skill
 
 El `SkillManifest` SHALL ser el envoltorio de gobernanza de un paquete conforme a la spec oficial Agent Skills (carpeta con `SKILL.md` + frontmatter `name`/`description`, progressive disclosure): MUST referenciar el paquete por identificador y `version`, y declarar `status`, `execution`, `tools` permitidas, `output_policy` y `evals`. El schema MUST NOT duplicar el contenido de la Skill (instrucciones ni ejemplos del `SKILL.md`); solo aporta la capa de gobernanza (id, versión, policies, Tools permitidas, status).

@@ -32,7 +32,7 @@ El sistema SHALL construir Registries en memoria (`AgentRegistry`, `SkillRegistr
 
 ### Requirement: Validación de referencias cruzadas entre Manifests
 
-Los Registries SHALL validar las referencias cruzadas entre Manifests: cada `enabled_skills` de un Agent MUST existir como Skill `active`; cada Tool declarada en `tools` de una Skill MUST existir como Tool `active`; cada `template` de evals MUST existir como Eval Template; cada Policy y Routing referenciados MUST existir. Una referencia a un Manifest inexistente o no `active` MUST hacer fallar la construcción del Registry (referencias colgantes prohibidas).
+Los Registries SHALL validar las referencias cruzadas entre Manifests: cada `enabled_skills` de un Agent MUST existir como Skill `active`; cada Tool declarada en `tools` de una Skill MUST existir como Tool `active`; cada `template` de evals MUST existir como Eval Template; cada Policy y Routing referenciados MUST existir; cada perfil de modelo referenciado por un Agent —cada id de `fallback_cascade` y, si está declarado, `escalation.target_profile`— MUST existir como perfil activo del catálogo de perfiles de modelo. Una referencia a un Manifest inexistente o no `active` MUST hacer fallar la construcción del Registry (referencias colgantes prohibidas).
 
 #### Scenario: Referencias cruzadas completas
 
@@ -53,6 +53,11 @@ Los Registries SHALL validar las referencias cruzadas entre Manifests: cada `ena
 
 - **WHEN** una Skill referencia en `evals.template` un Eval Template que no existe
 - **THEN** la construcción del Registry falla nombrando la referencia colgante
+
+#### Scenario: Agent referencia un perfil de modelo colgante
+
+- **WHEN** un Agent declara en `fallback_cascade` o en `escalation.target_profile` un id que no existe en el catálogo de perfiles de modelo, o que existe pero está inactivo
+- **THEN** la construcción del Registry falla citando el origen (`Agent:<id>`), el campo y el destino (`ModelProfile:<id>`)
 
 ### Requirement: Ciclo de vida draft→validated→active→deprecated y kill switch por status
 

@@ -308,7 +308,7 @@ describe("Flujo D — escalación manual a Pro (tarea 9.3)", () => {
     const double = createChatApiDouble({
       role: "funcional",
       escalationEnabled: true,
-      escalationTargetProfile: "openai_gpt_4o_pro",
+      escalationTargetProfile: "deepseek_v4_pro",
     });
     const spy = createPayloadSpy(double.fetch);
     vi.stubGlobal("fetch", spy.fetch);
@@ -344,7 +344,7 @@ describe("Flujo D — escalación manual a Pro (tarea 9.3)", () => {
     );
     const escalationReason =
       "Tu consulta cruza varias localizaciones tributarias y amerita el modelo avanzado.";
-    turn.pushEscalation({ reason: escalationReason, target_profile: "openai_gpt_4o_pro" });
+    turn.pushEscalation({ reason: escalationReason, target_profile: "deepseek_v4_pro" });
     turn.complete();
 
     // --- Fase 3 (Flujo D, punto 3): la tarjeta aparece tras la respuesta ----
@@ -354,7 +354,7 @@ describe("Flujo D — escalación manual a Pro (tarea 9.3)", () => {
     expect(confirmButton).toBeTruthy();
     expect(screen.getByRole("button", { name: LABELS.escalation.dismiss })).toBeTruthy();
     expect(screen.getByText(escalationReason)).toBeTruthy();
-    expect(screen.getByText("openai_gpt_4o_pro")).toBeTruthy();
+    expect(screen.getByText("deepseek_v4_pro")).toBeTruthy();
     expect(screen.getByText(LABELS.escalation.title)).toBeTruthy();
     // El texto final del turno se renderizó completo y limpio.
     expect(screen.getByText(/requiere un análisis más profundo\./)).toBeTruthy();
@@ -377,7 +377,7 @@ describe("Flujo D — escalación manual a Pro (tarea 9.3)", () => {
     expect(escalated).toBeTruthy();
     const escalatedSessionId = escalated.id;
     // Perfil Pro y enlace forked_from_id al origen.
-    expect(escalated.modelProfile).toBe("openai_gpt_4o_pro");
+    expect(escalated.modelProfile).toBe("deepseek_v4_pro");
     expect(escalated.forkedFromId).toBe(originSessionId);
     // Sembrada con el re-planteo: el mensaje de usuario del origen.
     const escalatedMessages = double.getMessages(escalatedSessionId);
@@ -455,7 +455,7 @@ describe("Flujo D — escalación manual a Pro (tarea 9.3)", () => {
     // evento SSE estructurado (`event: escalation` con el perfil destino),
     // nunca como marcador en el texto.
     const escalationEventPayloads = spy.payloads.filter(
-      (p) => p.body.includes("escalation") && p.body.includes("openai_gpt_4o_pro"),
+      (p) => p.body.includes("escalation") && p.body.includes("deepseek_v4_pro"),
     );
     expect(escalationEventPayloads.length).toBeGreaterThan(0);
     // Sanity-check del detector: da POSITIVO sobre un string de control que sí

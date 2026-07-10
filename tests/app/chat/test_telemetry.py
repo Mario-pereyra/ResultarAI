@@ -258,7 +258,7 @@ def _sample_raw() -> RawTurnMetadata:
         compacted=True,
         escalation={
             "reason": "necesita más razonamiento",
-            "target_profile": "openai_gpt_4o_pro",
+            "target_profile": "deepseek_v4_pro",
         },
     )
 
@@ -275,7 +275,7 @@ def test_layer_turn_metadata_funcional_never_sees_telemetry_key() -> None:
     assert view["compacted"] is True
     assert view["escalation"] == {
         "reason": "necesita más razonamiento",
-        "target_profile": "openai_gpt_4o_pro",
+        "target_profile": "deepseek_v4_pro",
     }
 
 

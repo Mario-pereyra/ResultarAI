@@ -171,7 +171,7 @@ def test_escalation_enabled_creates_linked_session_with_origin_intact(
     data = response.json()
 
     assert data["origin_session_id"] == session_id
-    assert data["model_profile"] == "openai_gpt_4o_pro"
+    assert data["model_profile"] == "deepseek_v4_pro"
     assert data["created"] is True
     # Tarea 2.2: el primer turno genera un título automático; la escalada lo hereda + " (Pro)"
     assert data["origin_session_title"] == "necesito ayuda avanzada"
@@ -184,7 +184,7 @@ def test_escalation_enabled_creates_linked_session_with_origin_intact(
         escalated_session = db.get(SessionModel, escalated_session_id)
         assert escalated_session is not None
         assert escalated_session.forked_from_id == session_id
-        assert escalated_session.model_profile == "openai_gpt_4o_pro"
+        assert escalated_session.model_profile == "deepseek_v4_pro"
         assert escalated_session.agent_id == "default_chat"
         assert escalated_session.owner_user_id is not None
 
@@ -194,7 +194,7 @@ def test_escalation_enabled_creates_linked_session_with_origin_intact(
         assert seeded_message.role == "user"
         assert seeded_message.parent_id is None
         assert seeded_message.content == "necesito ayuda avanzada"
-        assert seeded_message.model_profile == "openai_gpt_4o_pro"
+        assert seeded_message.model_profile == "deepseek_v4_pro"
 
         # Ninguna respuesta de agente se genera al sembrar: un único mensaje.
         escalated_messages = (
@@ -211,7 +211,7 @@ def test_escalation_enabled_creates_linked_session_with_origin_intact(
         assert {str(m.id) for m in origin_messages_after} == origin_ids_before
         origin_session = db.get(SessionModel, session_id)
         assert origin_session is not None
-        assert origin_session.model_profile != "openai_gpt_4o_pro"
+        assert origin_session.model_profile != "deepseek_v4_pro"
 
 
 def test_escalation_with_explicit_origin_message_id_reprises_that_turn(

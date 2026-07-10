@@ -320,3 +320,75 @@ def test_agent_referencing_valid_model_profile_succeeds(tmp_path: Path) -> None:
     agent = registries.agents.get("default_chat")
     assert agent is not None
     assert agent.fallback_cascade == ["gpt_4o"]
+
+
+def _profile_payload(profile_id: str, *, active: bool = True) -> dict[str, Any]:
+    return {
+        "id": profile_id,
+        "provider": "openai",
+        "model": "gpt-4o",
+        "cache_hit_rate": 0.0,
+        "cache_miss_rate": 0.0,
+        "active": active,
+    }
+
+
+def test_agent_escalation_target_profile_nonexistent_fails(tmp_path: Path) -> None:
+    _write_full_valid_set(tmp_path)
+    profiles_path = tmp_path / "model_profiles.yaml"
+    profiles_path.write_text(yaml.safe_dump([_profile_payload("gpt_4o")]), encoding="utf-8")
+
+    # El destino de la escalacion manual no existe como ModelProfile.
+    _write_manifest(
+        tmp_path / "agents",
+        "default_chat.yaml",
+        _agent_payload(escalation={"enabled": True, "target_profile": "nonexistent_pro"}),
+    )
+
+    with pytest.raises(DanglingReferenceError) as exc_info:
+        load_registries(tmp_path)
+
+    message = str(exc_info.value)
+    assert "Agent:default_chat" in message
+    assert "ModelProfile:nonexistent_pro" in message
+    assert exc_info.value.field == "escalation.target_profile"
+
+
+def test_agent_escalation_target_profile_inactive_fails(tmp_path: Path) -> None:
+    _write_full_valid_set(tmp_path)
+    profiles = [_profile_payload("gpt_4o"), _profile_payload("gpt_4o_pro", active=False)]
+    profiles_path = tmp_path / "model_profiles.yaml"
+    profiles_path.write_text(yaml.safe_dump(profiles), encoding="utf-8")
+
+    _write_manifest(
+        tmp_path / "agents",
+        "default_chat.yaml",
+        _agent_payload(escalation={"enabled": True, "target_profile": "gpt_4o_pro"}),
+    )
+
+    with pytest.raises(DanglingReferenceError) as exc_info:
+        load_registries(tmp_path)
+
+    message = str(exc_info.value)
+    assert "Agent:default_chat" in message
+    assert "ModelProfile:gpt_4o_pro" in message
+    assert "inactivo" in message
+    assert exc_info.value.field == "escalation.target_profile"
+
+
+def test_agent_escalation_target_profile_valid_succeeds(tmp_path: Path) -> None:
+    _write_full_valid_set(tmp_path)
+    profiles = [_profile_payload("gpt_4o"), _profile_payload("gpt_4o_pro")]
+    profiles_path = tmp_path / "model_profiles.yaml"
+    profiles_path.write_text(yaml.safe_dump(profiles), encoding="utf-8")
+
+    _write_manifest(
+        tmp_path / "agents",
+        "default_chat.yaml",
+        _agent_payload(escalation={"enabled": True, "target_profile": "gpt_4o_pro"}),
+    )
+
+    registries = load_registries(tmp_path)
+    agent = registries.agents.get("default_chat")
+    assert agent is not None
+    assert agent.escalation.target_profile == "gpt_4o_pro"

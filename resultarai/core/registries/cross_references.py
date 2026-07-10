@@ -4,8 +4,9 @@ Cada uno de los 6 Registries carga y cataloga su propio tipo de Manifest de form
 (tarea 2.1, `loader.py`): nada impide, a ese nivel, que un Agent habilite una Skill que no
 existe o que una Skill declare una Tool nunca definida. Este modulo cierra esa brecha:
 recorre los Registries ya construidos y valida que cada campo que un Manifest usa para
-referenciar a otro ("enabled_skills" de un Agent, "tools" de una Skill, "evals.template" de
-Agent/Skill/Tool, "applies_to.skills" de una Policy y el "target" de una regla de Routing)
+referenciar a otro ("enabled_skills", "fallback_cascade" y "escalation.target_profile" de
+un Agent, "tools" de una Skill, "evals.template" de Agent/Skill/Tool, "applies_to.skills"
+de una Policy y el "target" de una regla de Routing)
 resuelva a un Manifest que exista (requirement "Validacion de referencias cruzadas entre
 Manifests", `openspec/changes/a02-core-manifiestos/specs/manifest-registries/spec.md`).
 
@@ -50,6 +51,7 @@ if TYPE_CHECKING:
     # Solo para anotaciones de tipo: `Registries` vive en `loader.py`, que importa este
     # modulo para llamar a `validate_cross_references`. Bajo `TYPE_CHECKING` no hay import
     # en tiempo de ejecucion, asi que no se forma un ciclo real entre los dos modulos.
+    from resultarai.core.model_profile import ModelProfile
     from resultarai.core.registries.loader import Registries
 
 __all__ = ["DanglingReferenceError", "validate_cross_references"]
@@ -121,6 +123,36 @@ def _resolve_exists[M: BaseManifest](
         )
 
 
+def _resolve_active_model_profile(
+    profiles: dict[str, ModelProfile],
+    profile_id: str,
+    *,
+    origin: str,
+    field: str,
+) -> None:
+    """El destino debe existir como ModelProfile y estar `active`; si no, dispara el error.
+
+    Contraparte de `_resolve_active` para perfiles de modelo: `ModelProfile` no es un
+    `BaseManifest` (no tiene `status`, usa el booleano `active`) y vive en un dict plano,
+    no en un `ManifestRegistry`.
+    """
+    profile = profiles.get(profile_id)
+    if profile is None:
+        raise DanglingReferenceError(
+            origin=origin,
+            field=field,
+            target=f"ModelProfile:{profile_id}",
+            reason=f"no existe ningún ModelProfile con id {profile_id!r}",
+        )
+    if not profile.active:
+        raise DanglingReferenceError(
+            origin=origin,
+            field=field,
+            target=f"ModelProfile:{profile_id}",
+            reason=f"ModelProfile {profile_id!r} existe pero está inactivo",
+        )
+
+
 def validate_cross_references(registries: Registries) -> None:
     """Valida todas las referencias cruzadas de `registries`; lanza en la primera colgante.
 
@@ -141,21 +173,19 @@ def validate_cross_references(registries: Registries) -> None:
                 target_kind="Skill",
             )
         for profile_id in agent.fallback_cascade:
-            profile = registries.model_profiles.get(profile_id)
-            if profile is None:
-                raise DanglingReferenceError(
-                    origin=origin,
-                    field="fallback_cascade",
-                    target=f"ModelProfile:{profile_id}",
-                    reason=f"no existe ningún ModelProfile con id {profile_id!r}",
-                )
-            if not profile.active:
-                raise DanglingReferenceError(
-                    origin=origin,
-                    field="fallback_cascade",
-                    target=f"ModelProfile:{profile_id}",
-                    reason=f"ModelProfile {profile_id!r} existe pero está inactivo",
-                )
+            _resolve_active_model_profile(
+                registries.model_profiles,
+                profile_id,
+                origin=origin,
+                field="fallback_cascade",
+            )
+        if agent.escalation.target_profile is not None:
+            _resolve_active_model_profile(
+                registries.model_profiles,
+                agent.escalation.target_profile,
+                origin=origin,
+                field="escalation.target_profile",
+            )
         _resolve_exists(
             registries.evals,
             agent.evals.template,
