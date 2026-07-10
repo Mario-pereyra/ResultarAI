@@ -57,6 +57,15 @@ const InfoIcon = () => (
   </svg>
 );
 
+// Ícono de cierre accesible: mismo patrón que components/ui/modal.tsx
+// (aria-label del botón contenedor + ícono `aria-hidden`, sin glifo de
+// texto "&times;" literal).
+const CloseIcon = () => (
+  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+    <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+  </svg>
+);
+
 function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
@@ -374,7 +383,7 @@ export function NotificationPanel({ labels, initialCount = 0 }: NotificationPane
                 aria-label={labels.notificationsClose}
                 onClick={() => closePanel(true)}
               >
-                &times;
+                <CloseIcon />
               </button>
             </div>
           </div>

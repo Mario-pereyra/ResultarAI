@@ -61,7 +61,7 @@
 
 .notif-panel__kicker {
   padding: var(--sp-2) var(--sp-4);
-  background: var(--bg-kicker, rgba(0, 0, 0, 0.02));
+  background: var(--bg-kicker);
   font-size: 10px;
   font-weight: 700;
   color: var(--ink-dim);

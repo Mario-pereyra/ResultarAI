@@ -12,6 +12,9 @@ const mockLabels = {
   filterStatusAll: "Todos los estados",
   createUserBtn: "Crear usuario",
   createGroupBtn: "Crear grupo",
+  tabUsers: "Usuarios",
+  tabGroups: "Grupos",
+  cancel: "Cancelar",
   userTable: {
     username: "USERNAME",
     name: "NOMBRE",
@@ -51,6 +54,7 @@ const mockLabels = {
     email: "Correo electrónico",
     role: "Rol",
     group: "Grupo",
+    noGroup: "Ninguno",
     requireTotp: "Requerir TOTP en el primer acceso",
     requireTotpHintAdmin: "Obligatorio para Admin",
     submit: "Crear usuario",
@@ -69,6 +73,10 @@ const mockLabels = {
     addMembers: "Agregar miembros",
     noMembers: "No hay miembros en el grupo.",
     submit: "Crear grupo"
+  },
+  groupCard: {
+    membersCount: "{count} miembros",
+    removeMember: "Quitar"
   },
   resetPasswordModal: {
     title: "Restablecer contraseña",
@@ -161,7 +169,7 @@ describe("AdminContent", () => {
     expect(screen.getByText("Darío Técnico")).toBeDefined();
     
     // Cambiar a pestaña Grupos
-    const groupTab = screen.getByRole("button", { name: "Grupos" });
+    const groupTab = screen.getByRole("button", { name: mockLabels.tabGroups });
     fireEvent.click(groupTab);
 
     await waitFor(() => {

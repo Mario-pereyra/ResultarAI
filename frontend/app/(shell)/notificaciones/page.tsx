@@ -282,7 +282,7 @@ export default function NotificationsPage() {
           }}
         >
           <span style={{ fontSize: "13px", color: "var(--ink-dim)" }}>
-            Total: {total}
+            {t("notificationsTotal", { count: total })}
           </span>
           <div style={{ display: "flex", gap: "var(--sp-2)" }}>
             <button
@@ -299,7 +299,7 @@ export default function NotificationsPage() {
                 color: "var(--ink)",
               }}
             >
-              Anterior
+              {t("notificationsPrev")}
             </button>
             <button
               type="button"
@@ -315,7 +315,7 @@ export default function NotificationsPage() {
                 color: "var(--ink)",
               }}
             >
-              Siguiente
+              {t("notificationsNext")}
             </button>
           </div>
         </div>

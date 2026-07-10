@@ -67,6 +67,16 @@
  * falso positivo/negativo ocasional. Si el script marca algo dudoso,
  * revisar el archivo:línea señalado a mano — `node scripts/check-hardcoded-strings.mjs`
  * imprime archivo, línea y el snippet exacto que disparó la regla.
+ *
+ * ── Excepción documentada y acotada (falsos positivos legítimos) ──
+ * Igual que en check-hardcoded-colors.mjs: algunos textos NO son contenido
+ * de usuario traducible (datos técnicos, versión de build, siglas ya
+ * cubiertas por la heurística de mayúsculas, etc.). Para esos casos
+ * (nunca para excluir un archivo o directorio entero) se admite un
+ * comentario marcador `{/* audit-allow-literal-string: <motivo> *\/}` como
+ * hijo JSX cerca del texto exceptuado — habilita la línea del marcador y
+ * la línea inmediatamente anterior/posterior (ver `findAllowedLines` para
+ * el porqué de esa ventana), nunca un archivo o bloque completo.
  */
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -91,6 +101,36 @@ const ATTRIBUTE_PATTERN = new RegExp(
 );
 
 const MAX_CANDIDATE_LENGTH = 160;
+
+// Marcador de excepción documentada (ver cabecera del archivo).
+const ALLOW_LINE_PATTERN = /\/\*\s*audit-allow-literal-string:\s*[^*]*\*\//;
+
+/**
+ * Números de línea exceptuados por el marcador `audit-allow-literal-string`
+ * en el contenido ORIGINAL (antes de `stripComments`, que lo blanquearía).
+ *
+ * Ventana de ±1 línea alrededor del marcador (línea anterior, la propia y la
+ * siguiente): `findJsxTextFindings` reporta como "línea" del hallazgo la del
+ * `>` que CIERRA el tag de apertura (ver `scanTags`), no la línea física
+ * donde arranca el texto — que casi siempre es la línea siguiente. Un
+ * marcador puesto como hijo JSX justo antes del texto cae, según el caso,
+ * en la línea del hallazgo, en la anterior (si el tag de apertura es
+ * multilínea y termina justo arriba) o en la posterior; la ventana de 3
+ * líneas cubre las tres ubicaciones razonables sin tener que igualar la
+ * heurística de línea del propio hallazgo.
+ */
+function findAllowedLines(content) {
+  const allowed = new Set();
+  content.split("\n").forEach((line, index) => {
+    if (ALLOW_LINE_PATTERN.test(line)) {
+      const lineNumber = index + 1;
+      allowed.add(lineNumber - 1);
+      allowed.add(lineNumber);
+      allowed.add(lineNumber + 1);
+    }
+  });
+  return allowed;
+}
 
 function collectFiles(dir, files = []) {
   let entries;
@@ -296,13 +336,16 @@ function findAttributeFindings(originalContent, cleaned) {
 }
 
 function auditFile(content) {
+  const allowedLines = findAllowedLines(content);
   const withoutComments = stripComments(content);
   const withoutGenerics = stripGenerics(withoutComments);
 
-  return [
+  const findings = [
     ...findJsxTextFindings(withoutGenerics),
     ...findAttributeFindings(withoutComments, withoutGenerics),
   ];
+
+  return findings.filter((finding) => !allowedLines.has(finding.line));
 }
 
 function main() {

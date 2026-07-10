@@ -394,11 +394,13 @@ export function PrimerAccesoContent({ role, labels }: PrimerAccesoContentProps) 
                   {/* QR Code */}
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "var(--sp-2)", padding: "var(--sp-4)", background: "var(--bg-subtle)", borderRadius: "var(--r-sm)" }}>
                     <span style={{ fontSize: "var(--fs-small)", fontWeight: 600 }}>{labels.scanQr}</span>
+                    {/* audit-allow-literal-color-start: código QR — el blanco/negro debe ser literal para poder escanearse, no participa del theming */}
                     <svg width="128" height="128" viewBox="0 0 29 29" shapeRendering="crispEdges" style={{ background: "#fff", padding: "8px", borderRadius: "4px" }}>
                       <path d="M0 0h7v7H0zm22 0h7v7h-7zM0 22h7v7H0z" fill="#000" />
                       <path d="M2 2h3v3H2zm22 0h3v3h-3zM2 24h3v3H2z" fill="#fff" />
                       <path d="M9 0h1v3H9zm2 0h3v1h-3zm5 0h1v5h-1zm2 0h2v1h-2zm-8 4h3v1h-3zm5 0h2v3h-2zm-6 2h1v2H8zm8 0h3v1h-3zm-5 3h1v2h-1zm2 0h3v1h-3zm-6 2h2v1H9zm5 0h2v2h-2zm5 0h1v3h-1zm-9 2h1v3H9zm4 0h3v1h-3zm6 0h2v1h-2zm-9 2h3v1H9zm5 0h2v2h-2zm4 2h3v1h-3zm-8 2h1v3h-1zm3 0h2v1h-2zm4 0h3v2h-3zm-6 2h1v1h-1zm2 0h1v1h-1zm3 0h2v1h-2z" fill="#000" />
                     </svg>
+                    {/* audit-allow-literal-color-end */}
                   </div>
 
                   {/* Clave Manual */}

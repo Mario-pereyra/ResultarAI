@@ -15,6 +15,9 @@ export interface AdminContentProps {
     filterStatusAll: string;
     createUserBtn: string;
     createGroupBtn: string;
+    tabUsers: string;
+    tabGroups: string;
+    cancel: string;
     userTable: {
       username: string;
       name: string;
@@ -54,6 +57,7 @@ export interface AdminContentProps {
       email: string;
       role: string;
       group: string;
+      noGroup: string;
       requireTotp: string;
       requireTotpHintAdmin: string;
       submit: string;
@@ -72,6 +76,10 @@ export interface AdminContentProps {
       addMembers: string;
       noMembers: string;
       submit: string;
+    };
+    groupCard: {
+      membersCount: string;
+      removeMember: string;
     };
     resetPasswordModal: {
       title: string;
@@ -412,7 +420,7 @@ export function AdminContent({ labels }: AdminContentProps) {
             color: activeTab === "usuarios" ? "var(--accent)" : "var(--ink-dim)"
           }}
         >
-          Usuarios
+          {labels.tabUsers}
         </button>
         <button
           onClick={() => setActiveTab("grupos")}
@@ -426,7 +434,7 @@ export function AdminContent({ labels }: AdminContentProps) {
             color: activeTab === "grupos" ? "var(--accent)" : "var(--ink-dim)"
           }}
         >
-          Grupos
+          {labels.tabGroups}
         </button>
       </div>
 
@@ -560,7 +568,9 @@ export function AdminContent({ labels }: AdminContentProps) {
             <div key={g.id} className="panel" style={{ padding: "var(--sp-4)", display: "flex", flexDirection: "column", gap: "var(--sp-2)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 style={{ margin: 0, fontSize: "var(--fs-h4)", fontWeight: 700 }}>{g.name}</h3>
-                <span className="tag">{g.member_ids.length} miembros</span>
+                <span className="tag">
+                  {labels.groupCard.membersCount.replace("{count}", String(g.member_ids.length))}
+                </span>
               </div>
               <p style={{ fontSize: "var(--fs-small)", color: "var(--ink-dim)", margin: 0, flexGrow: 1 }}>
                 {g.description || "Sin descripción"}
@@ -581,7 +591,7 @@ export function AdminContent({ labels }: AdminContentProps) {
                           type="button"
                           onClick={() => removeMember(g.id, memberId)}
                           style={{ border: "none", background: "none", cursor: "pointer", padding: 0, color: "var(--danger)" }}
-                          title="Quitar"
+                          title={labels.groupCard.removeMember}
                         >
                           ×
                         </button>
@@ -604,7 +614,7 @@ export function AdminContent({ labels }: AdminContentProps) {
 
       {/* Modal: Crear Usuario */}
       {showCreateUser && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "var(--scrim)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
           <div className="panel" style={{ width: "100%", maxWidth: "450px", padding: "var(--sp-6)", background: "var(--panel)", borderRadius: "var(--r-lg)" }}>
             <h2 style={{ fontSize: "var(--fs-h4)", fontWeight: 700, marginBottom: "var(--sp-4)" }}>{labels.createUserModal.title}</h2>
             <form onSubmit={handleCreateUserSubmit} noValidate>
@@ -639,7 +649,7 @@ export function AdminContent({ labels }: AdminContentProps) {
                 <div>
                   <label className="field-label">{labels.createUserModal.group}</label>
                   <select className="select" value={newGroupId} onChange={(e) => setNewGroupId(e.target.value)}>
-                    <option value="">Ninguno</option>
+                    <option value="">{labels.createUserModal.noGroup}</option>
                     {groups.map((g) => (
                       <option key={g.id} value={g.id}>{g.name}</option>
                     ))}
@@ -648,7 +658,7 @@ export function AdminContent({ labels }: AdminContentProps) {
 
                 <div style={{ display: "flex", gap: "var(--sp-2)", justifyContent: "flex-end", marginTop: "var(--sp-2)" }}>
                   <Button type="button" variant="ghost" onClick={() => setShowCreateUser(false)}>
-                    Cancelar
+                    {labels.cancel}
                   </Button>
                   <Button type="submit" variant="primary" disabled={isPending || !newUsername || !newDisplayName || !newEmail} loading={isPending}>
                     {labels.createUserModal.submit}
@@ -662,7 +672,7 @@ export function AdminContent({ labels }: AdminContentProps) {
 
       {/* Modal: Crear Usuario Exitoso (Contraseña Temporal) */}
       {showCreateUserSuccess && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "var(--scrim)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
           <div className="panel" style={{ width: "100%", maxWidth: "450px", padding: "var(--sp-6)", background: "var(--panel)", borderRadius: "var(--r-lg)", border: "2px solid var(--money)" }}>
             <h2 style={{ fontSize: "var(--fs-h4)", fontWeight: 700, color: "var(--money)", marginBottom: "var(--sp-2)" }}>
               ✓ {labels.createUserModal.successTitle}
@@ -704,7 +714,7 @@ export function AdminContent({ labels }: AdminContentProps) {
 
       {/* Modal: Crear Grupo */}
       {showCreateGroup && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "var(--scrim)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
           <div className="panel" style={{ width: "100%", maxWidth: "450px", padding: "var(--sp-6)", background: "var(--panel)", borderRadius: "var(--r-lg)" }}>
             <h2 style={{ fontSize: "var(--fs-h4)", fontWeight: 700, marginBottom: "var(--sp-4)" }}>{labels.createGroupModal.title}</h2>
             <form onSubmit={handleCreateGroupSubmit} noValidate>
@@ -754,7 +764,7 @@ export function AdminContent({ labels }: AdminContentProps) {
 
                 <div style={{ display: "flex", gap: "var(--sp-2)", justifyContent: "flex-end", marginTop: "var(--sp-2)" }}>
                   <Button type="button" variant="ghost" onClick={() => setShowCreateGroup(false)}>
-                    Cancelar
+                    {labels.cancel}
                   </Button>
                   <Button type="submit" variant="primary" disabled={isPending || !newGroupName} loading={isPending}>
                     {labels.createGroupModal.submit}
@@ -768,7 +778,7 @@ export function AdminContent({ labels }: AdminContentProps) {
 
       {/* Modal: Restablecer Contraseña Confirmación */}
       {showResetPassword && resetTargetUser && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "var(--scrim)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
           <div className="panel" style={{ width: "100%", maxWidth: "450px", padding: "var(--sp-6)", background: "var(--panel)", borderRadius: "var(--r-lg)" }}>
             <h2 style={{ fontSize: "var(--fs-h4)", fontWeight: 700, marginBottom: "var(--sp-2)" }}>{labels.resetPasswordModal.title}</h2>
             <p style={{ fontSize: "var(--fs-small)", color: "var(--ink-dim)", marginBottom: "var(--sp-4)" }}>
@@ -780,7 +790,7 @@ export function AdminContent({ labels }: AdminContentProps) {
                   setShowResetPassword(false);
                   setResetTargetUser(null);
                 }}>
-                  Cancelar
+                  {labels.cancel}
                 </Button>
                 <Button type="submit" variant="danger" disabled={isPending} loading={isPending}>
                   {labels.resetPasswordModal.submit}
@@ -793,7 +803,7 @@ export function AdminContent({ labels }: AdminContentProps) {
 
       {/* Modal: Restablecer Contraseña Éxito (Muestra Contraseña una vez) */}
       {showResetPasswordSuccess && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "var(--scrim)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
           <div className="panel" style={{ width: "100%", maxWidth: "450px", padding: "var(--sp-6)", background: "var(--panel)", borderRadius: "var(--r-lg)", border: "2px solid var(--warn)" }}>
             <h2 style={{ fontSize: "var(--fs-h4)", fontWeight: 700, color: "var(--warn)", marginBottom: "var(--sp-2)" }}>
               {labels.resetPasswordModal.successTitle}
@@ -838,7 +848,7 @@ export function AdminContent({ labels }: AdminContentProps) {
 
       {/* Modal: Suspender Usuario (Confirmación por Escritura) */}
       {showSuspend && suspendTargetUser && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "var(--scrim)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
           <div className="panel" style={{ width: "100%", maxWidth: "450px", padding: "var(--sp-6)", background: "var(--panel)", borderRadius: "var(--r-lg)" }}>
             <h2 style={{ fontSize: "var(--fs-h4)", fontWeight: 700, color: "var(--danger)", marginBottom: "var(--sp-2)" }}>
               {labels.suspendModal.title}
@@ -863,7 +873,7 @@ export function AdminContent({ labels }: AdminContentProps) {
                     setSuspendTargetUser(null);
                     setSuspendConfirmText("");
                   }}>
-                    Cancelar
+                    {labels.cancel}
                   </Button>
                   <Button type="submit" variant="danger" disabled={isPending || suspendConfirmText !== suspendTargetUser.username} loading={isPending}>
                     {labels.suspendModal.submit}

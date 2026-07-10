@@ -48,6 +48,9 @@
       "notificationsViewAll": "Ver todas",
       "notificationsView": "Ver",
       "notificationsClose": "Cerrar notificaciones",
+      "notificationsTotal": "Total: {count}",
+      "notificationsPrev": "Anterior",
+      "notificationsNext": "Siguiente",
       "notificationsKickerCuotas": "Cuotas",
       "notificationsKickerSistema": "Sistema",
       "notificationsKickerAprobaciones": "Aprobaciones",
@@ -297,6 +300,9 @@
     "filterStatusAll": "Todos los estados",
     "createUserBtn": "Crear usuario",
     "createGroupBtn": "Crear grupo",
+    "tabUsers": "Usuarios",
+    "tabGroups": "Grupos",
+    "cancel": "Cancelar",
     "userTable": {
       "username": "USERNAME",
       "name": "NOMBRE",
@@ -336,6 +342,7 @@
       "email": "Correo electrónico",
       "role": "Rol",
       "group": "Grupo",
+      "noGroup": "Ninguno",
       "requireTotp": "Requerir TOTP en el primer acceso",
       "requireTotpHintAdmin": "Obligatorio para Admin",
       "submit": "Crear usuario",
@@ -354,6 +361,10 @@
       "addMembers": "Agregar miembros",
       "noMembers": "No hay miembros en el grupo.",
       "submit": "Crear grupo"
+    },
+    "groupCard": {
+      "membersCount": "{count} miembros",
+      "removeMember": "Quitar"
     },
     "resetPasswordModal": {
       "title": "Restablecer contraseña",
@@ -375,6 +386,30 @@
       "all": "Todas las sesiones",
       "allDesc": "Cierra la sesión en todos los dispositivos.",
       "submit": "Revocar"
+    }
+  },
+  "Chat": {
+    "empty": {
+      "greeting": "¿En qué te puedo ayudar hoy?"
+    },
+    "message": {
+      "stopped": "Detenida por vos"
+    },
+    "streaming": {
+      "doneAnnouncement": "Respuesta completa",
+      "cursorAriaLabel": "El agente está escribiendo"
+    },
+    "composer": {
+      "placeholder": "Escribile a {agent}…",
+      "textareaLabel": "Mensaje",
+      "send": "Enviar",
+      "sending": "Enviando…",
+      "hint": "Enter envía · Shift+Enter salto de línea"
+    },
+    "session": {
+      "loading": "Cargando conversación…",
+      "loadError": "No pudimos cargar esta conversación.",
+      "sendError": "Se perdió la conexión con el turno y no se pudo reconectar."
     }
   }
 }

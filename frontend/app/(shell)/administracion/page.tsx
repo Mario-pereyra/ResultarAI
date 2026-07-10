@@ -14,6 +14,9 @@ export default async function AdministracionPage() {
     filterStatusAll: t("filterStatusAll"),
     createUserBtn: t("createUserBtn"),
     createGroupBtn: t("createGroupBtn"),
+    tabUsers: t("tabUsers"),
+    tabGroups: t("tabGroups"),
+    cancel: t("cancel"),
     userTable: {
       username: t("userTable.username"),
       name: t("userTable.name"),
@@ -53,6 +56,7 @@ export default async function AdministracionPage() {
       email: t("createUserModal.email"),
       role: t("createUserModal.role"),
       group: t("createUserModal.group"),
+      noGroup: t("createUserModal.noGroup"),
       requireTotp: t("createUserModal.requireTotp"),
       requireTotpHintAdmin: t("createUserModal.requireTotpHintAdmin"),
       submit: t("createUserModal.submit"),
@@ -71,6 +75,10 @@ export default async function AdministracionPage() {
       addMembers: t("createGroupModal.addMembers"),
       noMembers: t("createGroupModal.noMembers"),
       submit: t("createGroupModal.submit"),
+    },
+    groupCard: {
+      membersCount: t("groupCard.membersCount"),
+      removeMember: t("groupCard.removeMember"),
     },
     resetPasswordModal: {
       title: t("resetPasswordModal.title"),

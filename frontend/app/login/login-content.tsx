@@ -440,6 +440,7 @@ export function LoginContent({
           color: "var(--ink-faint)",
         }}
       >
+        {/* audit-allow-literal-string: dato técnico de versión de build y locale, no es contenido de usuario traducible */}
         v1.0 · es-BO
       </div>
     </div>
