@@ -187,6 +187,39 @@ export function versionInfo(
 }
 
 /**
+ * Cantidad de mensajes POSTERIORES a `messageId` dentro de un camino ya
+ * resuelto (`path` -- típicamente `resolveVisiblePath`, es decir la rama
+ * VISIBLE en pantalla). Es la base client-side del aviso "reprocesa N
+ * mensajes" al editar (tarea 5.5, vista 09 §Datos, `design/FLUJOS.md` Flujo
+ * G): mientras el usuario todavía no confirmó la edición, no hay respuesta
+ * de servidor de la que leer el `reprocessed_count` autoritativo, así que
+ * `message-edit.tsx` estima N contando acá sobre lo que YA está en pantalla.
+ *
+ * Relación con el servidor (decisión 8 de `design.md`): tras confirmar, el
+ * `reprocessed_count` que llega en la respuesta lo calcula
+ * `count_active_descendants` (`resultarai/app/use_cases/chat/_branching.py`)
+ * bajando desde el mensaje editado por el hijo MÁS RECIENTE en cada
+ * bifurcación de su subárbol -- la noción de "rama activa" del backend, sin
+ * mirar qué versión esté mirando ESTE cliente en particular. Ambos números
+ * coinciden en el caso normal (el usuario edita sobre la rama activa, que es
+ * el default de `resolveVisiblePath`); si el usuario alternó con el selector
+ * de versiones a una rama más vieja y edita ahí, esta estimación puede
+ * diferir de la autoritativa -- el servidor manda igual, esto es solo el
+ * aviso PREVIO a confirmar, nunca el dato final persistido.
+ *
+ * `0` si `messageId` no está en `path` (defensivo; no debería ocurrir para un
+ * mensaje que ya se está mostrando en esa misma rama).
+ */
+export function countMessagesAfter(
+  path: readonly { id: string }[],
+  messageId: string,
+): number {
+  const index = path.findIndex((message) => message.id === messageId);
+  if (index === -1) return 0;
+  return path.length - 1 - index;
+}
+
+/**
  * Todo lo que el selector de versiones necesita para un mensaje ramificado:
  * `index`/`count` para el texto "N/M", `prevId`/`nextId` para las flechas ‹ › y
  * `parentKey` para registrar la elección en `BranchChoices`. `null` si el id no

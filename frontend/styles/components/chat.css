@@ -229,6 +229,16 @@
   min-width: 0;
 }
 
+/* Fila de la burbuja de usuario + botón "Editar" (tarea 5.5, vista 09
+   §Interacciones): el botón vive a la IZQUIERDA de la burbuja, oculto hasta
+   hover/focus del propio mensaje -- ver `.edit-btn` más abajo. */
+.msg-user__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
 .msg-bubble--user {
   max-width: 100%;
   background: var(--bg-raised);
@@ -319,6 +329,122 @@
 
 .branch-sel__count {
   min-width: 2.5em;
+  text-align: center;
+}
+
+/* ── Edición inline de mensaje (tarea 5.5, vista 09 §Layout/§Interacciones)
+   Ver `components/chat/message-edit.tsx`. ─────────────────────────────── */
+
+/* Botón "Editar" (lápiz): oculto en reposo, visible en hover/focus del
+   mensaje propio (vista 09: "aparece en hover y focus del mensaje propio").
+   `:focus-visible` propio además del `:focus-within` del contenedor, para
+   que la revelación por teclado no dependa de que el foco esté exactamente
+   en el botón. */
+.edit-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  margin-top: var(--sp-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-raised);
+  color: var(--ink-dim);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--dur-1) ease;
+}
+.msg-user__row:hover .edit-btn,
+.msg-user__row:focus-within .edit-btn,
+.edit-btn:focus-visible {
+  opacity: 1;
+}
+.edit-btn:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+.edit-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edit-btn {
+    transition: none;
+  }
+}
+
+/* Móvil: sin hover -- el botón queda siempre visible (vista 09 §Móvil:
+   "Editar" vía long-press/menú del mensaje; hasta que ese menú exista, la
+   revelación por hover no aplica en touch, así que se muestra directo). */
+@media (hover: none) {
+  .edit-btn {
+    opacity: 1;
+  }
+}
+
+/* Reemplaza la burbuja de lectura mientras el mensaje está en edición. */
+.edit-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: 100%;
+  max-width: 100%;
+}
+
+.edit-box .textarea {
+  width: 100%;
+}
+
+.edit-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  margin: 0;
+  color: var(--warn);
+  font-size: var(--fs-caption);
+}
+
+.edit-warn__icon {
+  flex: none;
+  line-height: 1;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+/* Atenuación del resto del hilo mientras se edita un mensaje (tarea 5.5,
+   vista 09 §Estados "Editando": "el resto del hilo se atenúa (opacity .55)
+   para señalar el punto de corte"). Se aplica por mensaje en
+   `message-column.tsx`, nunca a TODA la columna. */
+.is-dimmed {
+  opacity: 0.55;
+}
+
+/* ── Indicador discreto de compaction (tarea 5.6, vista 09 §Interacciones)
+   Ver `components/chat/compaction-indicator.tsx`. ──────────────────────── */
+.chat-compaction {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-caption);
+}
+
+.chat-compaction__line {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.chat-compaction__label {
+  flex: none;
   text-align: center;
 }
 

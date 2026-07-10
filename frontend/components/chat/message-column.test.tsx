@@ -49,6 +49,7 @@ const LABELS = {
     parametersLabel: "Parámetros",
     latencyLabel: "Latencia:",
   },
+  compaction: "Resumimos el historial de esta conversación.",
 };
 
 // Shape del evento `done` para el rol Funcional (tarea 4.1 del backend,
@@ -391,5 +392,105 @@ describe("MessageColumn — tool calls colapsadas/expandibles por rol sobre un t
     expect(screen.getByText(LABELS.toolCall.parametersLabel)).toBeTruthy();
     expect(screen.getByText(/MV_PAISLOC/)).toBeTruthy();
     expect(screen.getByText(/0,8 s/)).toBeTruthy();
+  });
+});
+
+describe("MessageColumn — edición inline y atenuación del resto del hilo (tarea 5.5)", () => {
+  const THREAD = [
+    { id: "u1", role: "user" as const, content: "Pregunta 1" },
+    { id: "a1", role: "assistant" as const, content: "Respuesta 1" },
+    { id: "u2", role: "user" as const, content: "Pregunta 2" },
+  ];
+
+  it("renderEditAction se invoca por mensaje y su click dispara el callback del caller", async () => {
+    const user = userEvent.setup();
+    const onEdit = vi.fn();
+    render(
+      <MessageColumn
+        messages={THREAD}
+        labels={LABELS}
+        renderEditAction={(message) =>
+          message.id === "u1" ? (
+            <button type="button" aria-label="editar-u1" onClick={() => onEdit(message.id)}>
+              ✎
+            </button>
+          ) : null
+        }
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "editar-u1" }));
+    expect(onEdit).toHaveBeenCalledWith("u1");
+  });
+
+  it("mientras se edita u1: su burbuja se reemplaza por `renderMessageEdit` y SOLO lo posterior se atenúa", () => {
+    const { container } = render(
+      <MessageColumn
+        messages={THREAD}
+        labels={LABELS}
+        editingMessageId="u1"
+        renderMessageEdit={(message) =>
+          message.id === "u1" ? <div data-testid="edit-ui">editando u1</div> : null
+        }
+      />,
+    );
+
+    expect(screen.getByTestId("edit-ui")).toBeTruthy();
+    // La burbuja original de u1 ya no está (la reemplazó `renderMessageEdit`).
+    expect(screen.queryByText("Pregunta 1")).toBeNull();
+
+    const items = container.querySelectorAll("li[data-message-id]");
+    expect(items).toHaveLength(3);
+    const [liU1, liA1, liU2] = Array.from(items) as HTMLLIElement[];
+
+    // El mensaje en edición NUNCA se atenúa.
+    expect(liU1.classList.contains("is-dimmed")).toBe(false);
+    expect(liU1.getAttribute("aria-hidden")).toBeNull();
+
+    // Todo lo POSTERIOR a u1 se atenúa y sale del árbol de accesibilidad.
+    expect(liA1.classList.contains("is-dimmed")).toBe(true);
+    expect(liA1.getAttribute("aria-hidden")).toBe("true");
+    expect(liU2.classList.contains("is-dimmed")).toBe(true);
+    expect(liU2.getAttribute("aria-hidden")).toBe("true");
+  });
+
+  it("sin edición activa (editingMessageId ausente): ningún mensaje se atenúa", () => {
+    const { container } = render(<MessageColumn messages={THREAD} labels={LABELS} />);
+    const items = container.querySelectorAll("li[data-message-id]");
+    for (const item of Array.from(items)) {
+      expect(item.className).not.toContain("is-dimmed");
+      expect(item.getAttribute("aria-hidden")).toBeNull();
+    }
+  });
+});
+
+describe("MessageColumn — indicador discreto de compaction (tarea 5.6)", () => {
+  it("mensaje con compacted:true muestra el indicador ANTES de esa respuesta, y solo ahí", () => {
+    render(
+      <MessageColumn
+        messages={[
+          { id: "u1", role: "user", content: "Pregunta 1" },
+          { id: "a1", role: "assistant", content: "Respuesta 1", compacted: false },
+          { id: "u2", role: "user", content: "Pregunta 2" },
+          { id: "a2", role: "assistant", content: "Respuesta 2", compacted: true },
+        ]}
+        labels={LABELS}
+      />,
+    );
+    const indicators = screen.getAllByRole("note");
+    expect(indicators).toHaveLength(1);
+    expect(indicators[0].textContent).toContain(LABELS.compaction);
+  });
+
+  it("sin ningún mensaje compactado: el indicador está ausente", () => {
+    render(
+      <MessageColumn
+        messages={[
+          { id: "u1", role: "user", content: "Pregunta 1" },
+          { id: "a1", role: "assistant", content: "Respuesta 1", compacted: false },
+        ]}
+        labels={LABELS}
+      />,
+    );
+    expect(screen.queryByRole("note")).toBeNull();
   });
 });

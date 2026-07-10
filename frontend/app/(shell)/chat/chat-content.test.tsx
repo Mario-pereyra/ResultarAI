@@ -1,6 +1,7 @@
 import userEvent from "@testing-library/user-event";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { createControlledReader, mockSseResponse, sseFrame } from "@/lib/chat/test-support/sse-mock";
 import { SessionProvider, type SessionContextValue } from "@/lib/session-context";
 import { ChatContent, type ChatContentLabels } from "./chat-content";
 
@@ -102,6 +103,15 @@ const LABELS: ChatContentLabels = {
     dismissedNote: "Decidiste seguir con Flash",
   },
   escalationOriginLink: "Esta conversación continúa una consulta anterior — abrir",
+  messageEdit: {
+    action: "Editar mensaje (crea una rama nueva)",
+    textareaLabel: "Editar mensaje",
+    cancel: "Cancelar",
+    confirm: "Crear rama",
+    reprocessWarningOne: "Crear una rama acá reprocesa {n} mensaje",
+    reprocessWarningOther: "Crear una rama acá reprocesa {n} mensajes",
+  },
+  compactionIndicator: "Resumimos el historial de esta conversación.",
 };
 
 const STARTER_PROMPTS = ["Ayudame a redactar un resumen ejecutivo", "Dame ideas para esta semana"];
@@ -772,5 +782,185 @@ describe("ChatContent — selector de versiones de ramas (tarea 5.4)", () => {
     } finally {
       restore();
     }
+  });
+});
+
+/**
+ * Tarea 5.5 (edición de mensaje -> rama nueva): 7 mensajes en cadena lineal
+ * (sin ramas todavía) -- editar el PRIMERO ("Pregunta 1") tiene 6 mensajes
+ * posteriores en la rama visible (aviso "reprocesa 6 mensajes" visible,
+ * requirement "Aviso suave de regeneración costosa al editar lejos");
+ * editar el ÚLTIMO ("Pregunta 4") no tiene ninguno (sin aviso).
+ */
+const EDIT_TREE_DETAIL = {
+  id: "session-1",
+  agent_id: "default_chat",
+  title: "Conversación",
+  model_profile: "deepseek-v4-flash",
+  forked_from_id: null,
+  escalated_session_ids: [],
+  active_leaf_id: "u4",
+  in_progress_turn: null,
+  messages: [
+    { id: "u1", parent_id: null, role: "user", content: "Pregunta 1", status: "complete", created_at: "2026-07-10T14:00:00Z", turn_metadata: null },
+    { id: "a1", parent_id: "u1", role: "assistant", content: "Respuesta 1", status: "complete", created_at: "2026-07-10T14:00:03Z", turn_metadata: assistantTurnMetadata() },
+    { id: "u2", parent_id: "a1", role: "user", content: "Pregunta 2", status: "complete", created_at: "2026-07-10T14:01:00Z", turn_metadata: null },
+    { id: "a2", parent_id: "u2", role: "assistant", content: "Respuesta 2", status: "complete", created_at: "2026-07-10T14:01:03Z", turn_metadata: assistantTurnMetadata() },
+    { id: "u3", parent_id: "a2", role: "user", content: "Pregunta 3", status: "complete", created_at: "2026-07-10T14:02:00Z", turn_metadata: null },
+    { id: "a3", parent_id: "u3", role: "assistant", content: "Respuesta 3", status: "complete", created_at: "2026-07-10T14:02:03Z", turn_metadata: assistantTurnMetadata() },
+    { id: "u4", parent_id: "a3", role: "user", content: "Pregunta 4", status: "complete", created_at: "2026-07-10T14:03:00Z", turn_metadata: null },
+  ],
+};
+
+/** Stub que responde el agente, el detalle de la sesión (SIEMPRE el mismo
+ * `detail` -- alcanza para probar la edición en vivo, la tarea 5.4 ya cubre
+ * la resolución del árbol tras recargar) y el `POST .../messages/stream`
+ * (SSE controlado a mano, mismo patrón que `message-column.test.tsx`). */
+function stubEditFetch(detail: unknown) {
+  const reader = createControlledReader();
+  const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url === "/api/agents/default_chat") {
+      return new Response(
+        JSON.stringify({
+          id: "default_chat",
+          name: "Chat por Defecto",
+          starter_prompts: [],
+          escalation_enabled: true,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (url === "/api/sessions/session-1" && (!init?.method || init.method === "GET")) {
+      return new Response(JSON.stringify(detail), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    if (url === "/api/sessions/session-1/messages/stream" && init?.method === "POST") {
+      return mockSseResponse(reader.reader, {
+        headers: { "X-Turn-Id": "turn-edit-1", "X-User-Message-Id": "u1-edit" },
+      });
+    }
+    throw new Error(`fetch inesperado en este test: ${url} (${init?.method ?? "GET"})`);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return { fetchMock, reader };
+}
+
+describe("ChatContent — edición de mensaje (tarea 5.5)", () => {
+  it("textarea precargado, aviso «reprocesa 6 mensajes», atenuación del resto y confirmar llama sendTurn con edits_message_id correcto", async () => {
+    const user = userEvent.setup();
+    const { fetchMock, reader } = stubEditFetch(EDIT_TREE_DETAIL);
+    const { container } = renderChatContent("funcional", "session-1");
+
+    await screen.findByText("Pregunta 4");
+
+    // El primer botón "Editar" en el DOM corresponde a "Pregunta 1" (u1, el
+    // primer mensaje del camino visible).
+    const editButtons = screen.getAllByRole("button", {
+      name: "Editar mensaje (crea una rama nueva)",
+    });
+    await user.click(editButtons[0]);
+
+    // Textarea precargado con el texto ORIGINAL del mensaje.
+    const textarea = screen.getByLabelText("Editar mensaje") as HTMLTextAreaElement;
+    expect(textarea.value).toBe("Pregunta 1");
+
+    // Aviso visible (N=6, ≥3) y NO bloquea "Crear rama".
+    expect(screen.getByText("Crear una rama acá reprocesa 6 mensajes")).toBeTruthy();
+    const confirmBtn = screen.getByRole("button", { name: "Crear rama" }) as HTMLButtonElement;
+    expect(confirmBtn.disabled).toBe(false);
+
+    // El resto del hilo (todo lo posterior a "Pregunta 1") queda atenuado;
+    // el mensaje en edición NUNCA se atenúa.
+    const items = Array.from(container.querySelectorAll<HTMLLIElement>("li[data-message-id]"));
+    expect(items).toHaveLength(7);
+    expect(items[0].classList.contains("is-dimmed")).toBe(false);
+    for (const item of items.slice(1)) {
+      expect(item.classList.contains("is-dimmed")).toBe(true);
+      expect(item.getAttribute("aria-hidden")).toBe("true");
+    }
+
+    // Confirmar -> el mismo `sendTurn` del envío normal, con
+    // `edits_message_id` apuntando al mensaje editado (decisión 4 de
+    // `design.md`).
+    await user.click(confirmBtn);
+    await waitFor(() => {
+      const streamCall = fetchMock.mock.calls.find(
+        ([callUrl]) =>
+          (typeof callUrl === "string" ? callUrl : callUrl.toString()) ===
+          "/api/sessions/session-1/messages/stream",
+      );
+      expect(streamCall).toBeTruthy();
+    });
+    const [, streamInit] = fetchMock.mock.calls.find(
+      ([callUrl]) =>
+        (typeof callUrl === "string" ? callUrl : callUrl.toString()) ===
+        "/api/sessions/session-1/messages/stream",
+    )!;
+    expect(JSON.parse(streamInit!.body as string)).toEqual({
+      text: "Pregunta 1",
+      edits_message_id: "u1",
+    });
+
+    // Cierra el turno para no dejar la conexión colgada -- el cierre dispara
+    // la recarga de la sesión (ver el efecto de "pliegue", rama
+    // `editTurnRef.current`), que sale de la edición: se espera esa señal
+    // observable para no dejar trabajo asincrónico pendiente tras el test.
+    reader.push(
+      sseFrame(1, "done", {
+        turn_id: "turn-edit-1",
+        user_message_id: "u1-edit",
+        assistant_message_id: "a1-edit",
+        reprocessed_count: 6,
+        stopped: false,
+        is_alternate_model: false,
+        compacted: false,
+        escalation: null,
+      }),
+    );
+    reader.close();
+    await waitFor(() => expect(screen.queryByLabelText("Editar mensaje")).toBeNull());
+  });
+
+  it("editar el último mensaje de la conversación: sin aviso de re-proceso", async () => {
+    const user = userEvent.setup();
+    stubEditFetch(EDIT_TREE_DETAIL);
+    renderChatContent("funcional", "session-1");
+    await screen.findByText("Pregunta 4");
+
+    const editButtons = screen.getAllByRole("button", {
+      name: "Editar mensaje (crea una rama nueva)",
+    });
+    // El ÚLTIMO botón corresponde a "Pregunta 4" (u4, el último del camino).
+    await user.click(editButtons[editButtons.length - 1]);
+
+    expect((screen.getByLabelText("Editar mensaje") as HTMLTextAreaElement).value).toBe(
+      "Pregunta 4",
+    );
+    expect(screen.queryByText(/reprocesa/)).toBeNull();
+  });
+
+  it("cancelar restaura la burbuja de lectura sin llamadas de red adicionales", async () => {
+    const user = userEvent.setup();
+    const { fetchMock } = stubEditFetch(EDIT_TREE_DETAIL);
+    renderChatContent("funcional", "session-1");
+    await screen.findByText("Pregunta 4");
+
+    const callsBeforeEdit = fetchMock.mock.calls.length;
+    const editButtons = screen.getAllByRole("button", {
+      name: "Editar mensaje (crea una rama nueva)",
+    });
+    await user.click(editButtons[0]);
+    await user.type(screen.getByLabelText("Editar mensaje"), " (cambiado)");
+    await user.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    // Vuelve la burbuja de lectura con el texto ORIGINAL -- el cambio
+    // tipeado se descarta, nunca se persiste.
+    expect(screen.getByText("Pregunta 1")).toBeTruthy();
+    expect(screen.queryByLabelText("Editar mensaje")).toBeNull();
+    // Cancelar NUNCA llama a ningún endpoint.
+    expect(fetchMock.mock.calls.length).toBe(callsBeforeEdit);
   });
 });

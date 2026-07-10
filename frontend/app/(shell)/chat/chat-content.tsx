@@ -8,6 +8,7 @@ import { Composer, type ComposerHandle, type ComposerLabels } from "@/components
 import { EscalationCard, type EscalationCardLabels } from "@/components/chat/escalation-card";
 import type { FeedbackActionsLabels } from "@/components/chat/feedback-actions";
 import { MessageColumn, type ChatMessageItem } from "@/components/chat/message-column";
+import { EditMessageButton, MessageEdit, type MessageEditLabels } from "@/components/chat/message-edit";
 import { SessionTaximeter, type SessionTaximeterLabels } from "@/components/chat/session-taximeter";
 import { StarterSuggestions } from "@/components/chat/starter-suggestions";
 import type { ToolCallLineLabels } from "@/components/chat/tool-call-line";
@@ -16,6 +17,7 @@ import { VersionSelector, type VersionSelectorLabels } from "@/components/chat/v
 import { Skeleton } from "@/components/ui/skeleton";
 import { csrfHeaders } from "@/lib/csrf";
 import {
+  countMessagesAfter,
   resolveVisiblePath,
   versionNav,
   type BranchChoices,
@@ -68,6 +70,10 @@ export interface ChatContentLabels {
    * anterior — abrir». Se muestra al tope del flujo cuando la sesión tiene
    * `forked_from_id`. */
   escalationOriginLink: string;
+  /** Edición inline de un mensaje de usuario (tarea 5.5) -- ver `MessageEdit`. */
+  messageEdit: MessageEditLabels;
+  /** Indicador discreto de compaction (tarea 5.6) -- ver `CompactionIndicator`. */
+  compactionIndicator: string;
 }
 
 export interface ChatContentProps {
@@ -115,6 +121,17 @@ function extractTelemetry(turnMetadata: Record<string, unknown> | null): TurnTel
 function extractIsAlternateModel(turnMetadata: Record<string, unknown> | null): boolean {
   if (!turnMetadata) return false;
   return Boolean(turnMetadata.is_alternate_model);
+}
+
+/**
+ * Lee `compacted` de `turn_metadata` (tarea 5.6) -- misma garantía que
+ * `is_alternate_model`: `layer_turn_metadata` SIEMPRE la incluye para los
+ * tres roles, así que alcanza con leerla directo (`false` para
+ * `turn_metadata: null` o mensajes de usuario).
+ */
+function extractCompacted(turnMetadata: Record<string, unknown> | null): boolean {
+  if (!turnMetadata) return false;
+  return Boolean(turnMetadata.compacted);
 }
 
 /**
@@ -168,6 +185,7 @@ function treeMessageToChatItem(message: SessionTreeMessage): ChatMessageItem {
     isAlternateModel: extractIsAlternateModel(message.turn_metadata),
     toolCalls: extractToolCalls(message.turn_metadata),
     escalation: extractEscalation(message.turn_metadata),
+    compacted: extractCompacted(message.turn_metadata),
     // El origen re-planteado al escalar es el mensaje de usuario del turno = el
     // `parent_id` de esta respuesta (id real, persistido).
     escalationOriginUserMessageId: message.parent_id ?? undefined,
@@ -265,6 +283,20 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   // `turnStream.reset()` termine de aplicarse).
   const foldedTurnIdRef = useRef<string | null>(null);
 
+  // Tarea 5.5 (edición de mensaje -> rama nueva): id del mensaje de usuario
+  // actualmente en edición, o `null` en reposo. Controla (vía `MessageColumn`)
+  // qué burbuja muta a textarea y qué mensajes posteriores se atenúan.
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  // `true` mientras el turno EN CURSO de `turnStream` es una edición (en vez
+  // de un envío normal) -- decide, en el efecto de "pliegue" de abajo, si el
+  // cierre del turno se resuelve recargando la sesión completa (edición) o
+  // agregando un mensaje más al final (envío normal). Es un ref, no un
+  // `useState`, porque `sendTurn` es la MISMA función para ambos casos
+  // (decisión 4 de `design.md`) y este flag solo necesita sobrevivir entre el
+  // click en "Crear rama" y el evento `done` correspondiente, sin disparar
+  // renders propios.
+  const editTurnRef = useRef(false);
+
   const loadSession = useCallback(
     async (id: string) => {
       setLoadingSession(true);
@@ -284,6 +316,10 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         setTreeMessages(detail.messages);
         setActiveLeafId(detail.active_leaf_id);
         setBranchChoices(emptyChoices);
+        // Tarea 5.5: (re)cargar la sesión sale de cualquier edición en curso
+        // -- tras confirmar una edición, la recarga de acá abajo YA muestra
+        // la rama nueva como activa, así que no hay nada que seguir editando.
+        setEditingMessageId(null);
         setMessages(resolveVisiblePath(tree, emptyChoices).map(treeMessageToChatItem));
         // Tarea 5.3: metadatos de escalación de la sesión (persistencia +
         // nota-enlace de vuelta). Ver `renderEscalation` y `leadingNote`.
@@ -367,6 +403,34 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     foldedTurnIdRef.current = turnStream.doneMetadata.turn_id;
 
     const metadata = turnStream.doneMetadata;
+
+    // Tarea 5.5 (edición -> rama nueva): un turno de edición NO se pliega
+    // como un mensaje más al final de `messages` -- eso dejaría la rama
+    // vieja posterior colgando junto a la respuesta nueva (la vista visible
+    // no es un simple append, es UNA rama distinta). En vez de reconstruir
+    // el árbol a mano acá, se RECARGA la sesión completa con `loadSession`
+    // -- el MISMO camino que ya prueba la tarea 5.4: el backend ya persistió
+    // la rama nueva como hoja activa, así que recargar resuelve el árbol y
+    // muestra el selector "N/M" correcto sin duplicar esa lógica. El
+    // `reprocessed_count` de este `metadata` es autoritativo pero llega
+    // TARDE para el aviso -- ese ya se mostró (estimado client-side) antes
+    // de confirmar, ver `message-edit.tsx` y `countMessagesAfter`.
+    if (editTurnRef.current) {
+      editTurnRef.current = false;
+      setEditingMessageId(null);
+      turnStream.reset();
+      if (sessionId) {
+        router.replace(`/chat/${sessionId}`);
+        // `loadSession` recarga desde el servidor tras un evento externo
+        // (acá, el cierre del turno de edición) -- mismo patrón ya aceptado
+        // en el efecto de `initialSessionId` de arriba, no un cascading
+        // render evitable con un cálculo derivado.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        void loadSession(sessionId);
+      }
+      return;
+    }
+
     const finalText = turnStream.text;
     // Tarea 5.3: la escalación puede llegar en el `done` o como evento SSE
     // `escalation` aparte -- se toma de cualquiera de los dos (el hook conserva
@@ -389,6 +453,10 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
           // id REAL del mensaje de usuario del turno (no el eco optimista):
           // el `origin_message_id` exacto a re-plantear si el usuario escala.
           escalationOriginUserMessageId: metadata.user_message_id,
+          // Tarea 5.6: `compacted` viaja siempre (los tres roles) -- si este
+          // turno disparó la compaction del runtime, el indicador discreto
+          // se monta justo antes de ESTA respuesta.
+          compacted: metadata.compacted,
         },
       ];
     });
@@ -397,6 +465,18 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     turnStream.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turnStream.status, turnStream.doneMetadata]);
+
+  // Tarea 5.5: un turno de edición que TERMINA EN ERROR no debe quedar
+  // marcado como "edición en curso" para el próximo intento -- se limpia el
+  // flag, pero `editingMessageId` se deja intacto a propósito (vista 09
+  // §Estados "Error al crear rama": "el texto editado no se pierde, el
+  // textarea persiste"). El aviso de error genérico (`showSendError`, ver
+  // el render de abajo) ya cubre la notificación.
+  useEffect(() => {
+    if (turnStream.status === "error") {
+      editTurnRef.current = false;
+    }
+  }, [turnStream.status]);
 
   // Tarea 5.4: al alternar de versión, el scroll queda anclado al mensaje
   // ramificado (vista 09 §Interacciones). Corre DESPUÉS del commit (la nueva
@@ -453,6 +533,36 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   function handleStarterSelect(text: string) {
     setComposerText(text);
     composerRef.current?.focus();
+  }
+
+  // Tarea 5.5: activa la edición inline de `message` (vista 09 §Estados
+  // "Editando"). Bloqueada mientras hay un turno en curso -- editar abre un
+  // segundo `sendTurn` sobre el mismo `turnStream`, que no soporta dos
+  // turnos concurrentes (ver `use-turn-stream.ts`).
+  function handleStartEdit(message: ChatMessageItem) {
+    if (isStreamingTurn) return;
+    setSendError(false);
+    setEditingMessageId(message.id);
+  }
+
+  // Cancelar (botón o Esc dentro de `MessageEdit`): vuelve a la burbuja de
+  // lectura SIN llamar a ningún endpoint -- ninguna rama se crea.
+  function handleCancelEdit() {
+    setEditingMessageId(null);
+  }
+
+  // Confirmar ("Crear rama"): mismo `sendTurn` del envío normal, con
+  // `edits_message_id` (decisión 4 de `design.md`) -- el flujo de rama nueva
+  // + selector de versiones ya funciona por la tarea 5.4 una vez que la
+  // sesión se recarga (ver el efecto de "pliegue" más arriba, rama
+  // `editTurnRef.current`). `editingMessageId` se deja intacto acá: solo se
+  // limpia al cerrar el turno (éxito) o lo hace el usuario cancelando
+  // (error, vista 09 "el texto editado no se pierde").
+  async function handleConfirmEdit(messageId: string, text: string) {
+    if (!sessionId) return;
+    setSendError(false);
+    editTurnRef.current = true;
+    await turnStream.sendTurn(sessionId, text, { editsMessageId: messageId });
   }
 
   // Tarea 5.3: crea la sesión escalada a Pro. Se invoca EXCLUSIVAMENTE desde el
@@ -513,14 +623,28 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   // este empalme, el taxímetro "parpadearía" un frame por detrás del último
   // costo mientras ese efecto todavía no corrió.
   const doneMetadata = turnStream.doneMetadata;
+  // Vista 06 §2: el taxímetro acumula TODAS las ramas de la sesión — también las
+  // descartadas por edición/regeneración ("se pagaron"). `treeMessages` trae el
+  // árbol completo; en una sesión nueva aún sin recarga el árbol está vacío y se
+  // cae a la rama visible (único costo existente en ese momento).
+  const costSourceMessages: ReadonlyArray<{
+    id: string;
+    telemetry?: TurnTelemetry | undefined;
+  }> =
+    treeMessages.length > 0
+      ? treeMessages.map((message) => ({
+          id: message.id,
+          telemetry: extractTelemetry(message.turn_metadata),
+        }))
+      : messages;
   const liveTelemetry =
     turnStream.status === "done" &&
     doneMetadata &&
-    !messages.some((message) => message.id === doneMetadata.assistant_message_id)
+    !costSourceMessages.some((message) => message.id === doneMetadata.assistant_message_id)
       ? doneMetadata.telemetry
       : undefined;
   const taximeterTotals = sumTelemetry([
-    ...messages.map((message) => message.telemetry),
+    ...costSourceMessages.map((message) => message.telemetry),
     liveTelemetry,
   ]);
   const showTaximeterBar = user.role === "tecnico" || user.role === "admin";
@@ -611,6 +735,40 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     );
   }
 
+  // Tarea 5.5: botón "Editar" para `message`, o `null` si no aplica. Solo
+  // mensajes de USUARIO ya persistidos (presentes en `treeMessages`) son
+  // editables -- un eco optimista todavía sin id real (`local-…`, ver
+  // `nextLocalMessageId`) no tiene un `edits_message_id` válido que mandarle
+  // al backend todavía.
+  function renderEditAction(message: ChatMessageItem): ReactNode {
+    if (message.role !== "user") return null;
+    if (!treeMessages.some((treeMessage) => treeMessage.id === message.id)) return null;
+    return (
+      <EditMessageButton
+        label={labels.messageEdit.action}
+        onClick={() => handleStartEdit(message)}
+      />
+    );
+  }
+
+  // Tarea 5.5: edición inline para `message`, SOLO cuando es el mensaje en
+  // `editingMessageId`. `reprocessCount` se calcula sobre `messages` -- la
+  // rama VISIBLE ya resuelta (ver el docstring de `countMessagesAfter` para
+  // la relación con el `reprocessed_count` autoritativo del servidor).
+  function renderMessageEdit(message: ChatMessageItem): ReactNode {
+    if (message.id !== editingMessageId) return null;
+    return (
+      <MessageEdit
+        originalText={message.content}
+        reprocessCount={countMessagesAfter(messages, message.id)}
+        pending={editTurnRef.current && turnStream.status === "streaming"}
+        labels={labels.messageEdit}
+        onConfirm={(text) => void handleConfirmEdit(message.id, text)}
+        onCancel={handleCancelEdit}
+      />
+    );
+  }
+
   return (
     <div className="chat-shell">
       {/* El chequeo de rol de acá arriba es solo para no dejar un
@@ -644,7 +802,11 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
           telemetry: labels.telemetry,
           alternateModel: labels.alternateModel,
           toolCall: labels.toolCall,
+          compaction: labels.compactionIndicator,
         }}
+        editingMessageId={editingMessageId}
+        renderEditAction={renderEditAction}
+        renderMessageEdit={renderMessageEdit}
         emptyStateExtra={
           starterPrompts.length > 0 ? (
             <StarterSuggestions prompts={starterPrompts} onSelect={handleStarterSelect} />
@@ -677,6 +839,10 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
       <Composer
         ref={composerRef}
         labels={labels.composer}
+        // Tarea 5.5: mientras se edita un mensaje, el composer normal queda
+        // inactivo -- evita un segundo `sendTurn` concurrente sobre el mismo
+        // `turnStream` (que solo sostiene un turno en curso a la vez).
+        disabled={editingMessageId !== null}
         streaming={isStreamingTurn}
         value={composerText}
         onChange={setComposerText}

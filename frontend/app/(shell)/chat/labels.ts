@@ -97,5 +97,23 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
       dismissedNote: t("escalation.dismissedNote"),
     },
     escalationOriginLink: t("escalation.originLink"),
+    messageEdit: {
+      action: t("edit.action"),
+      textareaLabel: t("edit.textareaLabel"),
+      cancel: t("edit.cancel"),
+      confirm: t("edit.confirm"),
+      // Plantilla ICU-lite (mismo patrón que `versionAriaLabel` arriba):
+      // `reprocessCount` es un dato de runtime del cliente (cuántos mensajes
+      // posteriores tiene la rama visible en el momento de editar, ver
+      // `lib/chat/session-tree.ts::countMessagesAfter`), así que acá solo se
+      // resuelve el TEXTO fijo con el placeholder `{n}` sin interpolar --
+      // `message-edit.tsx` hace el `.replace("{n}", …)` con el valor real y
+      // elige One/Other según `Intl.PluralRules` (el aviso de la vista 09
+      // solo se muestra desde N=3, así que "One" es un caso borde que hoy
+      // nunca se renderiza, pero queda resuelto correctamente igual).
+      reprocessWarningOne: t("branch.reprocessWarningOne", { n: "{n}" }),
+      reprocessWarningOther: t("branch.reprocessWarningOther", { n: "{n}" }),
+    },
+    compactionIndicator: t("compaction.label"),
   };
 }

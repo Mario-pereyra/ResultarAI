@@ -7,6 +7,7 @@ import { useAutoScroll } from "@/lib/chat/use-auto-scroll";
 import type { Role } from "@/lib/session-context";
 import { ActivityIndicator, type ActivityIndicatorLabels } from "./activity-indicator";
 import { AlternateModelTag, type AlternateModelTagLabels } from "./alternate-model-tag";
+import { CompactionIndicator } from "./compaction-indicator";
 import { FeedbackActions, type FeedbackActionsLabels } from "./feedback-actions";
 import { MarkdownContent } from "./markdown-content";
 import { ToolCallLine, type ToolCallLineLabels } from "./tool-call-line";
@@ -45,6 +46,14 @@ export interface ChatMessageItem {
    * mensaje `assistant` al recargar. Solo relevante si `escalation` está
    * poblado. */
   escalationOriginUserMessageId?: string;
+  /** `turn_metadata.compacted` (tarea 5.6) -- SIEMPRE presente para los tres
+   * roles (`layer_turn_metadata`, a diferencia de `telemetry`), así que acá
+   * `undefined` (mensajes de usuario, o una sesión sin ese turno todavía) se
+   * trata igual que `false`. `true` marca el turno donde el runtime resumió
+   * el contexto (contrato `context-compaction` de `b06-runtime-grafos`, una
+   * vez por sesión) -- ver `CompactionIndicator`, que se monta ANTES de la
+   * respuesta de ESE turno puntual. */
+  compacted?: boolean;
 }
 
 export type StreamingTurnStatus = "streaming" | "done" | "error";
@@ -75,6 +84,9 @@ export interface MessageColumnLabels {
   alternateModel: AlternateModelTagLabels;
   /** Tool calls colapsadas/expandibles (tarea 5.2) -- ver `ToolCallLine`. */
   toolCall: ToolCallLineLabels;
+  /** Texto del indicador discreto de compaction (tarea 5.6) -- ver
+   * `CompactionIndicator`. */
+  compaction: string;
 }
 
 export interface MessageColumnProps {
@@ -119,6 +131,26 @@ export interface MessageColumnProps {
    * responsabilidad de la columna -- ver `renderVersionSelector` en
    * `chat-content.tsx`. La columna solo lo ancla junto al mensaje. */
   renderVersionSelector?: (message: ChatMessageItem) => ReactNode;
+  /** id del mensaje de USUARIO actualmente en edición (tarea 5.5, vista 09
+   * §Estados "Editando"), o `null`/`undefined` fuera de edición. Determina
+   * (a) qué mensaje reemplaza su burbuja de lectura por `renderMessageEdit`
+   * y (b) qué mensajes POSTERIORES a él en la rama visible se atenúan
+   * (`.is-dimmed` + `aria-hidden`, vista 09: "el resto del hilo se atenúa
+   * para señalar el punto de corte" -- los mensajes ANTERIORES no se tocan,
+   * solo lo que se reprocesaría). */
+  editingMessageId?: string | null;
+  /** Botón "Editar" (lápiz) sobre un mensaje de usuario en reposo (tarea
+   * 5.5, vista 09 §Interacciones: "aparece en hover y focus del mensaje
+   * propio"). El caller decide por mensaje si corresponde mostrarlo (`null`
+   * si no aplica -- p. ej. un eco optimista sin id real todavía, ver
+   * `renderEditAction` en `chat-content.tsx`) -- mismo patrón que
+   * `renderVersionSelector`/`renderEscalation`. Sin este prop, ningún
+   * mensaje muestra la acción. */
+  renderEditAction?: (message: ChatMessageItem) => ReactNode;
+  /** Reemplaza la burbuja del mensaje en `editingMessageId` por la edición
+   * inline (tarea 5.5, vista 09 §Layout: la burbuja MUTA a textarea). Solo
+   * se invoca para ESE mensaje puntual -- ver `MessageEdit`. */
+  renderMessageEdit?: (message: ChatMessageItem) => ReactNode;
 }
 
 /**
@@ -146,6 +178,16 @@ export interface MessageColumnProps {
  * ramificado (usuario editado o respuesta regenerada) muestra el selector
  * "‹ N/M ›" anclado junto a la burbuja -- ver `VersionSelector`. Acciones de
  * copiar/regenerar quedan fuera de alcance todavía.
+ *
+ * Tarea 5.5: cada mensaje `user` muestra el botón "Editar" que devuelva
+ * `renderEditAction` (o ninguno, si el caller decide que no aplica); el
+ * mensaje en `editingMessageId` reemplaza su burbuja por lo que devuelva
+ * `renderMessageEdit`, y todo lo POSTERIOR a él en `messages` se atenúa
+ * (`.is-dimmed`) para señalar el punto de corte de la rama nueva.
+ *
+ * Tarea 5.6: cada mensaje `assistant` con `compacted` muestra
+ * `CompactionIndicator` justo ANTES de su respuesta -- el punto exacto de la
+ * conversación donde el runtime resumió el contexto.
  */
 export function MessageColumn({
   messages,
@@ -157,11 +199,23 @@ export function MessageColumn({
   leadingNote,
   renderEscalation,
   renderVersionSelector,
+  editingMessageId,
+  renderEditAction,
+  renderMessageEdit,
 }: MessageColumnProps) {
   const isEmpty = messages.length === 0 && !streaming;
   // Tarea 5.2: sin `role` explícito, nivel mínimo de detalle -- ver el
   // docstring de la prop `role` de `MessageColumnProps`.
   const effectiveRole: Role = role ?? "funcional";
+  // Tarea 5.5: posición del mensaje en edición dentro de la rama VISIBLE --
+  // todo lo que está a la derecha (índice mayor) se atenúa, nunca lo
+  // anterior (vista 09: "el resto del hilo se atenúa para señalar el punto
+  // de corte" -- el corte es hacia ADELANTE, es justo lo que se reprocesa).
+  // `-1` (no encontrado / sin edición activa) hace que ningún mensaje quede
+  // por delante, así que nada se atenúa.
+  const editingIndex = editingMessageId
+    ? messages.findIndex((message) => message.id === editingMessageId)
+    : -1;
 
   // Cambia con cada mensaje persistido nuevo y con cada fragmento de texto
   // en streaming -- exactamente lo que dispara la reevaluación de
@@ -188,28 +242,46 @@ export function MessageColumn({
           </div>
         ) : (
           <ol className="msg-column__list">
-            {messages.map((message) => (
-              // `data-message-id` (tarea 5.4): ancla estable para el scroll al
-              // mensaje ramificado al alternar de versión (ver `chat-content.tsx`)
-              // y garantía de que la clave por id no re-monta el prefijo previo
-              // al punto de bifurcación al cambiar de rama.
-              <li key={message.id} data-message-id={message.id}>
-                <ChatMessageRow
-                  message={message}
-                  stoppedCaption={labels.stoppedCaption}
-                  feedbackLabels={labels.feedback}
-                  telemetryLabels={labels.telemetry}
-                  alternateModelLabels={labels.alternateModel}
-                  toolCallLabels={labels.toolCall}
-                  role={effectiveRole}
-                  versionSelector={renderVersionSelector ? renderVersionSelector(message) : null}
-                />
-                {/* Tarea 5.3: la tarjeta de escalación entra DESPUÉS de la
-                    respuesta del turno que la disparó (vista 08 §Layout). El
-                    caller decide si hay tarjeta y en qué estado. */}
-                {renderEscalation ? renderEscalation(message) : null}
-              </li>
-            ))}
+            {messages.map((message, index) => {
+              // Tarea 5.5: SOLO lo posterior al mensaje en edición se atenúa
+              // (nunca el propio mensaje en edición, que muta a textarea, ni
+              // lo anterior, que no se toca al ramificar).
+              const dimmed = editingIndex !== -1 && index > editingIndex;
+              return (
+                // `data-message-id` (tarea 5.4): ancla estable para el scroll al
+                // mensaje ramificado al alternar de versión (ver `chat-content.tsx`)
+                // y garantía de que la clave por id no re-monta el prefijo previo
+                // al punto de bifurcación al cambiar de rama.
+                <li
+                  key={message.id}
+                  data-message-id={message.id}
+                  className={dimmed ? "is-dimmed" : undefined}
+                  aria-hidden={dimmed || undefined}
+                >
+                  {/* Tarea 5.6: el indicador de compaction se ancla ANTES de
+                      la respuesta del turno donde ocurrió (mismo punto que
+                      documenta `CompactionIndicator`). */}
+                  {message.compacted ? <CompactionIndicator label={labels.compaction} /> : null}
+                  <ChatMessageRow
+                    message={message}
+                    stoppedCaption={labels.stoppedCaption}
+                    feedbackLabels={labels.feedback}
+                    telemetryLabels={labels.telemetry}
+                    alternateModelLabels={labels.alternateModel}
+                    toolCallLabels={labels.toolCall}
+                    role={effectiveRole}
+                    versionSelector={renderVersionSelector ? renderVersionSelector(message) : null}
+                    isEditing={editingMessageId === message.id}
+                    editAction={renderEditAction ? renderEditAction(message) : null}
+                    messageEdit={renderMessageEdit ? renderMessageEdit(message) : null}
+                  />
+                  {/* Tarea 5.3: la tarjeta de escalación entra DESPUÉS de la
+                      respuesta del turno que la disparó (vista 08 §Layout). El
+                      caller decide si hay tarjeta y en qué estado. */}
+                  {renderEscalation ? renderEscalation(message) : null}
+                </li>
+              );
+            })}
             {streaming ? (
               <li>
                 {streaming.status === "streaming" && streaming.text.length === 0 ? (
@@ -249,6 +321,9 @@ function ChatMessageRow({
   toolCallLabels,
   role,
   versionSelector,
+  isEditing,
+  editAction,
+  messageEdit,
 }: {
   message: ChatMessageItem;
   stoppedCaption: string;
@@ -261,13 +336,32 @@ function ChatMessageRow({
    * cuando el mensaje no tiene versiones hermanas. Se ancla debajo de la
    * burbuja, alineado a su borde (vista 09 §Layout). */
   versionSelector?: ReactNode;
+  /** `true` cuando ESTE mensaje es `editingMessageId` (tarea 5.5). */
+  isEditing?: boolean;
+  /** Botón "Editar" ya renderizado por el caller para este mensaje puntual
+   * (tarea 5.5), o `null` si no aplica (rol agente, mensaje sin id real
+   * todavía, etc. -- lo decide el caller). Se ignora si `isEditing`. */
+  editAction?: ReactNode;
+  /** Edición inline ya renderizada por el caller (tarea 5.5) -- SOLO se usa
+   * cuando `isEditing` es `true`; reemplaza la burbuja de lectura entera. */
+  messageEdit?: ReactNode;
 }) {
   if (message.role === "user") {
+    if (isEditing && messageEdit) {
+      return (
+        <div className="msg-row msg-row--user">
+          <div className="msg-user-col">{messageEdit}</div>
+        </div>
+      );
+    }
     return (
       <div className="msg-row msg-row--user">
         <div className="msg-user-col">
-          <div className="msg-bubble msg-bubble--user">
-            <MarkdownContent content={message.content} variant="user" />
+          <div className="msg-user__row">
+            {editAction}
+            <div className="msg-bubble msg-bubble--user">
+              <MarkdownContent content={message.content} variant="user" />
+            </div>
           </div>
           {versionSelector}
         </div>

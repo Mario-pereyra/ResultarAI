@@ -472,7 +472,18 @@
     "branch": {
       "versionAriaLabel": "versión {n} de {m}",
       "previousVersion": "Versión anterior",
-      "nextVersion": "Versión siguiente"
+      "nextVersion": "Versión siguiente",
+      "reprocessWarningOne": "Crear una rama acá reprocesa {n} mensaje",
+      "reprocessWarningOther": "Crear una rama acá reprocesa {n} mensajes"
+    },
+    "edit": {
+      "action": "Editar mensaje (crea una rama nueva)",
+      "textareaLabel": "Editar mensaje",
+      "cancel": "Cancelar",
+      "confirm": "Crear rama"
+    },
+    "compaction": {
+      "label": "Resumimos el historial de esta conversación para que siga funcionando."
     }
   }
 }

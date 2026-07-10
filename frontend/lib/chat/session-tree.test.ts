@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   ROOT_PARENT_KEY,
+  countMessagesAfter,
   resolveVisiblePath,
   siblingGroups,
   versionInfo,
@@ -174,5 +175,35 @@ describe("versionInfo — respuesta regenerada dos veces (3 versiones)", () => {
       prevId: "a1",
       nextId: "a3",
     });
+  });
+});
+
+describe("countMessagesAfter — aviso de re-proceso al editar (tarea 5.5)", () => {
+  // Camino visible de 7 mensajes: editar "u1" (índice 0) reprocesa los 6
+  // posteriores; editar "a4" (el último, índice 6) no reprocesa nada.
+  const path = [
+    { id: "u1" },
+    { id: "a1" },
+    { id: "u2" },
+    { id: "a2" },
+    { id: "u3" },
+    { id: "a3" },
+    { id: "u4" },
+  ];
+
+  it("editar el primer mensaje del camino cuenta los 6 posteriores (N=6, aviso visible)", () => {
+    expect(countMessagesAfter(path, "u1")).toBe(6);
+  });
+
+  it("editar el anteúltimo mensaje cuenta 1 posterior (N=1, sin aviso)", () => {
+    expect(countMessagesAfter(path, "a3")).toBe(1);
+  });
+
+  it("editar el último mensaje del camino cuenta 0 posteriores", () => {
+    expect(countMessagesAfter(path, "u4")).toBe(0);
+  });
+
+  it("un id ausente del camino devuelve 0 (defensivo)", () => {
+    expect(countMessagesAfter(path, "no-existe")).toBe(0);
   });
 });
