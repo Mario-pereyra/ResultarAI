@@ -49,6 +49,13 @@ from resultarai.app.use_cases.chat.streaming import (
     filter_escalation_marker,
     start_turn_stream,
 )
+from resultarai.app.use_cases.chat.telemetry import (
+    TECHNICAL_ROLES,
+    RawTurnMetadata,
+    build_raw_turn_metadata,
+    is_technical_role,
+    layer_turn_metadata,
+)
 from resultarai.app.use_cases.chat.turns import (
     MessageEditForbiddenError,
     MessageNotEligibleError,
@@ -62,6 +69,7 @@ from resultarai.app.use_cases.chat.turns import (
 )
 
 __all__ = [
+    "TECHNICAL_ROLES",
     "AgentNotFoundError",
     "BufferedSseEvent",
     "EmptyFallbackCascadeError",
@@ -80,6 +88,7 @@ __all__ = [
     "MessageNotFoundError",
     "NoEligibleOriginMessageError",
     "OriginMessageNotEligibleError",
+    "RawTurnMetadata",
     "RegenerateResult",
     "ResponseGenerator",
     "SearchHit",
@@ -94,10 +103,13 @@ __all__ = [
     "TurnResult",
     "TurnStreamBuffer",
     "TurnStreamRegistry",
+    "build_raw_turn_metadata",
     "create_session",
     "escalate_session",
     "filter_escalation_marker",
     "get_session_detail",
+    "is_technical_role",
+    "layer_turn_metadata",
     "list_sessions",
     "regenerate_response",
     "search_sessions",

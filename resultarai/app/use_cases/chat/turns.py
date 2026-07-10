@@ -30,10 +30,25 @@ posiciona en su rama activa) y el selector de versiones de la tarea 5.4 en el fr
 
 No vive en `core/` (regla dura 1): orquesta persistencia (SQLAlchemy) y un callable de
 aplicación, ninguno de los dos permitido dentro del núcleo.
+
+**Tarea 4.1 -- `turn_metadata` en el camino síncrono.** A diferencia de
+`streaming.py` (que recibe un `TurnCompletion` con costo/cache del runtime), el
+`ResponseGenerator` de este módulo devuelve únicamente `str` (contrato deliberado de
+las tareas 1.2/1.3, ver `ResponseGenerator` abajo): no hay costo, cache ni
+"modelo alterno" real que reportar. Aun así se persiste `Message.turn_metadata` (vía
+`build_raw_turn_metadata`, `telemetry.py`) con lo que SÍ se conoce --
+`model_profile_id` (de `session.model_profile`) y `latency_ms` (medido alrededor de
+`generate_response`) -- y el resto en `None`/`False`, para que el filtrado por rol de
+la tarea 4.1 (`app/api/chat.py`) tenga un dict crudo consistente con el que arma
+`streaming.py`, aunque más pobre en datos. Hueco anotado en
+`openspec/BACKLOG-DESCUBRIMIENTOS.md`: el día que `ResponseGenerator` (o su
+implementación real) exponga esos datos, esta función los recoge sin cambiar su
+shape.
 """
 
 from __future__ import annotations
 
+import time
 import uuid
 from dataclasses import dataclass
 from typing import Protocol
@@ -49,6 +64,7 @@ from resultarai.app.use_cases.chat._branching import (
     find_active_leaf,
     find_owned_session,
 )
+from resultarai.app.use_cases.chat.telemetry import build_raw_turn_metadata
 from resultarai.app.use_cases.chat.titles import generate_session_title
 
 __all__ = [
@@ -201,7 +217,9 @@ def send_turn(
     db.flush()
 
     history = ancestor_chain(db, user_message)
+    generation_started_at = time.monotonic()
     response_text = generate_response(session=session, history=history)
+    latency_ms = round((time.monotonic() - generation_started_at) * 1000)
 
     assistant_message = Message(
         session_id=session_id,
@@ -210,6 +228,9 @@ def send_turn(
         content=response_text,
         model_profile=session.model_profile,
         status="complete",
+        turn_metadata=dict(
+            build_raw_turn_metadata(model_profile_id=session.model_profile, latency_ms=latency_ms)
+        ),
     )
     db.add(assistant_message)
     db.flush()
@@ -258,7 +279,9 @@ def regenerate_response(
     parent_message = db.get(Message, parent_id) if parent_id is not None else None
     history = ancestor_chain(db, parent_message) if parent_message is not None else []
 
+    generation_started_at = time.monotonic()
     response_text = generate_response(session=session, history=history)
+    latency_ms = round((time.monotonic() - generation_started_at) * 1000)
 
     new_message = Message(
         session_id=session.id,
@@ -267,6 +290,9 @@ def regenerate_response(
         content=response_text,
         model_profile=session.model_profile,
         status="complete",
+        turn_metadata=dict(
+            build_raw_turn_metadata(model_profile_id=session.model_profile, latency_ms=latency_ms)
+        ),
     )
     db.add(new_message)
     db.flush()

@@ -19,8 +19,8 @@
 
 ## 3. UI — chat base (vista 05, assistant-ui)
 
-- [ ] 3.1 Componente de columna de mensajes con streaming: markdown, tablas y bloques de código con highlighting, cursor de bloque parpadeante mientras el turno está en curso. Verificación: prueba de componente con una tabla y un bloque de código en streaming, renderizados correctamente antes del cierre del turno. `[modelo: sonnet]`
-- [ ] 3.2 Sanitización anti-XSS del markdown renderizado (lista blanca de nodos/atributos sobre el AST, sin `dangerouslySetInnerHTML`/`innerHTML` con markdown crudo), aplicada tanto al texto del agente como al eco del mensaje del usuario. Verificación: test adversarial con un payload tipo `<script>`/`onerror=` que confirma que no se ejecuta ni aparece como HTML activo. `[modelo: sonnet]`
+- [x] 3.1 Componente de columna de mensajes con streaming: markdown, tablas y bloques de código con highlighting, cursor de bloque parpadeante mientras el turno está en curso. Verificación: prueba de componente con una tabla y un bloque de código en streaming, renderizados correctamente antes del cierre del turno. `[modelo: sonnet]`
+- [x] 3.2 Sanitización anti-XSS del markdown renderizado (lista blanca de nodos/atributos sobre el AST, sin `dangerouslySetInnerHTML`/`innerHTML` con markdown crudo), aplicada tanto al texto del agente como al eco del mensaje del usuario. Verificación: test adversarial con un payload tipo `<script>`/`onerror=` que confirma que no se ejecuta ni aparece como HTML activo. `[modelo: sonnet]`
 - [ ] 3.3 Indicador de actividad plegado durante tool calls previas a la respuesta ("consultando…") + auto-scroll condicionado a que el usuario esté al final + botón flotante "Nuevos mensajes". Verificación: prueba de componente que simula scroll hacia arriba durante el streaming y confirma que aparece el botón en vez de forzar el scroll. `[modelo: sonnet]`
 - [ ] 3.4 Composer: Enter envía / Shift+Enter salto de línea, botón enviar↔detener según estado de streaming, deshabilitado con composer vacío, hint visible. Verificación: prueba de componente que cubre los tres estados (vacío, enviando, streaming). `[modelo: sonnet]`
 - [ ] 3.5 Sugerencias de inicio (`agent.starter_prompts`) clicables que precargan el composer con foco, sin enviar. Verificación: prueba de componente: click en sugerencia deja el texto en el composer sin turno enviado. `[modelo: sonnet]`
@@ -28,7 +28,7 @@
 
 ## 4. UI — capa de telemetría Técnico/Admin (vista 06)
 
-- [ ] 4.1 Backend: el contrato de salida del turno incluye costo, perfil, latencia y chips de cache hit/miss/write solo cuando el rol de la sesión de identidad es Técnico o Admin; el campo está ausente (no vacío) para Funcional. Verificación: test de contrato que confirma la ausencia total del campo para una sesión Funcional. `[modelo: sonnet]`
+- [x] 4.1 Backend: el contrato de salida del turno incluye costo, perfil, latencia y chips de cache hit/miss/write solo cuando el rol de la sesión de identidad es Técnico o Admin; el campo está ausente (no vacío) para Funcional. Verificación: test de contrato que confirma la ausencia total del campo para una sesión Funcional. `[modelo: sonnet]`
 - [ ] 4.2 UI: taxímetro de sesión en el header (Técnico/Admin) + fila de telemetría por turno con chips de cache y costo. Verificación: prueba de componente con datos de dos turnos que confirma la suma acumulada del taxímetro. `[modelo: sonnet]`
 - [ ] 4.3 UI: enlace "ver traza" visible solo para Admin, ausente para Técnico. Verificación: prueba de componente por rol que confirma la ausencia del enlace en Técnico. `[modelo: sonnet]`
 - [ ] 4.4 Estado degradado: si la traza no está disponible, taxímetro con `~` y tooltip "costo estimado" (solo Admin). Verificación: prueba de componente con traza no disponible simulada. `[modelo: haiku]`

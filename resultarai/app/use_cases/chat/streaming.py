@@ -84,11 +84,21 @@ igual que el fail-safe existente para un generador mal implementado que no cierr
 uno). El evento `done` gana el campo `stopped` (`True` en este camino, `False` en el
 camino normal -- se agrega a AMBOS para no bifurcar el shape del evento entre los dos
 casos, ver `app/api/chat_stream.py`).
+
+**Tarea 4.1 -- capa de telemetría por rol:** `Message.turn_metadata` sigue
+persistiéndose SIEMPRE completo (`_turn_metadata_dict`/`build_raw_turn_metadata`, ver
+`telemetry.py`); lo que cambia es el evento `done` transmitido al cliente, que expone
+`telemetry.layer_turn_metadata(metadata, role=user.role, ...)` en vez del dict crudo
+-- para Funcional, sin la clave `telemetry` (ausente, no vacía); para Técnico/Admin,
+con `telemetry.{cost_usd,model_profile_id,...}`; para Admin además con
+`telemetry.trace_id`. Ver el contrato exacto documentado en el docstring de
+`app/api/chat_stream.py`.
 """
 
 from __future__ import annotations
 
 import json
+import time
 import uuid
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
@@ -109,6 +119,7 @@ from resultarai.app.use_cases.chat.stream_registry import (
     TurnStreamBuffer,
     TurnStreamRegistry,
 )
+from resultarai.app.use_cases.chat.telemetry import build_raw_turn_metadata, layer_turn_metadata
 from resultarai.app.use_cases.chat.titles import generate_session_title
 from resultarai.app.use_cases.chat.turns import MessageEditForbiddenError, SessionNotFoundError
 from resultarai.core.registries import Registries
@@ -270,24 +281,34 @@ def filter_escalation_marker(
 
 
 def _turn_metadata_dict(
-    completion: TurnCompletion, escalation: EscalationPayload | None
+    completion: TurnCompletion, escalation: EscalationPayload | None, *, latency_ms: int
 ) -> dict[str, object]:
-    """Construye el dict que se persiste en `Message.turn_metadata` y viaja en `done`."""
-    return {
-        "model_profile_id": completion.model_profile_id,
-        "is_alternate_model": completion.is_alternate_model,
-        "primary_model_profile_id": completion.primary_model_profile_id,
-        "fallback_reason": completion.fallback_reason,
-        "cache_hit_tokens": completion.cache_hit_tokens,
-        "cache_miss_tokens": completion.cache_miss_tokens,
-        "cost_usd": completion.cost_usd,
-        "compacted": completion.compacted,
-        "escalation": (
-            {"reason": escalation.reason, "target_profile": escalation.target_profile}
-            if escalation is not None
-            else None
-        ),
-    }
+    """Construye el dict CRUDO que se persiste en `Message.turn_metadata` (tarea 4.1:
+    delega en `build_raw_turn_metadata`, único constructor de este shape compartido con
+    `turns.py`, ver `telemetry.py`).
+
+    `latency_ms` -- tarea 4.1 -- se mide en `_produce_turn_events` desde que arranca a
+    consumir el `StreamingResponseGenerator` hasta que el turno cierra (éxito o
+    cancelación), ver docstring de esa función.
+    """
+    return dict(
+        build_raw_turn_metadata(
+            model_profile_id=completion.model_profile_id,
+            is_alternate_model=completion.is_alternate_model,
+            primary_model_profile_id=completion.primary_model_profile_id,
+            fallback_reason=completion.fallback_reason,
+            cache_hit_tokens=completion.cache_hit_tokens,
+            cache_miss_tokens=completion.cache_miss_tokens,
+            cost_usd=completion.cost_usd,
+            latency_ms=latency_ms,
+            compacted=completion.compacted,
+            escalation=(
+                {"reason": escalation.reason, "target_profile": escalation.target_profile}
+                if escalation is not None
+                else None
+            ),
+        )
+    )
 
 
 def _produce_turn_events(
@@ -303,6 +324,7 @@ def _produce_turn_events(
     turn_id: str,
     buffer: TurnStreamBuffer,
     reprocessed_count: int,
+    role: str,
 ) -> Iterator[BufferedSseEvent]:
     """Genera la respuesta del agente y produce eventos SSE-ready, persistiéndola al final.
 
@@ -321,12 +343,20 @@ def _produce_turn_events(
     deja de consumir el generador de inmediato -- ni un fragmento más se produce ni se
     persiste -- y el turno se cierra igual que el camino normal, con `status="stopped"`
     en vez de `"complete"` y `stopped=True` en el evento `done`.
+
+    Tarea 4.1: `role` (el de la sesión de identidad que arrancó el turno,
+    `start_turn_stream` lo deriva de `user.role`) decide qué capa de metadatos lleva el
+    evento `done` -- ver `telemetry.layer_turn_metadata`. `latency_ms` se mide desde
+    que arranca a consumirse `filtered` (inicio real de generación, no la mera
+    construcción perezosa del iterador) hasta que el bucle termina (éxito o
+    cancelación).
     """
     accumulated = ""
     escalation_payload: EscalationPayload | None = None
     completion: TurnCompletion | None = None
     stopped = False
 
+    generation_started_at = time.monotonic()
     raw_events = generate_response(session=session, history=history)
     filtered = filter_escalation_marker(raw_events, escalation_enabled=escalation_enabled)
     for item in filtered:
@@ -374,7 +404,8 @@ def _produce_turn_events(
             model_profile_id=session.model_profile, is_alternate_model=False
         )
 
-    metadata = _turn_metadata_dict(completion, escalation_payload)
+    latency_ms = round((time.monotonic() - generation_started_at) * 1000)
+    metadata = _turn_metadata_dict(completion, escalation_payload, latency_ms=latency_ms)
 
     # INSERT único y atómico (no un UPDATE sobre una fila creada antes): ver nota de
     # módulo, `messages` rechaza cualquier UPDATE por trigger de b04. También el camino
@@ -402,13 +433,18 @@ def _produce_turn_events(
     db.flush()
     db.commit()
 
+    # Tarea 4.1: `turn_metadata` CRUDO (arriba) se persiste siempre completo -- lo que
+    # viaja en el evento `done` es la vista FILTRADA por rol (`layer_turn_metadata`),
+    # nunca el dict crudo. Ver el contrato documentado en el docstring de
+    # `app/api/chat_stream.py`.
+    layered = layer_turn_metadata(metadata, role=role, fallback_trace_id=str(assistant_message.id))
     done_payload: dict[str, object] = {
         "turn_id": turn_id,
         "user_message_id": str(user_message.id),
         "assistant_message_id": str(assistant_message.id),
         "reprocessed_count": reprocessed_count,
         "stopped": stopped,
-        **metadata,
+        **layered,
     }
     yield buffer.append("done", json.dumps(done_payload))
 
@@ -521,5 +557,6 @@ def start_turn_stream(
         turn_id=turn_id,
         buffer=buffer,
         reprocessed_count=reprocessed_count,
+        role=user.role,
     )
     return turn_id, events

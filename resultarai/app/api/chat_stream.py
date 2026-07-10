@@ -29,15 +29,28 @@ del chat (vista 05).
   - `escalation`: `data` = `{"reason": str, "target_profile": str | null}` -- solo si el
     Agent Manifest de la sesión tiene `escalation.enabled: true` y el modelo emitió el
     marcador; `target_profile` es `escalation.target_profile` del Agent Manifest.
-  - `done`: `data` = metadatos completos del turno --
+  - `done`: `data` = metadatos del turno, filtrados por el ROL de la sesión de
+    identidad que abrió la conexión (tarea 4.1, requirement `chat-experience` "Capa
+    de telemetría por turno para Técnico/Admin" -- ver `telemetry.py`) --
     `{"turn_id": str, "user_message_id": str, "assistant_message_id": str,
-    "reprocessed_count": int, "stopped": bool, "model_profile_id": str,
-    "is_alternate_model": bool, "primary_model_profile_id": str | null,
-    "fallback_reason": str | null, "cache_hit_tokens": int | null,
-    "cache_miss_tokens": int | null, "cost_usd": float | null, "compacted": bool,
-    "escalation": {"reason": str, "target_profile": str | null} | null}`.
-    `stopped` es `true` únicamente cuando el turno cerró por cancelación (tarea 1.7);
-    el shape es el MISMO en ambos casos (se agregó el campo, no se bifurcó el evento).
+    "reprocessed_count": int, "stopped": bool, "is_alternate_model": bool,
+    "compacted": bool, "escalation": {"reason": str, "target_profile": str | null} |
+    null, "telemetry": {...} }`. `turn_id`/`user_message_id`/`assistant_message_id`/
+    `reprocessed_count`/`stopped`/`is_alternate_model`/`compacted`/`escalation`
+    viajan SIEMPRE, para los tres roles (`is_alternate_model` es la etiqueta "modelo
+    alterno" de la tarea 5.1, visible para todos). `stopped` es `true` únicamente
+    cuando el turno cerró por cancelación (tarea 1.7); el shape es el MISMO en ambos
+    casos (se agregó el campo, no se bifurcó el evento).
+    - `telemetry` -- SOLO Técnico/Admin. Para Funcional la clave `telemetry` está
+      AUSENTE del JSON (ni `null` ni `{}`: decisión 7 de `design.md`, el backend no
+      confía en el cliente para ocultarla). Shape: `{"cost_usd": float | null,
+      "model_profile_id": str | null, "primary_model_profile_id": str | null,
+      "fallback_reason": str | null, "latency_ms": int | null, "cache_hit_tokens":
+      int | null, "cache_miss_tokens": int | null, "cache_write_tokens": null}` --
+      `cache_write_tokens` siempre `null` hasta que `LLMResponse` de
+      `b05-gateway-modelos` lo exponga (ver `openspec/BACKLOG-DESCUBRIMIENTOS.md`).
+      Para Admin, `telemetry` gana además `"trace_id": str` (enlace "ver traza" de
+      la tarea 4.3).
 - Nunca aparece el texto literal `<<<NEEDS_PRO>>>` en ningún `data` de ningún evento
   (tarea 1.4, defensa incondicional, ver `streaming.py`).
 - El intervalo de heartbeat es configurable vía la variable de entorno

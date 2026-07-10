@@ -414,12 +414,17 @@ def test_stream_turn_ordering_heartbeat_and_close_metadata(
 ) -> None:
     """Fragmentos en orden, al menos un heartbeat, e `id` incremental terminando en
     `done` con los metadatos completos del turno.
+
+    Usa el rol `tecnico` (tarea 4.1: la capa `telemetry` del `done` solo viaja para
+    Técnico/Admin, ver `test_telemetry.py` para la cobertura de la ausencia total en
+    Funcional) para poder seguir aserting sobre `model_profile_id`/`cache_hit_tokens`/
+    `cost_usd`, ahora anidados bajo `telemetry`.
     """
     monkeypatch.setenv("RESULTARAI_SSE_HEARTBEAT_INTERVAL_SECONDS", "0.05")
     streaming_generator.chunks = ["Hola", ", ", "¿cómo estás?"]
     streaming_generator.delay_seconds = 0.12
 
-    _create_user_and_login(client, "stream-full")
+    _create_user_and_login(client, "stream-full", role="tecnico")
     session_id = _create_session(client)
 
     raw = _stream_turn(client, session_id, "hola, turno completo")
@@ -444,13 +449,20 @@ def test_stream_turn_ordering_heartbeat_and_close_metadata(
     assert done_data["turn_id"].startswith("turn_")
     assert uuid.UUID(done_data["user_message_id"])
     assert uuid.UUID(done_data["assistant_message_id"])
-    assert done_data["model_profile_id"]
     assert done_data["is_alternate_model"] is False
     assert done_data["compacted"] is False
     assert done_data["escalation"] is None
     assert done_data["reprocessed_count"] == 0
-    assert "cache_hit_tokens" in done_data
-    assert "cost_usd" in done_data
+
+    # Tarea 4.1: rol tecnico -> capa `telemetry` presente, con `trace_id` AUSENTE
+    # (solo Admin lo ve).
+    telemetry = done_data["telemetry"]
+    assert telemetry["model_profile_id"]
+    assert "cache_hit_tokens" in telemetry
+    assert "cost_usd" in telemetry
+    assert isinstance(telemetry["latency_ms"], int)
+    assert telemetry["latency_ms"] >= 0
+    assert "trace_id" not in telemetry
 
     with get_db_session() as db:
         assistant = db.get(Message, uuid.UUID(done_data["assistant_message_id"]))
@@ -458,7 +470,7 @@ def test_stream_turn_ordering_heartbeat_and_close_metadata(
         assert assistant.content == "Hola, ¿cómo estás?"
         assert assistant.status == "complete"
         assert assistant.turn_metadata is not None
-        assert assistant.turn_metadata["model_profile_id"] == done_data["model_profile_id"]
+        assert assistant.turn_metadata["model_profile_id"] == telemetry["model_profile_id"]
 
         user_message = db.get(Message, uuid.UUID(done_data["user_message_id"]))
         assert user_message is not None

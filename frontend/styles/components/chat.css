@@ -1,0 +1,351 @@
+/*
+ * styles/components/chat.css — Chat base (d13-chat-conversacion, tareas
+ * 3.1/3.2 del frontend, `design/VISTAS/02-chat.md` vista 05).
+ *
+ * Consumido por `components/chat/*` y `app/(shell)/chat/*`. Portado desde
+ * cero (la vista 05 no tenía un archivo de componentes propio todavía en
+ * `styles/components/`) -- mismo criterio del resto de esta capa: SOLO
+ * tokens de `styles/tokens.css` (auditoría de colores, tarea 4.9 de
+ * d10-design-system-shell), nunca valores literales.
+ *
+ * `.sr-only` se define acá porque hacía falta para la región `aria-live`
+ * de `message-column.tsx` (vista 05 §0.4: "aria-live anuncia al completar
+ * el turno, no token por token") y todavía no existía en ningún archivo
+ * del proyecto pese a estar referenciada en un comentario de
+ * `styles/shell.css` — ver `openspec/BACKLOG-DESCUBRIMIENTOS.md` para la
+ * nota de moverla a un lugar más general si otro componente la necesita.
+ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Shell de la página de chat ─────────────────────────────────────── */
+.chat-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.chat-shell__messages {
+  flex: 1;
+}
+
+.chat-shell__error {
+  max-width: 760px;
+  margin: 0 auto var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  color: var(--danger);
+  font-size: var(--fs-small);
+}
+
+/* ── Columna de mensajes (vista 05: "máx. 760 px centrada") ─────────── */
+.msg-column {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: var(--sp-6) var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.msg-column__empty {
+  padding: var(--sp-9) var(--sp-4);
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: var(--fs-lead);
+}
+
+.msg-column__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+/* ── Filas de mensaje ─────────────────────────────────────────────────
+   Usuario: burbuja `--bg-raised` alineada a la derecha, máx. 85% del
+   ancho (vista 05). Agente: avatar + cuerpo a ancho completo, sin
+   burbuja -- el markdown largo respira mejor sin borde. */
+.msg-row {
+  display: flex;
+  width: 100%;
+}
+
+.msg-row--user {
+  justify-content: flex-end;
+}
+
+.msg-bubble--user {
+  max-width: 85%;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.msg-row--agent {
+  align-items: flex-start;
+  gap: var(--sp-3);
+}
+
+.msg-avatar {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  background: var(--bg-raised);
+  font-size: var(--fs-lead);
+}
+
+.msg-agent-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.msg-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+  font-size: var(--fs-caption);
+  color: var(--ink-faint);
+  font-family: var(--font-mono);
+}
+
+.msg-meta__stopped {
+  color: var(--warn);
+}
+
+/* ── Cursor de bloque parpadeante (tarea 3.1) ───────────────────────── */
+.chat-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--accent);
+  animation: chat-cursor-blink 1s step-end infinite;
+}
+
+@keyframes chat-cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-cursor {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ── Composer placeholder mínimo (tarea 3.1 -- reemplazado por 3.4) ──── */
+.chat-composer {
+  max-width: 760px;
+  margin: 0 auto;
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  border-top: 1px solid var(--line);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-2);
+  align-items: start;
+}
+
+.chat-composer__textarea {
+  grid-column: 1;
+  min-height: 44px;
+  max-height: 200px;
+}
+
+.chat-composer__hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: var(--fs-caption);
+  color: var(--ink-faint);
+}
+
+/* ── Contenido markdown sanitizado (tareas 3.1/3.2) ─────────────────── */
+.md-content {
+  font-size: var(--fs-body);
+  line-height: var(--lh-base);
+  color: var(--ink);
+  overflow-wrap: break-word;
+}
+
+.md-content > :first-child {
+  margin-top: 0;
+}
+.md-content > :last-child {
+  margin-bottom: 0;
+}
+
+.md-content p {
+  margin: 0 0 var(--sp-3);
+}
+
+.md-content ul,
+.md-content ol {
+  margin: 0 0 var(--sp-3);
+  padding-left: var(--sp-6);
+}
+
+.md-content li + li {
+  margin-top: var(--sp-1);
+}
+
+.md-content blockquote {
+  margin: 0 0 var(--sp-3);
+  padding: var(--sp-1) var(--sp-4);
+  border-left: 3px solid var(--line-strong);
+  color: var(--ink-dim);
+}
+
+.md-content h1,
+.md-content h2,
+.md-content h3,
+.md-content h4,
+.md-content h5,
+.md-content h6 {
+  margin: var(--sp-4) 0 var(--sp-2);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+}
+
+.md-content hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: var(--sp-4) 0;
+}
+
+.md-content a {
+  color: var(--info);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Código inline (sin `language-*`, `rehype-highlight` no lo toca). */
+.md-content code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xs);
+  padding: 0.1em 0.35em;
+}
+
+/* Bloques de código (`pre > code.hljs`, ya resaltados por rehype-highlight
+   -- ver `components/chat/markdown-sanitize-schema.ts`). */
+.md-content pre {
+  margin: 0 0 var(--sp-3);
+  padding: var(--sp-3);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  overflow-x: auto;
+}
+
+.md-content pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: var(--fs-small);
+  line-height: var(--lh-base);
+}
+
+/* Tema de highlighting propio (solo tokens semánticos -- nunca un theme
+   de highlight.js importado tal cual, que trae hex hardcodeados). */
+.hljs-comment,
+.hljs-quote {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-subst {
+  color: var(--info);
+}
+.hljs-string,
+.hljs-attr,
+.hljs-regexp,
+.hljs-addition {
+  color: var(--money);
+}
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: var(--accent);
+}
+.hljs-title,
+.hljs-section,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class {
+  color: var(--accent-alt);
+  font-weight: 600;
+}
+.hljs-deletion,
+.hljs-meta {
+  color: var(--danger);
+}
+.hljs-built_in,
+.hljs-type,
+.hljs-attribute {
+  color: var(--warn);
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 700;
+}
+
+/* Tablas GFM (`remark-gfm`) con scroll horizontal propio -- nunca
+   desborda el ancho del contenedor. */
+.md-table-scroll {
+  overflow-x: auto;
+  margin: 0 0 var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.md-content table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-small);
+}
+
+.md-content th,
+.md-content td {
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.md-content thead th {
+  background: var(--bg-raised);
+  font-weight: 600;
+  color: var(--ink-dim);
+}
+
+.md-content tbody tr:last-child td {
+  border-bottom: none;
+}

@@ -3,8 +3,13 @@
 d13-chat-conversacion, tareas 1.1 (`POST /sessions`), 1.2 (`POST /sessions/{id}/messages`),
 1.3 (`POST /messages/{id}/regenerate`), 1.8 (`POST /sessions/{id}/escalate`), 2.1
 (`GET /sessions`), 2.3 y 2.5 (`GET /sessions/{id}`, árbol completo + reconciliación de
-un turno en streaming en curso), 2.4 (`GET /sessions/search`) y el endpoint de
-feedback exigido por el proposal (`POST /messages/{id}/feedback`, `b07-observabilidad`).
+un turno en streaming en curso), 2.4 (`GET /sessions/search`), el endpoint de
+feedback exigido por el proposal (`POST /messages/{id}/feedback`, `b07-observabilidad`)
+y la tarea 4.1 (capa de telemetría por turno filtrada por rol, aplicada aquí a la
+respuesta de `POST /sessions/{id}/messages`, `/messages/{id}/regenerate` y al
+`turn_metadata` de cada mensaje `assistant` de `GET /sessions/{id}` -- ver
+`resultarai/app/use_cases/chat/telemetry.py` y el contrato equivalente para el
+evento `done` del SSE en `app/api/chat_stream.py`).
 
 También define `get_turn_stream_registry` (tarea 2.5): aunque el registro de buffers
 en streaming es sobre todo consumido por `app/api/chat_stream.py`, el proveedor vive
@@ -47,6 +52,7 @@ from resultarai.app.use_cases.chat import (
     create_session,
     escalate_session,
     get_session_detail,
+    layer_turn_metadata,
     list_sessions,
     regenerate_response,
     search_sessions,
@@ -347,10 +353,15 @@ def search_sessions_endpoint(
 class SessionTreeMessageResponse(BaseModel):
     """Un mensaje del árbol completo de una sesión (tarea 2.3).
 
-    Expone `turn_metadata` tal cual está persistido (costo, perfil, cache,
-    escalación, etc. -- ver `Message.turn_metadata` en `models.py`); el filtrado de
-    qué mostrar según el rol de la sesión de identidad es responsabilidad de la UI
-    (tarea 4.1 de este mismo change), no de este endpoint.
+    `turn_metadata` de un mensaje `assistant` viaja YA FILTRADO por el rol de la
+    sesión de identidad (tarea 4.1, `telemetry.layer_turn_metadata`) -- el dict
+    crudo persistido (costo, perfil, cache, ver `Message.turn_metadata` en
+    `models.py`) nunca viaja tal cual al cliente: para Funcional, sin la clave
+    `telemetry` (ausente, no vacía); para Técnico/Admin, con ella; para Admin,
+    además con `telemetry.trace_id`. Un mensaje `user` expone su `turn_metadata`
+    SIN filtrar -- hoy solo contiene las claves internas de idempotencia de la
+    escalación (`escalation_origin_session_id`/`escalation_origin_message_id`, ver
+    `escalation.py`), que no son telemetría y no requieren gating por rol.
     """
 
     id: str
@@ -393,8 +404,18 @@ class SessionDetailResponse(BaseModel):
     in_progress_turn: InProgressTurnResponse | None
 
 
-def _to_session_tree_message_response(message: Message) -> SessionTreeMessageResponse:
-    """Traduce un `Message` persistido a su representación en el árbol de la sesión."""
+def _to_session_tree_message_response(message: Message, role: str) -> SessionTreeMessageResponse:
+    """Traduce un `Message` persistido a su representación en el árbol de la sesión.
+
+    `role` (el de la sesión de identidad que pide el detalle) filtra `turn_metadata`
+    SOLO para mensajes `assistant` (tarea 4.1) -- ver docstring de
+    `SessionTreeMessageResponse`.
+    """
+    turn_metadata = message.turn_metadata
+    if message.role == "assistant":
+        turn_metadata = layer_turn_metadata(
+            message.turn_metadata, role=role, fallback_trace_id=str(message.id)
+        )
     return SessionTreeMessageResponse(
         id=str(message.id),
         parent_id=str(message.parent_id) if message.parent_id is not None else None,
@@ -402,7 +423,7 @@ def _to_session_tree_message_response(message: Message) -> SessionTreeMessageRes
         content=message.content,
         status=message.status,
         created_at=message.created_at.isoformat(),
-        turn_metadata=message.turn_metadata,
+        turn_metadata=turn_metadata,
     )
 
 
@@ -415,8 +436,11 @@ def _to_in_progress_turn_response(turn: InProgressTurn) -> InProgressTurnRespons
     )
 
 
-def _to_session_detail_response(detail: SessionDetail) -> SessionDetailResponse:
-    """Traduce un `SessionDetail` del caso de uso a su representación de API."""
+def _to_session_detail_response(detail: SessionDetail, role: str) -> SessionDetailResponse:
+    """Traduce un `SessionDetail` del caso de uso a su representación de API.
+
+    `role`: ver `_to_session_tree_message_response` (tarea 4.1).
+    """
     session = detail.session
     return SessionDetailResponse(
         id=session.id,
@@ -426,7 +450,7 @@ def _to_session_detail_response(detail: SessionDetail) -> SessionDetailResponse:
         forked_from_id=session.forked_from_id,
         escalated_session_ids=detail.escalated_session_ids,
         active_leaf_id=str(detail.active_leaf_id) if detail.active_leaf_id is not None else None,
-        messages=[_to_session_tree_message_response(message) for message in detail.messages],
+        messages=[_to_session_tree_message_response(message, role) for message in detail.messages],
         in_progress_turn=(
             _to_in_progress_turn_response(detail.in_progress_turn)
             if detail.in_progress_turn is not None
@@ -456,13 +480,16 @@ def get_session_detail_endpoint(
     ese turno YA aparece en `messages` (se persiste al arrancar, antes de generar la
     respuesta); reanudar nunca reenvía ese mismo texto, así que nunca duplica el
     turno -- el cliente que reanuda se re-attachea al stream real en vez de reenviar.
+
+    Tarea 4.1: `turn_metadata` de cada mensaje `assistant` del árbol viaja filtrado
+    por `current_user.role` -- ver `_to_session_tree_message_response`.
     """
     try:
         detail = get_session_detail(db, current_user, session_id, turn_stream_registry)
     except SessionNotFoundError as exc:
         raise HTTPException(status_code=404, detail="Sesión no encontrada.") from exc
 
-    return _to_session_detail_response(detail)
+    return _to_session_detail_response(detail, current_user.role)
 
 
 class SendMessageRequest(BaseModel):
@@ -478,7 +505,16 @@ class SendMessageRequest(BaseModel):
 
 
 class MessageResponse(BaseModel):
-    """Representación de un mensaje persistido (usuario o agente)."""
+    """Representación de un mensaje persistido (usuario o agente).
+
+    `turn_metadata` (tarea 4.1) solo se puebla para el mensaje `assistant`: la vista
+    filtrada por rol de `telemetry.layer_turn_metadata` --
+    `{"is_alternate_model": bool, "compacted": bool, "escalation": {...} | null,
+    "telemetry"?: {...}}`, con la clave `telemetry` AUSENTE (no `null`, no `{}`)
+    para Funcional. El mensaje `user` de este mismo turno no lleva `turn_metadata`
+    (`None`): no hay telemetría de turno que reportar sobre un mensaje de usuario en
+    este flujo.
+    """
 
     id: str
     session_id: str
@@ -487,6 +523,7 @@ class MessageResponse(BaseModel):
     content: str
     status: str
     created_at: str
+    turn_metadata: dict[str, Any] | None = None
 
 
 class SendMessageResponse(BaseModel):
@@ -505,8 +542,15 @@ class RegenerateResponse(BaseModel):
     version_count: int
 
 
-def _to_message_response(message: Message) -> MessageResponse:
-    """Traduce un `Message` persistido a su representación de API."""
+def _to_message_response(
+    message: Message, *, turn_metadata: dict[str, Any] | None = None
+) -> MessageResponse:
+    """Traduce un `Message` persistido a su representación de API.
+
+    `turn_metadata`: el caller lo pasa YA FILTRADO por rol (tarea 4.1, ver
+    `layer_turn_metadata`) para el mensaje `assistant`; se omite (`None`) para el
+    mensaje `user` -- ver docstring de `MessageResponse`.
+    """
     return MessageResponse(
         id=str(message.id),
         session_id=message.session_id,
@@ -515,6 +559,7 @@ def _to_message_response(message: Message) -> MessageResponse:
         content=message.content,
         status=message.status,
         created_at=message.created_at.isoformat(),
+        turn_metadata=turn_metadata,
     )
 
 
@@ -534,6 +579,9 @@ def send_message_endpoint(
     (`get_current_user`), nunca del payload; una sesión ajena responde 404 (sin filtrar
     existencia) y editar un mensaje que no pertenece a esta sesión responde 403 sin
     crear ninguna fila.
+
+    Tarea 4.1: `assistant_message.turn_metadata` viaja filtrado por
+    `current_user.role` -- ver `MessageResponse`.
     """
     try:
         result = send_turn(
@@ -551,9 +599,16 @@ def send_message_endpoint(
             status_code=403, detail="No se puede editar un mensaje que no es propio."
         ) from exc
 
+    assistant_turn_metadata = layer_turn_metadata(
+        result.assistant_message.turn_metadata,
+        role=current_user.role,
+        fallback_trace_id=str(result.assistant_message.id),
+    )
     return SendMessageResponse(
         user_message=_to_message_response(result.user_message),
-        assistant_message=_to_message_response(result.assistant_message),
+        assistant_message=_to_message_response(
+            result.assistant_message, turn_metadata=assistant_turn_metadata
+        ),
         reprocessed_count=result.reprocessed_count,
     )
 
@@ -570,6 +625,9 @@ def regenerate_message_endpoint(
     Solo aplica a mensajes de rol `assistant` (422 en cualquier otro caso); la sesión del
     mensaje debe pertenecer al usuario actual (404 sin filtrar existencia en caso
     contrario, ni crear nada).
+
+    Tarea 4.1: `message.turn_metadata` viaja filtrado por `current_user.role` -- ver
+    `MessageResponse`.
     """
     try:
         result = regenerate_response(db, current_user, message_id, generate_response)
@@ -580,8 +638,13 @@ def regenerate_message_endpoint(
             status_code=422, detail="Solo se puede regenerar una respuesta del agente."
         ) from exc
 
+    turn_metadata = layer_turn_metadata(
+        result.message.turn_metadata,
+        role=current_user.role,
+        fallback_trace_id=str(result.message.id),
+    )
     return RegenerateResponse(
-        message=_to_message_response(result.message),
+        message=_to_message_response(result.message, turn_metadata=turn_metadata),
         version=result.version,
         version_count=result.version_count,
     )
