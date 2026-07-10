@@ -63,8 +63,8 @@
 ## 9. Tests end-to-end de los flujos de diseño
 
 - [x] 9.1 Test E2E Flujo B (sin citas, `design/FLUJOS.md`): turno con streaming, indicador de actividad, feedback 👍/👎 con comentario, turno visible en telemetría T/A. Verificación: el test recorre el flujo completo y pasa en CI. `[modelo: sonnet]`
-- [ ] 9.2 Test E2E Flujo G (edición → rama): editar un mensaje intermedio crea una rama, el selector "versión 1/2" aparece, alternar conserva ambas ramas con sus respuestas posteriores intactas. Verificación: el test recorre el flujo completo, incluida la aserción de invariante append-only (ningún mensaje original se modifica). `[modelo: opus]`
-- [ ] 9.3 Test E2E Flujo D (escalación): tarjeta de escalación aparece tras el evento de escalación, "Continuar con Pro" abre sesión nueva con perfil Pro y nota-enlace bidireccional, la sesión original permanece intacta, el marcador crudo nunca llega al cliente en ningún punto del flujo. Verificación: el test recorre el flujo completo y falla si el texto del marcador aparece en cualquier payload entregado al cliente. `[modelo: opus]`
+- [x] 9.2 Test E2E Flujo G (edición → rama): editar un mensaje intermedio crea una rama, el selector "versión 1/2" aparece, alternar conserva ambas ramas con sus respuestas posteriores intactas. Verificación: el test recorre el flujo completo, incluida la aserción de invariante append-only (ningún mensaje original se modifica). `[modelo: opus]`
+- [x] 9.3 Test E2E Flujo D (escalación): tarjeta de escalación aparece tras el evento de escalación, "Continuar con Pro" abre sesión nueva con perfil Pro y nota-enlace bidireccional, la sesión original permanece intacta, el marcador crudo nunca llega al cliente en ningún punto del flujo. Verificación: el test recorre el flujo completo y falla si el texto del marcador aparece en cualquier payload entregado al cliente. `[modelo: opus]`
 - [x] 9.4 Test de contrato SSE: reconexión con `Last-Event-ID` tras un corte simulado no duplica fragmentos ni reinvoca al `LLMPort`. Verificación: el test corta y reconecta a mitad de un stream simulado y cuenta las invocaciones al doble de `LLMPort`. `[modelo: sonnet]`
 
 ## 10. Cierre
