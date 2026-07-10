@@ -2,24 +2,24 @@
 
 ## 1. Contrato y dependencias
 
-- [ ] 1.1 Definir `ExtractionPort` (Protocol puro en `core/ports/`): entrada tipada por tipo de archivo → extracción estructurada (inventario/esquema/texto + `extractor_version`), sin importar frameworks. Verificación: `uv run lint-imports` verde y `uv run mypy` sin errores sobre el port. `[modelo: opus]`
-- [ ] 1.2 Agregar dependencias al `pyproject.toml` (`openpyxl`, `python-calamine`, `pypdf`, `mammoth`, `presidio-analyzer`) y grupo de tipos si aplica. Verificación: `uv sync` termina sin errores y las libs importan. `[modelo: sonnet]`
+- [x] 1.1 Definir `ExtractionPort` (Protocol puro en `core/ports/`): entrada tipada por tipo de archivo → extracción estructurada (inventario/esquema/texto + `extractor_version`), sin importar frameworks. Verificación: `uv run lint-imports` verde y `uv run mypy` sin errores sobre el port. `[modelo: opus]`
+- [x] 1.2 Agregar dependencias al `pyproject.toml` (`openpyxl`, `python-calamine`, `pypdf`, `mammoth`, `presidio-analyzer`) y grupo de tipos si aplica. Verificación: `uv sync` termina sin errores y las libs importan. `[modelo: sonnet]`
 
 ## 2. Subida y validación de seguridad
 
-- [ ] 2.1 Endpoint de subida multipart en `app/attachments/`: estado inicial `subiendo`, límite de tamaño por tipo (matriz ANEXO §9, config) y máx 5 adjuntos/mensaje. Verificación: escenarios "excede tamaño" y "sexto adjunto" de `attachments-pipeline` pasan con sus textos §10. `[modelo: sonnet]`
-- [ ] 2.2 Validación de tipo real: allowlist de extensiones tras decodificar el nombre (doble extensión/null bytes) + magic bytes + coherencia ext/firma; Content-Type del navegador ignorado. Verificación: escenarios "extensión falsificada" y "fuera del allowlist" de `attachments-security` pasan (ANEXO §4.1). `[modelo: opus]`
-- [ ] 2.3 Rechazos de formatos activos/peligrosos: macros (.xlsm/.docm/.pptm), comprimidos, ejecutables, .doc antiguo, PDF con contraseña — cada uno con su mensaje §10. Verificación: test "Excel con macros rechazado" (.xlsm), "ejecutable rechazado" y "PDF con contraseña" en verde (ANEXO §2.6, §4.2). `[modelo: opus]`
-- [ ] 2.4 Protección zip-bomb OOXML: abortar si el descomprimido supera tamaño/ratio configurado (default >100 MB o >50:1). Verificación: test "OOXML tipo zip-bomb abortado" deja el adjunto en `error` sin agotar memoria (ANEXO §4.1). `[modelo: opus]`
-- [ ] 2.5 Worker de parseo aislado con timeout (30 s) y memoria acotada; los parsers solo leen. Verificación: test "archivo malformado agota el timeout" → adjunto `error` y plataforma operativa (ANEXO §4.1, §8). `[modelo: opus]`
+- [x] 2.1 Endpoint de subida multipart en `app/attachments/`: estado inicial `subiendo`, límite de tamaño por tipo (matriz ANEXO §9, config) y máx 5 adjuntos/mensaje. Verificación: escenarios "excede tamaño" y "sexto adjunto" de `attachments-pipeline` pasan con sus textos §10. `[modelo: sonnet]`
+- [x] 2.2 Validación de tipo real: allowlist de extensiones tras decodificar el nombre (doble extensión/null bytes) + magic bytes + coherencia ext/firma; Content-Type del navegador ignorado. Verificación: escenarios "extensión falsificada" y "fuera del allowlist" de `attachments-security` pasan (ANEXO §4.1). `[modelo: opus]`
+- [x] 2.3 Rechazos de formatos activos/peligrosos: macros (.xlsm/.docm/.pptm), comprimidos, ejecutables, .doc antiguo, PDF con contraseña — cada uno con su mensaje §10. Verificación: test "Excel con macros rechazado" (.xlsm), "ejecutable rechazado" y "PDF con contraseña" en verde (ANEXO §2.6, §4.2). `[modelo: opus]`
+- [x] 2.4 Protección zip-bomb OOXML: abortar si el descomprimido supera tamaño/ratio configurado (default >100 MB o >50:1). Verificación: test "OOXML tipo zip-bomb abortado" deja el adjunto en `error` sin agotar memoria (ANEXO §4.1). `[modelo: opus]`
+- [x] 2.5 Worker de parseo aislado con timeout (30 s) y memoria acotada; los parsers solo leen. Verificación: test "archivo malformado agota el timeout" → adjunto `error` y plataforma operativa (ANEXO §4.1, §8). `[modelo: opus]`
 
 ## 3. Extractores deterministas por tipo
 
-- [ ] 3.1 Extractor de hojas (`openpyxl`/`python-calamine` + CSV/TSV streaming): inventario + esquema + tabla MD/TSV; 150+20 filas si excede. Verificación: escenario "XLSX que excede el límite de filas" con su marcador de filas omitidas (ANEXO §2.1). `[modelo: sonnet]`
-- [ ] 3.2 Extractor de PDF (`pypdf`) por página con marcadores `--- página N ---` + detección de escaneado por umbral chars/página y oferta de OCR marcada DIFERIDA (V1.1). Verificación: escenarios "PDF con texto nativo" y "PDF escaneado ofrece OCR diferido" (ANEXO §2.2). `[modelo: sonnet]`
-- [ ] 3.3 Extractor DOCX (`mammoth` Python → Markdown estructurado; imágenes → `[imagen omitida: …]`). Verificación: escenario "DOCX con encabezados, tabla e imagen" preserva estructura (ANEXO §2.3). `[modelo: sonnet]`
-- [ ] 3.4 Extractor texto/código/logs: detección de encoding→UTF-8, bloque de código con lenguaje, logs tail-first. Verificación: escenario "Log en Windows-1252 se normaliza y se trunca tail-first" (ANEXO §2.5). `[modelo: sonnet]`
-- [ ] 3.5 Rechazo de imágenes en V1 con alternativa accionable (el adapter no las admite). Verificación: el tipo imagen produce el texto "Imagen (V1)" §10, sin aceptar la subida (ANEXO §2.4). `[modelo: sonnet]`
+- [x] 3.1 Extractor de hojas (`openpyxl`/`python-calamine` + CSV/TSV streaming): inventario + esquema + tabla MD/TSV; 150+20 filas si excede. Verificación: escenario "XLSX que excede el límite de filas" con su marcador de filas omitidas (ANEXO §2.1). `[modelo: sonnet]`
+- [x] 3.2 Extractor de PDF (`pypdf`) por página con marcadores `--- página N ---` + detección de escaneado por umbral chars/página y oferta de OCR marcada DIFERIDA (V1.1). Verificación: escenarios "PDF con texto nativo" y "PDF escaneado ofrece OCR diferido" (ANEXO §2.2). `[modelo: sonnet]`
+- [x] 3.3 Extractor DOCX (`mammoth` Python → Markdown estructurado; imágenes → `[imagen omitida: …]`). Verificación: escenario "DOCX con encabezados, tabla e imagen" preserva estructura (ANEXO §2.3). `[modelo: sonnet]`
+- [x] 3.4 Extractor texto/código/logs: detección de encoding→UTF-8, bloque de código con lenguaje, logs tail-first. Verificación: escenario "Log en Windows-1252 se normaliza y se trunca tail-first" (ANEXO §2.5). `[modelo: sonnet]`
+- [x] 3.5 Rechazo de imágenes en V1 con alternativa accionable (el adapter no las admite). Verificación: el tipo imagen produce el texto "Imagen (V1)" §10, sin aceptar la subida (ANEXO §2.4). `[modelo: sonnet]`
 
 ## 4. Sanitización y anti prompt-injection
 
@@ -49,7 +49,7 @@
 - [ ] 8.1 `AttachmentAdapter` (sobre `CompositeAttachmentAdapter`): `add()` valida/sube, polling del estado de extracción, `send()` devuelve `attachment_id`; errores tipados mapeados a mensajes §10. Verificación: subir→procesar→listo funciona end-to-end contra el endpoint (ANEXO §6). `[modelo: sonnet]`
 - [ ] 8.2 Chips de estado subiendo→procesando→listo/advertencia/bloqueado/error con causa específica; nunca silencioso. Verificación: escenarios "error de extracción muestra causa" y "adjunto bloqueado se ve como no enviable" (ANEXO §6, §10). `[modelo: sonnet]`
 - [ ] 8.3 Panel "Ver lo que verá el agente" (extracción exacta + marcadores de truncado + tokens/%; pie permanente) con capa por rol (Funcional=% de espacio; Técnico/Admin=tokens). Verificación: escenarios "vista previa de un adjunto truncado" y "mismo adjunto, métricas por rol" (ANEXO §3.4). `[modelo: sonnet]`
-- [ ] 8.4 Portar los textos de UI del §10 en voseo (chips y errores/avisos) a los recursos i18n del frontend. Verificación: escenario "imagen rechazada con alternativa accionable" y presencia literal de los textos §10. `[modelo: haiku]`
+- [x] 8.4 Portar los textos de UI del §10 en voseo (chips y errores/avisos) a los recursos i18n del frontend. Verificación: escenario "imagen rechazada con alternativa accionable" y presencia literal de los textos §10. `[modelo: haiku]`
 
 ## 9. Cierre
 

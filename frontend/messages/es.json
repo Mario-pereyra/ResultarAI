@@ -509,6 +509,48 @@
     },
     "agentDisabled": {
       "composerReason": "Este agente ya no está disponible. Podés leer la conversación, pero no continuarla."
+    },
+    "attachments": {
+      "states": {
+        "uploading": "Subiendo… {percent}%",
+        "processing": "Procesando contenido…",
+        "readyTechAdmin": "Listo · {tokens} tokens",
+        "readyFunctional": "Listo · usa {percent}% del espacio del mensaje",
+        "readyTruncated": "Listo · incluye el {percent}% del archivo — tocá para ver qué verá el agente",
+        "warning": "Revisá antes de enviar",
+        "blocked": "Bloqueado — contiene credenciales",
+        "error": "No se pudo procesar"
+      },
+      "errors": {
+        "unsupportedType": "No podemos procesar archivos {extension}. Extraé el archivo que necesitás y subilo directamente.",
+        "falsifiedType": "El contenido del archivo no coincide con su extensión ({extension}). Por seguridad no se puede adjuntar.",
+        "withMacros": "Los archivos con macros ({extension}) no están permitidos. Guardalo desde Excel como \"Libro de Excel (.xlsx)\" y volvé a subirlo.",
+        "tooLarge": "El archivo supera el límite de {limitMb} MB para {fileType}. Si solo necesitás algunas hojas, copialas a un archivo nuevo.",
+        "pdfProtected": "Este PDF está protegido con contraseña y no se puede leer. Quitale la protección y volvé a subirlo.",
+        "pdfScanned": "Este PDF parece escaneado: no tiene texto seleccionable. ¿Querés que intentemos leerlo con reconocimiento óptico (OCR)? El resultado puede tener errores — vas a poder revisarlo antes de enviar.",
+        "pdfScannedNoOcr": "Sin OCR no podemos leer este documento. Probá con una versión digital del archivo.",
+        "imageNotSupported": "Este agente todavía no puede ver imágenes. Si es una captura de un error, pegá el texto del mensaje directamente en el chat; si es un reporte, exportalo a PDF o Excel.",
+        "wordLegacy": "El formato .doc (Word 97-2003) no está soportado. Abrilo en Word y guardalo como .docx.",
+        "emptyFile": "No encontramos contenido de texto en este archivo.",
+        "truncatedPreview": "Por el límite de espacio, el agente verá el {percent}% del archivo (se priorizaron las secciones relacionadas con tu consulta). Las partes omitidas están marcadas — podés pedirlas explícitamente en el chat.",
+        "pdfTableWarning": "Atención: las tablas de este PDF pueden haber perdido su estructura al extraer el texto.",
+        "piiDetected": "Detectamos posibles datos personales en este archivo ({detail}). Recordá la política: solo datos de prueba hacia la IA.",
+        "credentialsDetected": "Este archivo contiene lo que parece una contraseña o clave de acceso ({detail}). Por política no puede enviarse a la IA. Quitá las credenciales del archivo y volvé a subirlo.",
+        "embeddedInstruction": "Este documento contiene texto que parece dirigido a la IA ({detail}). El agente lo tratará solo como contenido del documento. Revisalo si no lo esperabas.",
+        "quotaExceeded": "Este adjunto excede el espacio disponible de tu sesión (límite al 100%).",
+        "tooManyAttachments": "Máximo 5 archivos por mensaje. Quitá alguno o enviá en dos mensajes.",
+        "genericError": "No pudimos procesar este archivo (puede estar dañado). Probá guardarlo de nuevo desde la aplicación original."
+      },
+      "warnings": {
+        "piiConfirmation": "Confirmo que son datos de prueba",
+        "piiCancel": "Cancelar",
+        "quotaRequestRelease": "Solicitar liberación"
+      },
+      "preview": {
+        "action": "Ver lo que verá el agente",
+        "title": "Esto es exactamente lo que recibirá el agente",
+        "footer": "Contenido extraído automáticamente — puede diferir del documento original."
+      }
     }
   },
   "History": {
