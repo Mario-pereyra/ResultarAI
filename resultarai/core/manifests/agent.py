@@ -91,6 +91,12 @@ class AgentManifest(BaseManifest):
     limits: AgentLimits | None = None
     fallback_cascade: list[str] = Field(default_factory=list)
     escalation: AgentEscalation = Field(default_factory=AgentEscalation)
+    # Prompts de ejemplo clicables que la UI del chat precarga en el composer al
+    # iniciar una sesion nueva sin mensajes (d13-chat-conversacion, tarea 3.5,
+    # `design/VISTAS/02-chat.md` vista 05: "Sugerencias de inicio"). Mismo criterio
+    # que `escalation.target_profile`: campo additivo con default vacio para no
+    # romper manifiestos existentes que no lo declaren.
+    starter_prompts: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _enforce_golden_rule(self) -> Self:

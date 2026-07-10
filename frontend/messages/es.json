@@ -403,8 +403,25 @@
       "placeholder": "Escribile a {agent}…",
       "textareaLabel": "Mensaje",
       "send": "Enviar",
-      "sending": "Enviando…",
+      "stop": "Detener",
       "hint": "Enter envía · Shift+Enter salto de línea"
+    },
+    "activity": {
+      "consulting": "Consultando…"
+    },
+    "stream": {
+      "newMessages": "↓ Nuevos mensajes"
+    },
+    "actions": {
+      "like": "Me gusta",
+      "dislike": "No me gusta"
+    },
+    "feedback": {
+      "prompt": "¿Querés agregar un comentario? (opcional)",
+      "commentLabel": "Comentario",
+      "send": "Enviar",
+      "skip": "Omitir",
+      "error": "No pudimos registrar tu voto. Probá de nuevo."
     },
     "session": {
       "loading": "Cargando conversación…",

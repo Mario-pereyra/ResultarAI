@@ -2,8 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ComposerPlaceholder, type ComposerPlaceholderLabels } from "@/components/chat/composer-placeholder";
+import type { ActivityIndicatorLabels } from "@/components/chat/activity-indicator";
+import { Composer, type ComposerHandle, type ComposerLabels } from "@/components/chat/composer";
+import type { FeedbackActionsLabels } from "@/components/chat/feedback-actions";
 import { MessageColumn, type ChatMessageItem } from "@/components/chat/message-column";
+import { StarterSuggestions } from "@/components/chat/starter-suggestions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { csrfHeaders } from "@/lib/csrf";
 import { resolveActiveBranch } from "@/lib/chat/session-tree";
@@ -11,7 +14,8 @@ import type { CreatedSession, SessionDetail } from "@/lib/chat/types";
 import { useTurnStream } from "@/lib/chat/use-turn-stream";
 
 export interface ChatContentLabels {
-  /** Agente con el que se crea la sesión nueva al primer envío. El
+  /** Agente con el que se crea la sesión nueva al primer envío, y con el que
+   * se resuelve `GET /api/agents/{id}` (tarea 3.5, sugerencias de inicio). El
    * selector de agente es `d15` (documentado en
    * `openspec/BACKLOG-DESCUBRIMIENTOS.md`) -- por ahora siempre
    * `"default_chat"`. */
@@ -20,7 +24,10 @@ export interface ChatContentLabels {
   stoppedCaption: string;
   streamingDoneAnnouncement: string;
   cursorAriaLabel: string;
-  composer: ComposerPlaceholderLabels;
+  activity: ActivityIndicatorLabels;
+  newMessages: string;
+  feedback: FeedbackActionsLabels;
+  composer: ComposerLabels;
   loading: string;
   loadError: string;
   sendError: string;
@@ -48,7 +55,7 @@ function nextLocalMessageId(): string {
 /**
  * Orquestación de la vista 05 (`design/VISTAS/02-chat.md`): carga/crea la
  * sesión, conecta `use-turn-stream.ts` y renderiza `MessageColumn` +
- * `ComposerPlaceholder`. Un solo componente para ambas rutas (`chat/page.tsx`
+ * `Composer`. Un solo componente para ambas rutas (`chat/page.tsx`
  * y `chat/[sessionId]/page.tsx`, patrón de `app/(shell)/administracion/`) --
  * evita que crear la sesión a mitad de un turno en streaming desmonte el
  * árbol (navegar de `/chat` a `/chat/{id}` cambiaría de segmento de ruta,
@@ -57,12 +64,18 @@ function nextLocalMessageId(): string {
 export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   const router = useRouter();
   const turnStream = useTurnStream();
+  const composerRef = useRef<ComposerHandle>(null);
 
   const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
   const [loadingSession, setLoadingSession] = useState(initialSessionId !== null);
   const [loadError, setLoadError] = useState(false);
   const [sendError, setSendError] = useState(false);
+  const [composerText, setComposerText] = useState("");
+  // Sugerencias de inicio (tarea 3.5): `agent.starter_prompts` resuelto vía
+  // `GET /api/agents/{id}` -- ver `MessageColumn`, que solo las muestra en
+  // el estado vacío (sin mensajes ni turno en curso).
+  const [starterPrompts, setStarterPrompts] = useState<string[]>([]);
 
   // Evita plegar el mismo turno dos veces si el efecto de abajo se
   // re-ejecuta (p. ej. por un re-render intermedio antes de que
@@ -121,6 +134,27 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSessionId]);
 
+  // Tarea 3.5: resuelve las sugerencias de inicio del agente una sola vez.
+  // Falla en silencio (sin sugerencias) si el endpoint no responde -- no es
+  // condición para que el resto del chat funcione.
+  useEffect(() => {
+    let cancelled = false;
+    async function loadAgent() {
+      try {
+        const res = await fetch(`/api/agents/${labels.agentId}`);
+        if (!res.ok) return;
+        const data = (await res.json()) as { starter_prompts: string[] };
+        if (!cancelled) setStarterPrompts(data.starter_prompts);
+      } catch {
+        // Sin sugerencias no rompe el chat: la vista 05 sigue funcional.
+      }
+    }
+    void loadAgent();
+    return () => {
+      cancelled = true;
+    };
+  }, [labels.agentId]);
+
   // Pliega el turno en curso dentro del historial persistido cuando cierra
   // (la columna deja de mostrar el bloque "en streaming" y pasa a
   // mostrarlo como parte de `messages`, sin duplicarlo). Recién ACÁ --no
@@ -176,8 +210,21 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     const id = await ensureSession();
     if (!id) return;
 
+    setComposerText("");
     setMessages((prev) => [...prev, { id: nextLocalMessageId(), role: "user", content: text }]);
     await turnStream.sendTurn(id, text);
+  }
+
+  function handleStop() {
+    void turnStream.cancelTurn();
+  }
+
+  // Tarea 3.5: click en una sugerencia SOLO precarga el composer y le da
+  // foco -- nunca crea la sesión ni envía el turno (eso queda para que el
+  // usuario confirme con Enter/"Enviar").
+  function handleStarterSelect(text: string) {
+    setComposerText(text);
+    composerRef.current?.focus();
   }
 
   if (loadingSession) {
@@ -208,6 +255,7 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   // refleja apenas cambia `turnStream.status`, sin el "cascading render"
   // de espejar ese estado en un `useState` propio actualizado por efecto.
   const showSendError = sendError || turnStream.status === "error";
+  const isStreamingTurn = turnStream.status === "streaming";
 
   return (
     <div className="chat-shell">
@@ -220,17 +268,29 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
           stoppedCaption: labels.stoppedCaption,
           streamingDoneAnnouncement: labels.streamingDoneAnnouncement,
           cursorAriaLabel: labels.cursorAriaLabel,
+          activity: labels.activity,
+          newMessages: labels.newMessages,
+          feedback: labels.feedback,
         }}
+        emptyStateExtra={
+          starterPrompts.length > 0 ? (
+            <StarterSuggestions prompts={starterPrompts} onSelect={handleStarterSelect} />
+          ) : null
+        }
       />
       {showSendError ? (
         <p className="chat-shell__error" role="alert">
           {labels.sendError}
         </p>
       ) : null}
-      <ComposerPlaceholder
+      <Composer
+        ref={composerRef}
         labels={labels.composer}
-        sending={turnStream.status === "streaming"}
+        streaming={isStreamingTurn}
+        value={composerText}
+        onChange={setComposerText}
         onSubmit={handleSubmit}
+        onStop={handleStop}
       />
     </div>
   );

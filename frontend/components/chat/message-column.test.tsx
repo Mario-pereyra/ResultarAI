@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useTurnStream } from "@/lib/chat/use-turn-stream";
 import { createControlledReader, mockSseResponse, sseFrame } from "@/lib/chat/test-support/sse-mock";
 import { MessageColumn, type StreamingTurnStatus } from "./message-column";
@@ -9,6 +9,17 @@ const LABELS = {
   stoppedCaption: "Detenida por vos",
   streamingDoneAnnouncement: "Respuesta completa",
   cursorAriaLabel: "El agente está escribiendo",
+  activity: { consulting: "Consultando…" },
+  newMessages: "↓ Nuevos mensajes",
+  feedback: {
+    like: "Me gusta",
+    dislike: "No me gusta",
+    prompt: "¿Querés agregar un comentario? (opcional)",
+    commentLabel: "Comentario",
+    send: "Enviar",
+    skip: "Omitir",
+    error: "No pudimos registrar tu voto. Probá de nuevo.",
+  },
 };
 
 // Shape del evento `done` para el rol Funcional (tarea 4.1 del backend,
@@ -73,8 +84,11 @@ describe("MessageColumn — streaming con tabla y bloque de código (tarea 3.1)"
       screen.getByRole("button", { name: "enviar" }).click();
     });
 
-    // Cursor visible apenas arranca el streaming.
-    expect(await screen.findByTestId("stream-cursor")).toBeTruthy();
+    // Antes de que llegue cualquier fragmento de texto: línea de actividad
+    // plegada (tarea 3.3), sin cursor todavía (el cursor es del TEXTO en
+    // streaming, que todavía no existe).
+    expect(await screen.findByText("Consultando…")).toBeTruthy();
+    expect(screen.queryByTestId("stream-cursor")).toBeNull();
 
     // Llega primero la tabla markdown...
     reader.push(
@@ -114,6 +128,102 @@ describe("MessageColumn — streaming con tabla y bloque de código (tarea 3.1)"
     // después del cierre del turno, no solo antes.
     expect(document.querySelector("table")).not.toBeNull();
     expect(document.querySelector("code.language-python.hljs")).not.toBeNull();
+  });
+});
+
+/** Estampa `scrollTop`/`scrollHeight`/`clientHeight` mockeables sobre un
+ * elemento real (jsdom no implementa scroll real -- ver `use-auto-scroll.ts`).
+ * `scrollTop` queda como propiedad mutable de verdad para poder leer luego
+ * qué le asignó `scrollToBottom()`. */
+function mockScrollMetrics(
+  el: HTMLElement,
+  { scrollHeight, clientHeight, scrollTop }: { scrollHeight: number; clientHeight: number; scrollTop: number },
+) {
+  Object.defineProperty(el, "scrollHeight", { value: scrollHeight, configurable: true });
+  Object.defineProperty(el, "clientHeight", { value: clientHeight, configurable: true });
+  let currentScrollTop = scrollTop;
+  Object.defineProperty(el, "scrollTop", {
+    configurable: true,
+    get: () => currentScrollTop,
+    set: (value: number) => {
+      currentScrollTop = value;
+    },
+  });
+}
+
+describe("MessageColumn — auto-scroll condicionado y botón «Nuevos mensajes» (tarea 3.3)", () => {
+  it("NO fuerza el scroll si el usuario scrolleó hacia arriba, y muestra el botón flotante", async () => {
+    const reader = createControlledReader();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        mockSseResponse(reader.reader, {
+          headers: { "X-Turn-Id": "turn-1", "X-User-Message-Id": "msg-1" },
+        }),
+      ),
+    );
+
+    render(<StreamingHarness />);
+    const container = screen.getByTestId("msg-scroll-container");
+
+    // El usuario está al final antes de que arranque el turno.
+    mockScrollMetrics(container, { scrollHeight: 500, clientHeight: 200, scrollTop: 300 });
+
+    await act(async () => {
+      screen.getByRole("button", { name: "enviar" }).click();
+    });
+    await screen.findByText("Consultando…");
+
+    // El usuario scrollea hacia arriba (se aleja del fondo) ANTES de que
+    // llegue contenido nuevo -- por sí solo esto no debe mostrar el botón.
+    mockScrollMetrics(container, { scrollHeight: 500, clientHeight: 200, scrollTop: 0 });
+    fireEvent.scroll(container);
+    expect(screen.queryByText("↓ Nuevos mensajes")).toBeNull();
+
+    // Llega un fragmento nuevo mientras el usuario sigue arriba: NO se
+    // fuerza el scroll (scrollTop no vuelve a moverse solo) y aparece el
+    // botón flotante en su lugar.
+    reader.push(sseFrame(1, "fragment", { text: "Une respuesta larga que sigue." }));
+    await waitFor(() => expect(screen.queryByText("↓ Nuevos mensajes")).not.toBeNull());
+    expect(container.scrollTop).toBe(0);
+
+    // Click en el botón: baja al fondo y el botón desaparece.
+    fireEvent.click(screen.getByText("↓ Nuevos mensajes"));
+    expect(container.scrollTop).toBe(container.scrollHeight);
+    expect(screen.queryByText("↓ Nuevos mensajes")).toBeNull();
+
+    reader.close();
+  });
+
+  it("SÍ fuerza el scroll al fondo con cada fragmento cuando el usuario ya está al final", async () => {
+    const reader = createControlledReader();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        mockSseResponse(reader.reader, {
+          headers: { "X-Turn-Id": "turn-1", "X-User-Message-Id": "msg-1" },
+        }),
+      ),
+    );
+
+    render(<StreamingHarness />);
+    const container = screen.getByTestId("msg-scroll-container");
+    mockScrollMetrics(container, { scrollHeight: 400, clientHeight: 200, scrollTop: 200 });
+
+    await act(async () => {
+      screen.getByRole("button", { name: "enviar" }).click();
+    });
+    await screen.findByText("Consultando…");
+
+    // Crece el contenido: el mock simula que `scrollHeight` crece con el
+    // fragmento nuevo, como pasaría en un navegador real.
+    Object.defineProperty(container, "scrollHeight", { value: 900, configurable: true });
+    reader.push(sseFrame(1, "fragment", { text: "Respuesta nueva." }));
+
+    await waitFor(() => expect(container.scrollTop).toBe(900));
+    expect(screen.queryByText("↓ Nuevos mensajes")).toBeNull();
+
+    reader.close();
   });
 });
 

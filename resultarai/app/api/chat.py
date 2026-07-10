@@ -1,15 +1,17 @@
-"""FastAPI router para endpoints de chat /api/sessions y /api/messages.
+"""FastAPI router para endpoints de chat /api/sessions, /api/messages y /api/agents.
 
 d13-chat-conversacion, tareas 1.1 (`POST /sessions`), 1.2 (`POST /sessions/{id}/messages`),
 1.3 (`POST /messages/{id}/regenerate`), 1.8 (`POST /sessions/{id}/escalate`), 2.1
 (`GET /sessions`), 2.3 y 2.5 (`GET /sessions/{id}`, árbol completo + reconciliación de
 un turno en streaming en curso), 2.4 (`GET /sessions/search`), el endpoint de
-feedback exigido por el proposal (`POST /messages/{id}/feedback`, `b07-observabilidad`)
-y la tarea 4.1 (capa de telemetría por turno filtrada por rol, aplicada aquí a la
+feedback exigido por el proposal (`POST /messages/{id}/feedback`, `b07-observabilidad`),
+la tarea 4.1 (capa de telemetría por turno filtrada por rol, aplicada aquí a la
 respuesta de `POST /sessions/{id}/messages`, `/messages/{id}/regenerate` y al
 `turn_metadata` de cada mensaje `assistant` de `GET /sessions/{id}` -- ver
 `resultarai/app/use_cases/chat/telemetry.py` y el contrato equivalente para el
-evento `done` del SSE en `app/api/chat_stream.py`).
+evento `done` del SSE en `app/api/chat_stream.py`) y la tarea 3.5 (`GET /agents/{id}`,
+lectura mínima del catálogo para las sugerencias de inicio del composer -- ver
+`AgentSummaryResponse`; el catálogo completo de agentes es `d15-catalogo-agentes`).
 
 También define `get_turn_stream_registry` (tarea 2.5): aunque el registro de buffers
 en streaming es sobre todo consumido por `app/api/chat_stream.py`, el proveedor vive
@@ -164,6 +166,51 @@ def get_feedback_submitter() -> FeedbackSubmitter:
         "produccion con la implementacion que delega en "
         "tracing_langfuse.feedback.submit_feedback; en tests, con un doble que "
         "registre las llamadas."
+    )
+
+
+class AgentSummaryResponse(BaseModel):
+    """Resumen minimo de un agente del catalogo para el chat (tarea 3.5).
+
+    La UI de chat lo necesita ANTES de crear la sesion (sugerencias de inicio
+    `starter_prompts` sobre la sesion nueva, vista 05) y lo reutilizara la tarjeta
+    de escalacion (`escalation_enabled`, tarea 5.3) para decidir si renderizarse. El
+    catalogo completo de agentes (listado, busqueda, filtros por rol) es
+    `d15-catalogo-agentes` -- ver la nota en `openspec/BACKLOG-DESCUBRIMIENTOS.md`;
+    este endpoint solo resuelve UN agente por id, lo minimo que necesita hoy la
+    vista de chat.
+    """
+
+    id: str
+    name: str
+    starter_prompts: list[str]
+    escalation_enabled: bool
+
+
+@router.get("/agents/{agent_id}")
+def get_agent_endpoint(
+    agent_id: str,
+    registries: Annotated[Registries, Depends(get_registries)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> AgentSummaryResponse:
+    """Devuelve el resumen minimo de un agente del catalogo (tarea 3.5).
+
+    Requiere sesion autenticada (`current_user`, sin uso mas alla de exigir el
+    login) igual que el resto de los endpoints de chat, aunque la respuesta no
+    dependa del usuario. 404 si el agente no esta catalogado o no es invocable
+    (`status` distinto de `active`) -- mismo criterio que
+    `use_cases/chat/sessions.py::create_session`: un agente `draft`/`deprecated` es
+    indistinguible de uno inexistente para quien solo puede leer su ficha.
+    """
+    agent = registries.agents.get_invocable(agent_id)
+    if agent is None:
+        raise HTTPException(status_code=404, detail="Agente no encontrado o no disponible.")
+
+    return AgentSummaryResponse(
+        id=agent.id,
+        name=agent.name,
+        starter_prompts=agent.starter_prompts,
+        escalation_enabled=agent.escalation.enabled,
     )
 
 

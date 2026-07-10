@@ -37,6 +37,8 @@
 
 .chat-shell__messages {
   flex: 1;
+  position: relative;
+  min-height: 0;
 }
 
 .chat-shell__error {
@@ -47,6 +49,16 @@
   font-size: var(--fs-small);
 }
 
+/* ── Región de la columna de mensajes (tarea 3.3: envoltorio de
+   posicionamiento para el botón flotante "Nuevos mensajes", que ancla
+   sobre el contenedor con scroll real, `.msg-column` de abajo) ────────── */
+.msg-column-region {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
 /* ── Columna de mensajes (vista 05: "máx. 760 px centrada") ─────────── */
 .msg-column {
   max-width: 760px;
@@ -55,6 +67,127 @@
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
+  width: 100%;
+  /* Tarea 3.3: región con scroll real, medida por `use-auto-scroll.ts` vía
+     `scrollTop`/`scrollHeight`/`clientHeight`. `max-height` es una
+     aproximación por viewport (no el cálculo exacto del alto del shell,
+     ver `openspec/BACKLOG-DESCUBRIMIENTOS.md`) hasta que la tarea 8.1 fije
+     la altura del shell de chat de punta a punta. */
+  overflow-y: auto;
+  max-height: calc(100vh - 260px);
+}
+
+/* ── Botón flotante "Nuevos mensajes" (tarea 3.3) ────────────────────── */
+.msg-new-messages-btn {
+  position: absolute;
+  left: 50%;
+  bottom: var(--sp-4);
+  transform: translateX(-50%);
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--bg-raised);
+  color: var(--ink);
+  font-size: var(--fs-caption);
+  font-weight: 600;
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+}
+.msg-new-messages-btn:hover {
+  background: color-mix(in srgb, var(--ink) 6%, var(--bg-raised));
+}
+.msg-new-messages-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── Línea de actividad plegada (tarea 3.3: "consultando…") ─────────── */
+.chat-activity {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink-faint);
+  font-size: var(--fs-caption);
+}
+
+.chat-activity__spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: dx-spin 0.7s linear infinite;
+}
+
+/* ── Sugerencias de inicio (tarea 3.5) ───────────────────────────────── */
+.chat-starters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+}
+
+.chat-starters__item {
+  max-width: 320px;
+  padding: var(--sp-2) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg-raised);
+  color: var(--ink);
+  font-size: var(--fs-body);
+  text-align: left;
+  cursor: pointer;
+}
+.chat-starters__item:hover {
+  background: color-mix(in srgb, var(--ink) 6%, var(--bg-raised));
+  border-color: var(--line-strong);
+}
+.chat-starters__item:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── Feedback 👍/👎 por turno (tarea 3.6) ─────────────────────────────── */
+.msg-feedback {
+  margin-top: var(--sp-1);
+}
+
+.msg-feedback__buttons {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.msg-feedback__btn.is-active {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.msg-feedback__popover {
+  margin-top: var(--sp-2);
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.msg-feedback__prompt {
+  margin: 0;
+  font-size: var(--fs-caption);
+  color: var(--ink-dim);
+}
+
+.msg-feedback__popover-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+.msg-feedback__error {
+  margin: 0;
+  font-size: var(--fs-caption);
+  color: var(--danger);
 }
 
 .msg-column__empty {
