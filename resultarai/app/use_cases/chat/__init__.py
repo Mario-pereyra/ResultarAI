@@ -1,7 +1,15 @@
-"""Casos de uso de chat: sesiones, turnos, ramas, streaming, escalación y feedback
-(d13-chat-conversacion).
+"""Casos de uso de chat: sesiones, turnos, ramas, streaming, escalación, feedback y
+composición de adjuntos (d13-chat-conversacion, d14-attachments tareas 6.1-6.3).
 """
 
+from resultarai.app.use_cases.chat._attachments import (
+    AttachmentNotFoundError,
+    AttachmentNotSendableError,
+    ComposedMessage,
+    MessageTokenBudgetExceededError,
+    SectionNotFoundError,
+    request_attachment_fragment,
+)
 from resultarai.app.use_cases.chat.escalation import (
     EscalationDisabledError,
     EscalationMisconfiguredError,
@@ -71,7 +79,10 @@ from resultarai.app.use_cases.chat.turns import (
 __all__ = [
     "TECHNICAL_ROLES",
     "AgentNotFoundError",
+    "AttachmentNotFoundError",
+    "AttachmentNotSendableError",
     "BufferedSseEvent",
+    "ComposedMessage",
     "EmptyFallbackCascadeError",
     "EscalationDetected",
     "EscalationDisabledError",
@@ -86,12 +97,14 @@ __all__ = [
     "MessageNotEligibleError",
     "MessageNotEligibleForFeedbackError",
     "MessageNotFoundError",
+    "MessageTokenBudgetExceededError",
     "NoEligibleOriginMessageError",
     "OriginMessageNotEligibleError",
     "RawTurnMetadata",
     "RegenerateResult",
     "ResponseGenerator",
     "SearchHit",
+    "SectionNotFoundError",
     "SessionDetail",
     "SessionNotFoundError",
     "SessionSummary",
@@ -112,6 +125,7 @@ __all__ = [
     "layer_turn_metadata",
     "list_sessions",
     "regenerate_response",
+    "request_attachment_fragment",
     "search_sessions",
     "send_turn",
     "start_turn_stream",

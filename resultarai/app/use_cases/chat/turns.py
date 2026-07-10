@@ -50,6 +50,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -58,6 +59,13 @@ from sqlalchemy.orm import Session as DbSession
 
 from resultarai.adapters.persistence_postgres.models import Message, User, get_utc_now
 from resultarai.adapters.persistence_postgres.models import Session as SessionModel
+from resultarai.app.attachments.config import AttachmentsConfig
+from resultarai.app.use_cases.chat._attachments import (
+    ComposedMessage,
+    compose_message_with_attachments,
+    evaluate_quota_before_generation,
+    persist_attachment_links,
+)
 from resultarai.app.use_cases.chat._branching import (
     ancestor_chain,
     count_active_descendants,
@@ -67,6 +75,7 @@ from resultarai.app.use_cases.chat._branching import (
 from resultarai.app.use_cases.chat._marker import strip_escalation_marker
 from resultarai.app.use_cases.chat.telemetry import build_raw_turn_metadata
 from resultarai.app.use_cases.chat.titles import generate_session_title
+from resultarai.core.registries import Registries
 
 __all__ = [
     "MessageEditForbiddenError",
@@ -178,6 +187,10 @@ def send_turn(
     text: str,
     generate_response: ResponseGenerator,
     edits_message_id: uuid.UUID | None = None,
+    *,
+    attachment_ids: Sequence[uuid.UUID] | None = None,
+    registries: Registries | None = None,
+    attachments_config: AttachmentsConfig | None = None,
 ) -> TurnResult:
     """Envía un turno nuevo o edita uno existente (mismo endpoint, tarea 1.2 / decisión 4).
 
@@ -193,6 +206,17 @@ def send_turn(
     En ambos casos invoca `generate_response` para generar y persistir la respuesta del
     agente sobre el mensaje de usuario recién creado, y actualiza `last_activity_at` de la
     sesión. No hace `db.commit()` (misma convención que `create_session`).
+
+    **Tarea 6.3 -- adjuntos:** `attachment_ids` es ADITIVO y opcional (parámetro nuevo al
+    final, keyword-only): sin él, el comportamiento es IDÉNTICO al de antes de d14 (los
+    87 tests de chat existentes no lo pasan). Con `attachment_ids` no vacío, `registries`
+    y `attachments_config` son OBLIGATORIOS (`ValueError` si faltan -- error de
+    programación del llamador, no un caso de usuario: `app/api/chat.py` siempre los
+    inyecta). El contenido compuesto (`app/use_cases/chat/_attachments.py`,
+    `compose_message_with_attachments`) reemplaza a `text` como `Message.content` --
+    texto del usuario + `<adjunto id=…>` de cada adjunto, AL FINAL (ANEXO §7/§8 paso
+    [9]) -- y `evaluate_quota_before_generation` corre justo antes de `generate_response`
+    (seam de `d16`, hoy passthrough).
     """
     session = _require_owned_session(db, user, session_id)
 
@@ -207,17 +231,32 @@ def send_turn(
         active_leaf = find_active_leaf(db, session_id)
         parent_id = active_leaf.id if active_leaf is not None else None
 
+    composed = ComposedMessage(content=text, links=[], total_attachment_tokens=0)
+    if attachment_ids:
+        if registries is None or attachments_config is None:
+            raise ValueError(
+                "send_turn: attachment_ids requiere 'registries' y 'attachments_config' "
+                "(ver app/api/chat.py: get_registries/get_attachments_config)."
+            )
+        composed = compose_message_with_attachments(
+            db, registries, attachments_config, user, session, text, attachment_ids
+        )
+
     user_message = Message(
         session_id=session_id,
         parent_id=parent_id,
         role="user",
-        content=text,
+        content=composed.content,
         model_profile=session.model_profile,
     )
     db.add(user_message)
     db.flush()
 
+    if composed.links:
+        persist_attachment_links(db, user_message.id, composed)
+
     history = ancestor_chain(db, user_message)
+    evaluate_quota_before_generation(session=session, composed=composed)
     generation_started_at = time.monotonic()
     response_text = generate_response(session=session, history=history)
     latency_ms = round((time.monotonic() - generation_started_at) * 1000)

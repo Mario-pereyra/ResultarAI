@@ -35,9 +35,9 @@
 
 ## 6. Presupuesto, truncado y composición del mensaje
 
-- [ ] 6.1 Conteo de tokens (tokenizer del proveedor vía gateway `b05`) y truncado por relevancia UNA VEZ: consciente de estructura (DOCX/MD/PDF), esquema-primero (hojas), head+tail (logs), con marcadores explícitos; persiste `inserted_text`/`token_count`/%. Verificación: escenario "DOCX que excede el presupuesto se trunca consciente de estructura" (ANEXO §3.1–3.2). `[modelo: sonnet]`
-- [ ] 6.2 Fragmento nuevo desde `full_text` al pedir otra parte (append-only, sin re-parsear ni re-truncar). Verificación: escenario "pedir otra parte inserta un fragmento nuevo sin re-procesar" (ANEXO §3.2, §7 P4). `[modelo: sonnet]`
-- [ ] 6.3 Composición server-side del mensaje: texto del usuario + `<adjunto id=…>inserted_text</adjunto>` AL FINAL; cuota (`d16`) evaluada con el mensaje completo antes de llamar al modelo; ramas reutilizan `inserted_text`. Verificación: escenario "el adjunto entra al final del mensaje del usuario" (ANEXO §7, §8). `[modelo: sonnet]`
+- [x] 6.1 Conteo de tokens (tokenizer del proveedor vía gateway `b05`) y truncado por relevancia UNA VEZ: consciente de estructura (DOCX/MD/PDF), esquema-primero (hojas), head+tail (logs), con marcadores explícitos; persiste `inserted_text`/`token_count`/%. Verificación: escenario "DOCX que excede el presupuesto se trunca consciente de estructura" (ANEXO §3.1–3.2). `[modelo: sonnet]`
+- [x] 6.2 Fragmento nuevo desde `full_text` al pedir otra parte (append-only, sin re-parsear ni re-truncar). Verificación: escenario "pedir otra parte inserta un fragmento nuevo sin re-procesar" (ANEXO §3.2, §7 P4). `[modelo: sonnet]`
+- [x] 6.3 Composición server-side del mensaje: texto del usuario + `<adjunto id=…>inserted_text</adjunto>` AL FINAL; cuota (`d16`) evaluada con el mensaje completo antes de llamar al modelo; ramas reutilizan `inserted_text`. Verificación: escenario "el adjunto entra al final del mensaje del usuario" (ANEXO §7, §8). `[modelo: sonnet]`
 
 ## 7. Ciclo de vida y persistencia
 

@@ -31,9 +31,13 @@ from sqlalchemy.orm import Session as DbSession
 
 from resultarai.adapters.persistence_postgres.models import Message, User
 from resultarai.adapters.persistence_postgres.models import Session as SessionModel
+from resultarai.app.attachments import AttachmentExtractionMissingError, AttachmentsConfig
+from resultarai.app.attachments.dependency import get_attachments_config
 from resultarai.app.identity import get_current_user, get_db
 from resultarai.app.use_cases.chat import (
     AgentNotFoundError,
+    AttachmentNotFoundError,
+    AttachmentNotSendableError,
     EmptyFallbackCascadeError,
     EscalationDisabledError,
     EscalationMisconfiguredError,
@@ -44,10 +48,12 @@ from resultarai.app.use_cases.chat import (
     MessageNotEligibleError,
     MessageNotEligibleForFeedbackError,
     MessageNotFoundError,
+    MessageTokenBudgetExceededError,
     NoEligibleOriginMessageError,
     OriginMessageNotEligibleError,
     ResponseGenerator,
     SearchHit,
+    SectionNotFoundError,
     SessionDetail,
     SessionNotFoundError,
     SessionSummary,
@@ -57,6 +63,7 @@ from resultarai.app.use_cases.chat import (
     layer_turn_metadata,
     list_sessions,
     regenerate_response,
+    request_attachment_fragment,
     search_sessions,
     send_turn,
     submit_message_feedback,
@@ -545,10 +552,16 @@ class SendMessageRequest(BaseModel):
     `edits_message_id` es el único campo que distingue un turno normal de una edición
     (`design.md`, decisión 4): reutiliza este mismo endpoint en vez de un `PATCH`
     separado, porque ambas operaciones son "crear un mensaje nuevo en la rama".
+
+    `attachment_ids` (d14-attachments, tarea 6.3) es ADITIVO y opcional: los `id` de
+    adjuntos en estado `listo` del borrador de esta sesión (`session_id` fijado,
+    `message_id IS NULL` hasta enviarse -- ver `app/attachments/upload.py`). Ausente o
+    vacío, el comportamiento es IDÉNTICO al de antes de d14.
     """
 
     text: str = Field(..., min_length=1)
     edits_message_id: uuid.UUID | None = None
+    attachment_ids: list[uuid.UUID] | None = None
 
 
 class MessageResponse(BaseModel):
@@ -616,9 +629,11 @@ def send_message_endpoint(
     payload: SendMessageRequest,
     db: Annotated[DbSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
+    registries: Annotated[Registries, Depends(get_registries)],
+    attachments_config: Annotated[AttachmentsConfig, Depends(get_attachments_config)],
     generate_response: Annotated[ResponseGenerator, Depends(get_response_generator)],
 ) -> SendMessageResponse:
-    """Envía un turno nuevo o edita uno existente (tarea 1.2).
+    """Envía un turno nuevo o edita uno existente (tarea 1.2; adjuntos: tarea 6.3).
 
     Editar reutiliza este mismo endpoint (decisión 4 de `design.md`): la única
     diferencia con un turno normal es de qué `parent_id` cuelga el mensaje de usuario
@@ -629,6 +644,15 @@ def send_message_endpoint(
 
     Tarea 4.1: `assistant_message.turn_metadata` viaja filtrado por
     `current_user.role` -- ver `MessageResponse`.
+
+    Tarea 6.3: con `payload.attachment_ids` no vacío, el contenido del mensaje de
+    usuario se compone server-side (texto + adjuntos envueltos AL FINAL, ANEXO §7/§8
+    paso [9]) antes de invocar al generador. Rechazos tipados: `attachment_not_found`
+    (404, adjunto ajeno/inexistente o de otra sesión), `attachment_not_sendable` (422,
+    bloqueado por N3 o N2 sin confirmar), `attachment_extraction_missing` (422,
+    invariante -- ver `AttachmentExtractionMissingError`) y
+    `message_token_budget_exceeded` (422, suma de tokens de los adjuntos por encima del
+    presupuesto del mensaje).
     """
     try:
         result = send_turn(
@@ -638,12 +662,38 @@ def send_message_endpoint(
             payload.text,
             generate_response,
             edits_message_id=payload.edits_message_id,
+            attachment_ids=payload.attachment_ids,
+            registries=registries,
+            attachments_config=attachments_config,
         )
     except SessionNotFoundError as exc:
         raise HTTPException(status_code=404, detail="Sesión no encontrada.") from exc
     except MessageEditForbiddenError as exc:
         raise HTTPException(
             status_code=403, detail="No se puede editar un mensaje que no es propio."
+        ) from exc
+    except AttachmentNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail={"error_code": "attachment_not_found", "params": {}},
+        ) from exc
+    except AttachmentNotSendableError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"error_code": "attachment_not_sendable", "params": {"status": exc.status}},
+        ) from exc
+    except AttachmentExtractionMissingError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"error_code": "attachment_extraction_missing", "params": {}},
+        ) from exc
+    except MessageTokenBudgetExceededError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error_code": "message_token_budget_exceeded",
+                "params": {"total_tokens": exc.total_tokens, "budget_tokens": exc.budget_tokens},
+            },
         ) from exc
 
     assistant_turn_metadata = layer_turn_metadata(
@@ -658,6 +708,83 @@ def send_message_endpoint(
         ),
         reprocessed_count=result.reprocessed_count,
     )
+
+
+class RequestAttachmentFragmentRequest(BaseModel):
+    """Payload de `POST .../attachments/{attachment_id}/fragment` (tarea 6.2).
+
+    `section_title` es el título EXACTO que aparece en el marcador de omisión que dejó
+    el truncado por relevancia (`[… sección "X" omitida…]`, ver
+    `app/attachments/truncation.py::_omission_marker`) -- "pedir la parte que falta" es
+    un lookup directo por ese título contra el `full_text` ya almacenado.
+    """
+
+    section_title: str = Field(..., min_length=1)
+
+
+@router.post("/sessions/{session_id}/attachments/{attachment_id}/fragment", status_code=201)
+def request_attachment_fragment_endpoint(
+    session_id: str,
+    attachment_id: uuid.UUID,
+    payload: RequestAttachmentFragmentRequest,
+    db: Annotated[DbSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    registries: Annotated[Registries, Depends(get_registries)],
+    attachments_config: Annotated[AttachmentsConfig, Depends(get_attachments_config)],
+) -> MessageResponse:
+    """ "Pedir otra parte" de un adjunto ya insertado (tarea 6.2, ANEXO §3.2).
+
+    Corta un fragmento NUEVO del `full_text` ya almacenado del adjunto (sin re-parsear
+    el binario ni re-truncar ninguna inserción previa) y lo inserta como mensaje nuevo,
+    append-only, colgado del leaf de la rama activa de `session_id`. Endpoint DELGADO
+    sobre `use_cases.chat.request_attachment_fragment`: el disparador conversacional
+    completo (que el agente lo ofrezca, o que el usuario lo pida en lenguaje natural y
+    el runtime lo traduzca a esta llamada) llega con `b06-runtime-grafos`, fuera de
+    alcance de `d14` -- este endpoint es la OPERACIÓN invocable que ese disparador usará.
+
+    Sesión ajena o inexistente: 404 (sin filtrar existencia). Adjunto ajeno, de otra
+    sesión, o no enviable: mismos `error_code` que `POST .../messages`
+    (`attachment_not_found`/`attachment_not_sendable`/`attachment_extraction_missing`).
+    Sección inexistente: 404 `section_not_found`.
+    """
+    session = db.get(SessionModel, session_id)
+    if session is None or session.owner_user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Sesión no encontrada.")
+
+    try:
+        message = request_attachment_fragment(
+            db,
+            registries,
+            attachments_config,
+            current_user,
+            session,
+            attachment_id,
+            payload.section_title,
+        )
+    except AttachmentNotFoundError as exc:
+        raise HTTPException(
+            status_code=404, detail={"error_code": "attachment_not_found", "params": {}}
+        ) from exc
+    except AttachmentNotSendableError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"error_code": "attachment_not_sendable", "params": {"status": exc.status}},
+        ) from exc
+    except AttachmentExtractionMissingError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"error_code": "attachment_extraction_missing", "params": {}},
+        ) from exc
+    except SectionNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error_code": "section_not_found",
+                "params": {"section_title": exc.section_title},
+            },
+        ) from exc
+
+    return _to_message_response(message)
 
 
 @router.post("/messages/{message_id}/regenerate", status_code=201)

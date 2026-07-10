@@ -209,3 +209,24 @@ class ExtractionFailedError(AttachmentExtractionError):
 
     def __init__(self, *, cause: str, **params: Any) -> None:
         super().__init__(f"la extraccion fallo: {cause}", {"cause": cause, **params})
+
+
+class AttachmentExtractionMissingError(Exception):
+    """El adjunto esta `ready`/`blocked` pero no tiene `Extraction` persistida (tarea 6.x).
+
+    Invariante que DEBERIA ser imposible una vez que `b04-persistencia-postgres` /
+    tarea `7.1` (dedup + persistencia de `full_text`) wireen la extraccion al flujo de
+    subida real: hoy (2026-07-10) el endpoint de subida (`app/api/attachments.py`) solo
+    llega a `create_attachment` (estado `uploaded`) y NADIE invoca todavia
+    `extract_attachment`/persiste `Extraction` desde HTTP -- ver el docstring de
+    `app/use_cases/chat/_attachments.py` para el detalle de este hueco documentado. Se
+    lanza en vez de fallar en silencio (P7) cuando la composicion del mensaje (tarea 6.3)
+    o "pedir otra parte" (tarea 6.2) necesitan `full_text` y `Attachment.extraction` es
+    `None`.
+    """
+
+    error_code = "attachment_extraction_missing"
+
+    def __init__(self, *, attachment_id: str) -> None:
+        super().__init__(f"adjunto sin extraccion persistida: {attachment_id!r}")
+        self.attachment_id = attachment_id

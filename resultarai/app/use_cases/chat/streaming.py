@@ -100,7 +100,7 @@ from __future__ import annotations
 import json
 import time
 import uuid
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -108,6 +108,13 @@ from sqlalchemy.orm import Session as DbSession
 
 from resultarai.adapters.persistence_postgres.models import Message, User, get_utc_now
 from resultarai.adapters.persistence_postgres.models import Session as SessionModel
+from resultarai.app.attachments.config import AttachmentsConfig
+from resultarai.app.use_cases.chat._attachments import (
+    ComposedMessage,
+    compose_message_with_attachments,
+    evaluate_quota_before_generation,
+    persist_attachment_links,
+)
 from resultarai.app.use_cases.chat._branching import (
     ancestor_chain,
     count_active_descendants,
@@ -328,6 +335,7 @@ def _produce_turn_events(
     buffer: TurnStreamBuffer,
     reprocessed_count: int,
     role: str,
+    composed_message: ComposedMessage,
 ) -> Iterator[BufferedSseEvent]:
     """Genera la respuesta del agente y produce eventos SSE-ready, persistiéndola al final.
 
@@ -358,6 +366,11 @@ def _produce_turn_events(
     escalation_payload: EscalationPayload | None = None
     completion: TurnCompletion | None = None
     stopped = False
+
+    # Tarea 6.3 -- seam de cuota (`d16`, ver docstring de `evaluate_quota_before_generation`
+    # en `_attachments.py`): corre DESPUES de componer el mensaje completo (adjuntos ya
+    # resueltos en `composed_message`) y ANTES de invocar al generador real.
+    evaluate_quota_before_generation(session=session, composed=composed_message)
 
     generation_started_at = time.monotonic()
     raw_events = generate_response(session=session, history=history)
@@ -481,6 +494,9 @@ def start_turn_stream(
     text: str,
     generate_response: StreamingResponseGenerator,
     edits_message_id: uuid.UUID | None = None,
+    *,
+    attachment_ids: Sequence[uuid.UUID] | None = None,
+    attachments_config: AttachmentsConfig | None = None,
 ) -> tuple[str, Iterator[BufferedSseEvent]]:
     """Arranca un turno en streaming (tarea 1.5): valida, encadena y devuelve el stream.
 
@@ -503,6 +519,15 @@ def start_turn_stream(
     Tarea 2.5 -- un solo turno en curso por sesión: se verifica ANTES de crear
     ninguna fila (ni el mensaje de usuario nuevo), así que un intento rechazado no deja
     ningún rastro en la base -- ver `TurnAlreadyInProgressError`.
+
+    **Tarea 6.3 -- adjuntos:** mismo contrato aditivo que `turns.py::send_turn`:
+    `attachment_ids` es opcional (default `None`/vacío, comportamiento IDÉNTICO al de
+    antes de d14). Con `attachment_ids` no vacío, `attachments_config` es obligatorio
+    (`ValueError` si falta -- `registries` ya era un parámetro requerido de este
+    endpoint, se reutiliza para resolver el tokenizer del `model_profile` de la sesión).
+    El contenido compuesto (texto + adjuntos envueltos AL FINAL) reemplaza a `text` como
+    `Message.content`, y las filas de `message_attachments` se persisten en la MISMA
+    transacción que el mensaje de usuario (antes del `commit()` de abajo, atómico).
     """
     session = find_owned_session(db, user, session_id)
     if session is None:
@@ -523,15 +548,30 @@ def start_turn_stream(
         active_leaf = find_active_leaf(db, session_id)
         parent_id = active_leaf.id if active_leaf is not None else None
 
+    composed = ComposedMessage(content=text, links=[], total_attachment_tokens=0)
+    if attachment_ids:
+        if attachments_config is None:
+            raise ValueError(
+                "start_turn_stream: attachment_ids requiere 'attachments_config' (ver "
+                "app/api/chat_stream.py: get_attachments_config)."
+            )
+        composed = compose_message_with_attachments(
+            db, registries, attachments_config, user, session, text, attachment_ids
+        )
+
     user_message = Message(
         session_id=session_id,
         parent_id=parent_id,
         role="user",
-        content=text,
+        content=composed.content,
         model_profile=session.model_profile,
     )
     db.add(user_message)
     db.flush()
+
+    if composed.links:
+        persist_attachment_links(db, user_message.id, composed)
+
     db.commit()
 
     history = ancestor_chain(db, user_message)
@@ -561,5 +601,6 @@ def start_turn_stream(
         buffer=buffer,
         reprocessed_count=reprocessed_count,
         role=user.role,
+        composed_message=composed,
     )
     return turn_id, events

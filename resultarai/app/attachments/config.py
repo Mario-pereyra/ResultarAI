@@ -23,6 +23,13 @@ Variables reconocidas:
   extraccion (ANEXO §4.1 punto 5, §8 paso [4]); default 30 s.
 - ``RESULTARAI_ATTACHMENTS_EXTRACTION_MEMORY_MB``  memoria (espacio de direcciones) tope
   del worker aislado, aplicada con ``RLIMIT_AS`` en el hijo; default 512 MB.
+- ``RESULTARAI_ATTACHMENTS_TOKEN_BUDGET_PER_FILE``  presupuesto de tokens por archivo
+  (ANEXO §3.1, tarea 6.1); truncado por relevancia al insertar si se excede. Default
+  12.000.
+- ``RESULTARAI_ATTACHMENTS_TOKEN_BUDGET_PER_MESSAGE``  presupuesto de tokens por
+  mensaje, suma de todos sus adjuntos (ANEXO §3.1, tarea 6.3); se valida al componer,
+  DESPUES de truncar cada adjunto por su presupuesto individual -- nunca trunca de
+  nuevo, un exceso rechaza el envio con un error tipado. Default 24.000.
 - ``RESULTARAI_ATTACHMENTS_EXTRA_SECRET_PATTERNS``  regex adicionales para el escaneo N3
   de secretos (ANEXO §4.4: la LISTA de patrones extra es configurable por instancia; los
   de fabrica van en codigo, ``data_scan.py``). **Una regex por linea** (no por comas: las
@@ -57,6 +64,10 @@ _DEFAULT_ZIPBOMB_MAX_RATIO = 50.0
 _DEFAULT_EXTRACTION_TIMEOUT_SECONDS = 30.0
 _DEFAULT_EXTRACTION_MEMORY_LIMIT_BYTES = 512 * _MIB
 
+# Presupuesto de tokens (ANEXO §3.1, tarea 6.1): defaults exactos de la matriz de fabrica.
+_DEFAULT_TOKEN_BUDGET_PER_FILE = 12_000
+_DEFAULT_TOKEN_BUDGET_PER_MESSAGE = 24_000
+
 
 @dataclass
 class AttachmentsConfig:
@@ -75,6 +86,9 @@ class AttachmentsConfig:
     extraction_memory_limit_bytes: int = _DEFAULT_EXTRACTION_MEMORY_LIMIT_BYTES
     # Regex extra para el escaneo N3 (ANEXO §4.4); los patrones de fabrica van en codigo.
     extra_secret_patterns: tuple[str, ...] = ()
+    # Presupuesto de tokens (ANEXO §3.1, tarea 6.1): por archivo y por mensaje (suma).
+    token_budget_per_file: int = _DEFAULT_TOKEN_BUDGET_PER_FILE
+    token_budget_per_message: int = _DEFAULT_TOKEN_BUDGET_PER_MESSAGE
 
     def size_limit_for(self, category: FileCategory) -> int:
         """Limite de tamano (bytes) para una categoria; cae al default si falta."""
@@ -133,6 +147,13 @@ class AttachmentsConfig:
             line.strip() for line in raw_secret_patterns.splitlines() if line.strip()
         )
 
+        token_budget_per_file = _int_env(
+            "RESULTARAI_ATTACHMENTS_TOKEN_BUDGET_PER_FILE", _DEFAULT_TOKEN_BUDGET_PER_FILE
+        )
+        token_budget_per_message = _int_env(
+            "RESULTARAI_ATTACHMENTS_TOKEN_BUDGET_PER_MESSAGE", _DEFAULT_TOKEN_BUDGET_PER_MESSAGE
+        )
+
         return cls(
             storage_dir=storage_dir,
             tenant=tenant,
@@ -144,6 +165,8 @@ class AttachmentsConfig:
             extraction_timeout_seconds=extraction_timeout,
             extraction_memory_limit_bytes=extraction_memory,
             extra_secret_patterns=extra_secret_patterns,
+            token_budget_per_file=token_budget_per_file,
+            token_budget_per_message=token_budget_per_message,
         )
 
 

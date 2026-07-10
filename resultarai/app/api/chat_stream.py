@@ -131,7 +131,14 @@ from resultarai.app.api.chat import SendMessageRequest, get_registries
 # (ver la nota debajo), y mypy --strict exige la forma `import X as X` para que un
 # nombre importado cuente como parte de la API pública re-exportada del módulo.
 from resultarai.app.api.chat import get_turn_stream_registry as get_turn_stream_registry
+from resultarai.app.attachments import AttachmentExtractionMissingError, AttachmentsConfig
+from resultarai.app.attachments.dependency import get_attachments_config
 from resultarai.app.identity import get_current_user, get_db
+from resultarai.app.use_cases.chat import (
+    AttachmentNotFoundError,
+    AttachmentNotSendableError,
+    MessageTokenBudgetExceededError,
+)
 from resultarai.app.use_cases.chat.stream_registry import (
     BufferedSseEvent,
     TurnStreamBuffer,
@@ -292,6 +299,7 @@ def send_message_stream_endpoint(
     payload: SendMessageRequest,
     db: Annotated[DbSession, Depends(get_db)],
     registries: Annotated[Registries, Depends(get_registries)],
+    attachments_config: Annotated[AttachmentsConfig, Depends(get_attachments_config)],
     turn_stream_registry: Annotated[TurnStreamRegistry, Depends(get_turn_stream_registry)],
     current_user: Annotated[User, Depends(get_current_user)],
     generate_response: Annotated[
@@ -311,6 +319,13 @@ def send_message_stream_endpoint(
     `{"turn_id": str}` del turno vivo -- nunca arranca un segundo streaming
     concurrente sobre la misma rama. El cliente debe re-attachearse a
     `GET /api/turns/{turn_id}/stream` (tarea 1.6) en vez de reintentar el envío.
+
+    Tarea 6.3: `payload.attachment_ids` (opcional, mismo campo que el endpoint
+    no-streaming) compone el mensaje con los adjuntos AL FINAL antes de arrancar el
+    stream; los mismos rechazos tipados que `POST /sessions/{id}/messages`
+    (`attachment_not_found`/`attachment_not_sendable`/`attachment_extraction_missing`/
+    `message_token_budget_exceeded`), todos respondidos ANTES de abrir la conexión
+    `text/event-stream` (igual que `SessionNotFoundError`/`TurnAlreadyInProgressError`).
     """
     edits_message_id: uuid.UUID | None = payload.edits_message_id
     try:
@@ -323,6 +338,8 @@ def send_message_stream_endpoint(
             payload.text,
             generate_response,
             edits_message_id=edits_message_id,
+            attachment_ids=payload.attachment_ids,
+            attachments_config=attachments_config,
         )
     except SessionNotFoundError as exc:
         raise HTTPException(status_code=404, detail="Sesión no encontrada.") from exc
@@ -332,6 +349,28 @@ def send_message_stream_endpoint(
         ) from exc
     except TurnAlreadyInProgressError as exc:
         raise HTTPException(status_code=409, detail={"turn_id": exc.turn_id}) from exc
+    except AttachmentNotFoundError as exc:
+        raise HTTPException(
+            status_code=404, detail={"error_code": "attachment_not_found", "params": {}}
+        ) from exc
+    except AttachmentNotSendableError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"error_code": "attachment_not_sendable", "params": {"status": exc.status}},
+        ) from exc
+    except AttachmentExtractionMissingError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={"error_code": "attachment_extraction_missing", "params": {}},
+        ) from exc
+    except MessageTokenBudgetExceededError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error_code": "message_token_budget_exceeded",
+                "params": {"total_tokens": exc.total_tokens, "budget_tokens": exc.budget_tokens},
+            },
+        ) from exc
 
     # El buffer ya está registrado en este punto (`start_turn_stream` lo crea de forma
     # síncrona antes de devolver el iterador perezoso, ver su docstring): se lee de
