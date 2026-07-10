@@ -109,6 +109,7 @@ from resultarai.app.use_cases.chat.stream_registry import (
     TurnStreamBuffer,
     TurnStreamRegistry,
 )
+from resultarai.app.use_cases.chat.titles import generate_session_title
 from resultarai.app.use_cases.chat.turns import MessageEditForbiddenError, SessionNotFoundError
 from resultarai.core.registries import Registries
 
@@ -119,6 +120,7 @@ __all__ = [
     "SessionNotFoundError",
     "StreamingResponseGenerator",
     "TextFragment",
+    "TurnAlreadyInProgressError",
     "TurnCompletion",
     "TurnFragment",
     "filter_escalation_marker",
@@ -388,6 +390,13 @@ def _produce_turn_events(
         turn_metadata=metadata,
     )
     db.add(assistant_message)
+
+    # Generación de título automático (tarea 2.2): si es el primer turno completo
+    # de la sesión y el usuario no ha editado el título manualmente, genera uno
+    # a partir del mensaje de usuario. Nunca se regenera si title_edited es True.
+    if session.title is None and not session.title_edited:
+        session.title = generate_session_title(user_message.content)
+
     session.last_activity_at = get_utc_now()
     db.add(session)
     db.flush()
@@ -404,6 +413,26 @@ def _produce_turn_events(
     yield buffer.append("done", json.dumps(done_payload))
 
 
+class TurnAlreadyInProgressError(Exception):
+    """Ya hay un turno en streaming EN CURSO sobre esta sesión (tarea 2.5).
+
+    Decisión de diseño (garantía server-side de no-duplicación, complementaria a
+    `in_progress_turn` en `get_session_detail`, `history.py`): solo puede haber UN
+    turno en curso por sesión a la vez. Un segundo intento de arrancar un turno --
+    p. ej. un "reenviar" accidental desde otra pestaña/dispositivo que todavía no vio
+    el turno vivo en el detalle de sesión -- se rechaza en vez de arrancar un segundo
+    streaming concurrente sobre la misma rama, que produciría dos mensajes de agente
+    compitiendo por el mismo `parent_id` (dos hijos del mismo mensaje de usuario, sin
+    que ninguno de los dos sea una edición ni una regeneración intencional). `turn_id`
+    es el del turno vivo, para que quien recibe el error se re-attachee a
+    `GET /api/turns/{turn_id}/stream` (tarea 1.6) en vez de reintentar el envío.
+    """
+
+    def __init__(self, turn_id: str) -> None:
+        super().__init__(f"Ya hay un turno en curso para esta sesión: {turn_id}")
+        self.turn_id = turn_id
+
+
 def start_turn_stream(
     db: DbSession,
     registries: Registries,
@@ -418,21 +447,31 @@ def start_turn_stream(
 
     La resolución de ownership/edición y la creación del mensaje de usuario son
     SÍNCRONAS (corren antes de devolver nada): así la API puede traducir
-    `SessionNotFoundError`/`MessageEditForbiddenError` a HTTP 404/403 *antes* de abrir la
-    respuesta `text/event-stream` (una vez abierta, ya no se puede cambiar el status
-    code). Devuelve `(turn_id, iterador_de_eventos)`: el iterador es perezoso -- invoca al
+    `SessionNotFoundError`/`MessageEditForbiddenError`/`TurnAlreadyInProgressError` a
+    HTTP 404/403/409 *antes* de abrir la respuesta `text/event-stream` (una vez
+    abierta, ya no se puede cambiar el status code). Devuelve
+    `(turn_id, iterador_de_eventos)`: el iterador es perezoso -- invoca al
     `StreamingResponseGenerator` real y persiste recién cuando se empieza a consumir
     (ver `_produce_turn_events`).
 
-    El buffer del turno queda registrado con `owner_user_id=user.id` y
-    `user_message_id=user_message.id` (tareas 1.6/1.7) ANTES de devolver el control: la
-    API puede resolver `GET /api/turns/{turn_id}/stream` (reconexión) y
-    `POST /api/messages/{id}/cancel` / `POST /api/turns/{id}/cancel` (cancelación) sobre
-    este mismo buffer sin ninguna carrera posible con su creación.
+    El buffer del turno queda registrado con `owner_user_id=user.id`,
+    `user_message_id=user_message.id` y `session_id=session_id` (tareas 1.6/1.7/2.5)
+    ANTES de devolver el control: la API puede resolver
+    `GET /api/turns/{turn_id}/stream` (reconexión) y `POST /api/messages/{id}/cancel` /
+    `POST /api/turns/{id}/cancel` (cancelación) sobre este mismo buffer sin ninguna
+    carrera posible con su creación.
+
+    Tarea 2.5 -- un solo turno en curso por sesión: se verifica ANTES de crear
+    ninguna fila (ni el mensaje de usuario nuevo), así que un intento rechazado no deja
+    ningún rastro en la base -- ver `TurnAlreadyInProgressError`.
     """
     session = find_owned_session(db, user, session_id)
     if session is None:
         raise SessionNotFoundError(session_id)
+
+    existing_turn = turn_stream_registry.get_open_by_session_id(session_id)
+    if existing_turn is not None:
+        raise TurnAlreadyInProgressError(existing_turn.turn_id)
 
     reprocessed_count = 0
     if edits_message_id is not None:
@@ -464,7 +503,10 @@ def start_turn_stream(
 
     turn_id = f"turn_{uuid.uuid4().hex}"
     buffer = turn_stream_registry.create(
-        turn_id, owner_user_id=user.id, user_message_id=user_message.id
+        turn_id,
+        owner_user_id=user.id,
+        user_message_id=user_message.id,
+        session_id=session_id,
     )
 
     events = _produce_turn_events(

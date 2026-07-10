@@ -112,6 +112,12 @@ from sqlalchemy.orm import Session as DbSession
 
 from resultarai.adapters.persistence_postgres.models import User
 from resultarai.app.api.chat import SendMessageRequest, get_registries
+
+# Re-exportado explícitamente (alias redundante `as`): `app/api/__init__.py` y los
+# tests de streaming siguen importando `get_turn_stream_registry` DESDE este módulo
+# (ver la nota debajo), y mypy --strict exige la forma `import X as X` para que un
+# nombre importado cuente como parte de la API pública re-exportada del módulo.
+from resultarai.app.api.chat import get_turn_stream_registry as get_turn_stream_registry
 from resultarai.app.identity import get_current_user, get_db
 from resultarai.app.use_cases.chat.stream_registry import (
     BufferedSseEvent,
@@ -122,6 +128,7 @@ from resultarai.app.use_cases.chat.streaming import (
     MessageEditForbiddenError,
     SessionNotFoundError,
     StreamingResponseGenerator,
+    TurnAlreadyInProgressError,
     start_turn_stream,
 )
 from resultarai.core.registries import Registries
@@ -134,20 +141,14 @@ _DEFAULT_HEARTBEAT_INTERVAL_SECONDS = 15.0
 _CANCEL_WAIT_TIMEOUT_ENV_VAR = "RESULTARAI_CANCEL_WAIT_TIMEOUT_SECONDS"
 _DEFAULT_CANCEL_WAIT_TIMEOUT_SECONDS = 10.0
 
-
-def get_turn_stream_registry() -> TurnStreamRegistry:
-    """Proveedor inyectable del registro de buffers de turnos en streaming.
-
-    Sin override falla explícitamente (mismo patrón fail-loud que `get_registries`/
-    `get_response_generator` de `app/api/chat.py`): `create_app()` lo sobreescribe con
-    una instancia real por app (no cacheada globalmente, para que cada `create_app()` de
-    test quede aislado); es infraestructura de proceso sin I/O externo, así que en los
-    tests alcanza con la misma implementación real, sin necesidad de un doble.
-    """
-    raise NotImplementedError(
-        "get_turn_stream_registry debe sobreescribirse via app.dependency_overrides con "
-        "una instancia real de TurnStreamRegistry (una por proceso/app)."
-    )
+# `get_turn_stream_registry` vive en `app/api/chat.py` (tarea 2.5), no acá: tanto este
+# router (streaming) como `GET /sessions/{id}` (detalle, reconciliación) necesitan
+# depender del MISMO proveedor -- `app.dependency_overrides` de FastAPI indexa por
+# identidad de función -- para que `create_app()` los cablee con un único
+# `TurnStreamRegistry` de proceso con un único override. Se re-importa acá (en vez de
+# redefinirlo) para no romper los imports existentes de este módulo
+# (`from resultarai.app.api.chat_stream import get_turn_stream_registry`, usado por
+# `app/api/__init__.py` y los tests de streaming).
 
 
 def get_streaming_response_generator() -> StreamingResponseGenerator:
@@ -275,6 +276,13 @@ def send_message_stream_endpoint(
     única diferencia es que la respuesta del agente se transmite incremental en vez de
     devolverse completa en el cuerpo de la respuesta. Ver el contrato SSE documentado en
     el docstring del módulo.
+
+    Tarea 2.5 -- un solo turno en curso por sesión: si ya hay un turno EN CURSO sobre
+    esta sesión (típicamente un "reenviar" accidental desde otra pestaña/dispositivo
+    que no vio todavía `in_progress_turn` en `GET /sessions/{id}`), responde 409 con
+    `{"turn_id": str}` del turno vivo -- nunca arranca un segundo streaming
+    concurrente sobre la misma rama. El cliente debe re-attachearse a
+    `GET /api/turns/{turn_id}/stream` (tarea 1.6) en vez de reintentar el envío.
     """
     edits_message_id: uuid.UUID | None = payload.edits_message_id
     try:
@@ -294,6 +302,8 @@ def send_message_stream_endpoint(
         raise HTTPException(
             status_code=403, detail="No se puede editar un mensaje que no es propio."
         ) from exc
+    except TurnAlreadyInProgressError as exc:
+        raise HTTPException(status_code=409, detail={"turn_id": exc.turn_id}) from exc
 
     # El buffer ya está registrado en este punto (`start_turn_stream` lo crea de forma
     # síncrona antes de devolver el iterador perezoso, ver su docstring): se lee de

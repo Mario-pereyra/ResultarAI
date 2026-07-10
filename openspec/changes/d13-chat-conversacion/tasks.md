@@ -11,11 +11,11 @@
 
 ## 2. API — historial y búsqueda
 
-- [ ] 2.1 Endpoint `GET /sessions` (listado propio): filtra por propietario derivado de la sesión de identidad (nunca de un parámetro), incluye agente, título automático, última actividad, `message_count`, `branch_count`. Verificación: test que confirma que el listado de un usuario nunca incluye sesiones de otro. `[modelo: sonnet]`
-- [ ] 2.2 Generación de título automático a partir del primer intercambio de la sesión, editable por el usuario y sin regenerarse tras edición manual. Verificación: test que edita el título y confirma que un turno nuevo no lo sobrescribe. `[modelo: haiku]`
-- [ ] 2.3 Endpoint `GET /sessions/{id}` (detalle): retorna el árbol completo de mensajes con `parent_id`, incluyendo ramas no activas (descartadas por edición o "Seguir con Flash"). Verificación: test que crea dos ramas y confirma que ambas aparecen en el árbol retornado. `[modelo: sonnet]`
-- [ ] 2.4 Endpoint `GET /sessions/search?q=` (búsqueda server-side por texto en título y contenido de mensajes de las sesiones propias). Verificación: test con término presente en un mensaje retorna la sesión con el término marcado; término ausente retorna lista vacía sin error. `[modelo: sonnet]`
-- [ ] 2.5 Lógica de "reanudar": abrir una sesión posiciona en su última rama activa; reconciliación si un turno seguía en streaming en otra pestaña (sin duplicar el turno). Verificación: test que abre la misma sesión desde dos "clientes" simulados durante un streaming y confirma que el turno aparece una sola vez. `[modelo: sonnet]`
+- [x] 2.1 Endpoint `GET /sessions` (listado propio): filtra por propietario derivado de la sesión de identidad (nunca de un parámetro), incluye agente, título automático, última actividad, `message_count`, `branch_count`. Verificación: test que confirma que el listado de un usuario nunca incluye sesiones de otro. `[modelo: sonnet]`
+- [x] 2.2 Generación de título automático a partir del primer intercambio de la sesión, editable por el usuario y sin regenerarse tras edición manual. Verificación: test que edita el título y confirma que un turno nuevo no lo sobrescribe. `[modelo: haiku]`
+- [x] 2.3 Endpoint `GET /sessions/{id}` (detalle): retorna el árbol completo de mensajes con `parent_id`, incluyendo ramas no activas (descartadas por edición o "Seguir con Flash"). Verificación: test que crea dos ramas y confirma que ambas aparecen en el árbol retornado. `[modelo: sonnet]`
+- [x] 2.4 Endpoint `GET /sessions/search?q=` (búsqueda server-side por texto en título y contenido de mensajes de las sesiones propias). Verificación: test con término presente en un mensaje retorna la sesión con el término marcado; término ausente retorna lista vacía sin error. `[modelo: sonnet]`
+- [x] 2.5 Lógica de "reanudar": abrir una sesión posiciona en su última rama activa; reconciliación si un turno seguía en streaming en otra pestaña (sin duplicar el turno). Verificación: test que abre la misma sesión desde dos "clientes" simulados durante un streaming y confirma que el turno aparece una sola vez. `[modelo: sonnet]`
 
 ## 3. UI — chat base (vista 05, assistant-ui)
 

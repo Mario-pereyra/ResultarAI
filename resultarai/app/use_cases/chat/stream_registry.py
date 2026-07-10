@@ -38,6 +38,19 @@ que `POST /api/messages/{id}/cancel` pueda resolver el turno en curso sin conoce
 notifica a quien esté esperando eventos nuevos -- quien realmente detiene la generación es
 el consumidor del `StreamingResponseGenerator` en `streaming.py`, que la consulta entre
 fragmento y fragmento.
+
+**Tarea 2.5 (reanudar sesión) -- `session_id` y `get_open_by_session_id`:** el buffer
+también guarda la sesión a la que pertenece el turno (fijada una única vez al crear el
+buffer, igual que `owner_user_id`/`user_message_id`). `get_open_by_session_id` permite
+al detalle de sesión (`app/use_cases/chat/history.py`, `get_session_detail`) detectar
+si hay un turno EN CURSO (no cerrado) sobre la sesión que se está reanudando desde otra
+pestaña/dispositivo -- así el segundo cliente puede re-attachearse a
+`GET /api/turns/{turn_id}/stream` (tarea 1.6) en vez de reenviar el mismo turno.
+`start_turn_stream` (`streaming.py`) usa el mismo método para la garantía
+complementaria del lado servidor: solo puede haber UN turno en curso por sesión a la
+vez, así que un segundo intento de arrancar un turno mientras el primero sigue vivo se
+rechaza (`TurnAlreadyInProgressError`) en vez de crear un segundo streaming concurrente
+sobre la misma rama.
 """
 
 from __future__ import annotations
@@ -66,15 +79,17 @@ class TurnStreamBuffer:
     `design.md` (habilita `Last-Event-ID` en la tarea 1.6). `closed` se vuelve `True` al
     agregar el evento `done` (cierre del turno, normal o cancelado).
 
-    `owner_user_id` y `user_message_id` se fijan una única vez al crear el buffer
-    (`TurnStreamRegistry.create`) y nunca cambian: son la base del control de acceso de
-    la reconexión y la cancelación (ownership derivado siempre del buffer, nunca de un
-    parámetro de la petición).
+    `owner_user_id`, `user_message_id` y `session_id` se fijan una única vez al crear
+    el buffer (`TurnStreamRegistry.create`) y nunca cambian: son la base del control de
+    acceso de la reconexión y la cancelación (ownership derivado siempre del buffer,
+    nunca de un parámetro de la petición) y, `session_id`, de la reconciliación al
+    reanudar sesión (tarea 2.5, `get_open_by_session_id`).
     """
 
     turn_id: str
     owner_user_id: uuid.UUID
     user_message_id: uuid.UUID
+    session_id: str
     events: list[BufferedSseEvent] = field(default_factory=list)
     closed: bool = False
     _condition: threading.Condition = field(
@@ -153,18 +168,27 @@ class TurnStreamRegistry:
         self._lock = threading.Lock()
 
     def create(
-        self, turn_id: str, *, owner_user_id: uuid.UUID, user_message_id: uuid.UUID
+        self,
+        turn_id: str,
+        *,
+        owner_user_id: uuid.UUID,
+        user_message_id: uuid.UUID,
+        session_id: str,
     ) -> TurnStreamBuffer:
         """Crea (y registra) un buffer nuevo y vacío para `turn_id`.
 
-        `owner_user_id` y `user_message_id` son obligatorios: todo turno en streaming
-        tiene un dueño y un mensaje de usuario desde su creación (ver `streaming.py`,
-        `start_turn_stream`), y ambos son la base de la resolución de ownership de la
-        reconexión (tarea 1.6) y la cancelación (tarea 1.7).
+        `owner_user_id`, `user_message_id` y `session_id` son obligatorios: todo turno
+        en streaming tiene un dueño, un mensaje de usuario y una sesión desde su
+        creación (ver `streaming.py`, `start_turn_stream`), y los tres son la base de
+        la resolución de ownership de la reconexión (tarea 1.6), la cancelación (tarea
+        1.7) y la reconciliación al reanudar sesión (tarea 2.5).
         """
         with self._lock:
             buffer = TurnStreamBuffer(
-                turn_id=turn_id, owner_user_id=owner_user_id, user_message_id=user_message_id
+                turn_id=turn_id,
+                owner_user_id=owner_user_id,
+                user_message_id=user_message_id,
+                session_id=session_id,
             )
             self._buffers[turn_id] = buffer
             self._turn_id_by_user_message[str(user_message_id)] = turn_id
@@ -187,6 +211,30 @@ class TurnStreamRegistry:
             if turn_id is None:
                 return None
             return self._buffers.get(turn_id)
+
+    def get_open_by_session_id(self, session_id: str) -> TurnStreamBuffer | None:
+        """Devuelve el buffer EN CURSO (no cerrado) de `session_id`, o `None` si no hay
+        ninguno (tarea 2.5).
+
+        Por diseño solo puede haber un turno en curso por sesión a la vez
+        (`start_turn_stream` lo garantiza rechazando un segundo arranque con
+        `TurnAlreadyInProgressError` mientras el primero siga abierto, ver
+        `streaming.py`), así que el primer match ya es el único relevante -- no hace
+        falta desambiguar entre varios. Se usa tanto para esa misma garantía
+        server-side como para exponer `in_progress_turn` en el detalle de sesión
+        (`app/use_cases/chat/history.py`, `get_session_detail`).
+
+        `buffer.closed` se lee sin el lock propio del buffer (mismo criterio que
+        `app/api/chat_stream.py`, `_iter_reconnect_sse_bytes`): es una lectura de un
+        `bool` simple, sin invariante que dependa de verla exactamente en el instante
+        de otra escritura -- el peor caso es una respuesta con un ciclo de atraso, no
+        una respuesta incorrecta.
+        """
+        with self._lock:
+            for buffer in self._buffers.values():
+                if buffer.session_id == session_id and not buffer.closed:
+                    return buffer
+            return None
 
     def discard(self, turn_id: str) -> None:
         """Elimina el buffer de `turn_id` (limpieza tras cerrar/cancelar el turno)."""

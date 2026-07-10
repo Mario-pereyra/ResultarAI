@@ -49,6 +49,7 @@ from resultarai.app.use_cases.chat._branching import (
     find_active_leaf,
     find_owned_session,
 )
+from resultarai.app.use_cases.chat.titles import generate_session_title
 
 __all__ = [
     "MessageEditForbiddenError",
@@ -212,6 +213,12 @@ def send_turn(
     )
     db.add(assistant_message)
     db.flush()
+
+    # Generación de título automático (tarea 2.2): si es el primer turno completo
+    # de la sesión y el usuario no ha editado el título manualmente, genera uno
+    # a partir del mensaje de usuario. Nunca se regenera si title_edited es True.
+    if session.title is None and not session.title_edited:
+        session.title = generate_session_title(user_message.content)
 
     session.last_activity_at = get_utc_now()
 

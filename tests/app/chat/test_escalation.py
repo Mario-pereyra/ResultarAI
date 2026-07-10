@@ -173,8 +173,9 @@ def test_escalation_enabled_creates_linked_session_with_origin_intact(
     assert data["origin_session_id"] == session_id
     assert data["model_profile"] == "openai_gpt_4o_pro"
     assert data["created"] is True
-    assert data["origin_session_title"] is None  # tarea 2.2 (titulado) fuera de alcance aquí
-    assert data["escalated_session_title"] is None  # sin título de origen que derivar
+    # Tarea 2.2: el primer turno genera un título automático; la escalada lo hereda + " (Pro)"
+    assert data["origin_session_title"] == "necesito ayuda avanzada"
+    assert data["escalated_session_title"] == "necesito ayuda avanzada (Pro)"
     escalated_session_id = data["escalated_session_id"]
     assert escalated_session_id != session_id
     assert escalated_session_id.startswith("sess_")
