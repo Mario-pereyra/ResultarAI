@@ -8,8 +8,9 @@ OOXML (`zip_guard.py`), y lo deja en `ready` (exito) o `error` (timeout/crash/OO
 Transicion de estados (valores EXACTOS de la `CheckConstraint` de `attachments` en `b04`,
 `resultarai/adapters/persistence_postgres/models.py`):
 
-    uploaded --> extracting --> ready   (exito)
-    uploaded --> extracting --> error   (ExtractionTimeout / ExtractionFailed / ZipBomb)
+    uploaded --> extracting --> ready     (exito, sin secretos N3)
+    uploaded --> extracting --> blocked   (exito, pero hallazgo N3: no enviable, tarea 5.1)
+    uploaded --> extracting --> error     (ExtractionTimeout / ExtractionFailed / ZipBomb)
 
 La **causa especifica** del `error` se guarda en `scan_result` del adjunto
 (`{"extraction_error": {"error_code", "params"}}`) para telemetria de Admin y para que el
@@ -33,12 +34,20 @@ pipeline ademas:
   advertencia visible es del frontend, tarea 8.2; la traza los recoge de `scan_result`).
   Invariante: el marcador de escalacion DENTRO de un adjunto es dato — jamas dispara una
   escalacion de modelo (la escalacion solo existe en la SALIDA del modelo, camino d13).
+- **Escanea niveles de datos N2/N3** (`data_scan.py`, tareas 5.1-5.2) sobre el texto ya
+  sanitizado. Un hallazgo **N3** (secreto/credencial) deja el adjunto en `blocked` (no
+  enviable) con tipo + linea + fragmento redactado en `scan_result["n3_findings"]`. Un
+  hallazgo **N2** (PII) deja el adjunto `ready` pero registra `scan_result["pii_findings"]`
+  y `requires_test_data_confirmation=True`: el envio queda bloqueado hasta la confirmacion
+  auditada (`confirmation.py`) o el retiro del adjunto. **N3 gana sobre N2**: si hay ambos,
+  el estado es `blocked` y no se pide confirmacion (no es enviable de todos modos).
 
 Fuera de alcance (tareas posteriores): persistir el `full_text`/`Extraction` con dedup
-por sha256 (7.1), escanear N2/N3 (5.x), contar tokens y truncar para el `inserted_text`
-(6.x), envolver con el spotlight al componer el mensaje (6.3; `spotlight.py` ya listo).
-Aca `ready` significa "extraido, sanitizado y escaneado por heuristica"; el
-`ExtractionResult` se devuelve en el `ExtractionOutcome` para esas etapas.
+por sha256 (7.1), contar tokens y truncar para el `inserted_text` (6.x), envolver con el
+spotlight al componer el mensaje (6.3; `spotlight.py` ya listo). Aca `ready` significa
+"extraido, sanitizado, escaneado y enviable"; `blocked` significa "extraido pero con
+secreto N3". El `ExtractionResult` se devuelve en el `ExtractionOutcome` para esas etapas
+(el texto existe en ambos casos: `blocked` es una extraccion exitosa pero no enviable).
 
 El extractor concreto se **inyecta** (`Callable`/`ExtractionPort.extract`): este modulo no
 importa ningun adapter de `resultarai/adapters/extraction_*`.
@@ -54,6 +63,12 @@ from sqlalchemy.orm import Session as DbSession
 
 from resultarai.adapters.persistence_postgres.models import Attachment, get_utc_now
 from resultarai.app.attachments.config import AttachmentsConfig
+from resultarai.app.attachments.data_scan import (
+    PiiFinding,
+    SecretFinding,
+    scan_for_pii,
+    scan_for_secrets,
+)
 from resultarai.app.attachments.errors import AttachmentExtractionError
 from resultarai.app.attachments.filetypes import extension_of, is_ooxml
 from resultarai.app.attachments.heuristics import InjectionFlag, scan_for_injection
@@ -74,8 +89,9 @@ STATUS_ERROR = "error"
 class ExtractionOutcome:
     """Resultado de orquestar la extraccion de un adjunto.
 
-    Exactamente uno de `result`/`error` viene poblado: `result` en `ready`, `error` en
-    `error`. `attachment.status` refleja la transicion aplicada.
+    `result` viene poblado siempre que la extraccion tuvo exito (estados `ready` **y**
+    `blocked`: en ambos el texto existe); `error` viene poblado solo cuando la extraccion
+    fallo (estado `error`). `attachment.status` refleja la transicion aplicada.
     """
 
     attachment: Attachment
@@ -121,14 +137,15 @@ def extract_attachment(
     *,
     now: datetime.datetime | None = None,
 ) -> ExtractionOutcome:
-    """Lleva `attachment` de `uploaded` a `ready`/`error` corriendo la extraccion aislada.
+    """Lleva `attachment` de `uploaded` a `ready`/`blocked`/`error` con la extraccion aislada.
 
-    En el camino de exito, sanitiza el `full_text` (tarea 4.1) y corre la heuristica de
-    instruccion embebida (tarea 4.3) sobre el texto ya limpio; los hallazgos van a
-    `scan_result` sin bloquear (ver docstring del modulo). No hace `db.commit()` (la
-    transaccion es de quien inyecta `db`, igual que el resto de casos de uso). No propaga
-    la excepcion de extraccion: la traduce a estado `error` con la causa en `scan_result`
-    y la devuelve en el `ExtractionOutcome`.
+    En el camino de exito, sanitiza el `full_text` (tarea 4.1), corre la heuristica de
+    instruccion embebida (tarea 4.3) y escanea niveles de datos N2/N3 (tareas 5.1-5.2)
+    sobre el texto ya limpio. Un hallazgo N3 deja el adjunto `blocked`; N2 lo deja `ready`
+    con `requires_test_data_confirmation`; los hallazgos van a `scan_result`. No hace
+    `db.commit()` (la transaccion es de quien inyecta `db`, igual que el resto de casos de
+    uso). No propaga la excepcion de extraccion: la traduce a estado `error` con la causa en
+    `scan_result` y la devuelve en el `ExtractionOutcome`.
     """
     attachment.status = STATUS_EXTRACTING
     db.flush()
@@ -144,9 +161,21 @@ def extract_attachment(
     sanitization = sanitize_extracted_text(result.full_text)
     sanitized_result = result.model_copy(update={"full_text": sanitization.text})
     injection_flags = scan_for_injection(sanitization.text)
+    secret_findings = scan_for_secrets(sanitization.text, config.extra_secret_patterns)
+    pii_findings = scan_for_pii(sanitization.text)
 
-    attachment.status = STATUS_READY
-    scan_result = _record_analysis(attachment.scan_result, sanitization, injection_flags)
+    # N3 gana sobre N2: un secreto bloquea el adjunto (no enviable); sin secreto queda
+    # `ready` (la PII de N2 no bloquea, solo exige confirmacion).
+    blocked = bool(secret_findings)
+    attachment.status = STATUS_BLOCKED if blocked else STATUS_READY
+    scan_result = _record_analysis(
+        attachment.scan_result,
+        sanitization,
+        injection_flags,
+        secret_findings,
+        pii_findings,
+        blocked=blocked,
+    )
     if scan_result is not None:
         attachment.scan_result = scan_result
     db.flush()
@@ -185,18 +214,31 @@ def _record_analysis(
     scan_result: dict[str, object] | None,
     sanitization: SanitizationResult,
     injection_flags: list[InjectionFlag],
+    secret_findings: list[SecretFinding],
+    pii_findings: list[PiiFinding],
+    *,
+    blocked: bool,
 ) -> dict[str, object] | None:
-    """Registra sanitizacion y flags de inyeccion en `scan_result`, preservando lo previo.
+    """Registra sanitizacion, inyeccion y hallazgos N2/N3 en `scan_result`, preservando lo previo.
 
     Devuelve `None` si no hay nada que registrar (texto limpio, sin artefactos): asi un
     adjunto sano conserva `scan_result` intacto (tipicamente `NULL`) y la telemetria de
-    Admin distingue "limpio" de "escaneado con hallazgos" de un vistazo.
+    Admin distingue "limpio" de "escaneado con hallazgos" de un vistazo. La forma completa
+    de `scan_result` esta documentada en `data_scan.py`.
     """
     updates: dict[str, object] = {}
     if sanitization.removed_anything:
         updates["sanitization"] = sanitization.artifacts_dict()
     if injection_flags:
         updates["injection_flags"] = [flag.to_dict() for flag in injection_flags]
+    if secret_findings:
+        updates["n3_findings"] = [finding.to_dict() for finding in secret_findings]
+    if pii_findings:
+        updates["pii_findings"] = [finding.to_dict() for finding in pii_findings]
+        # Solo se exige confirmacion si el adjunto NO esta bloqueado por N3: un adjunto
+        # bloqueado no es enviable de todos modos (N3 gana sobre N2, ANEXO §4.4).
+        if not blocked:
+            updates["requires_test_data_confirmation"] = True
     if not updates:
         return None
     merged: dict[str, object] = dict(scan_result or {})

@@ -23,6 +23,10 @@ Variables reconocidas:
   extraccion (ANEXO §4.1 punto 5, §8 paso [4]); default 30 s.
 - ``RESULTARAI_ATTACHMENTS_EXTRACTION_MEMORY_MB``  memoria (espacio de direcciones) tope
   del worker aislado, aplicada con ``RLIMIT_AS`` en el hijo; default 512 MB.
+- ``RESULTARAI_ATTACHMENTS_EXTRA_SECRET_PATTERNS``  regex adicionales para el escaneo N3
+  de secretos (ANEXO §4.4: la LISTA de patrones extra es configurable por instancia; los
+  de fabrica van en codigo, ``data_scan.py``). **Una regex por linea** (no por comas: las
+  regex suelen contener comas). Sus coincidencias se guardan totalmente redactadas.
 - ``RESULTARAI_TENANT``  tenant al que se atribuyen los adjuntos (default ``default``;
   la derivacion multi-tenant real es Etapa P).
 """
@@ -69,6 +73,8 @@ class AttachmentsConfig:
     zip_bomb_max_ratio: float = _DEFAULT_ZIPBOMB_MAX_RATIO
     extraction_timeout_seconds: float = _DEFAULT_EXTRACTION_TIMEOUT_SECONDS
     extraction_memory_limit_bytes: int = _DEFAULT_EXTRACTION_MEMORY_LIMIT_BYTES
+    # Regex extra para el escaneo N3 (ANEXO §4.4); los patrones de fabrica van en codigo.
+    extra_secret_patterns: tuple[str, ...] = ()
 
     def size_limit_for(self, category: FileCategory) -> int:
         """Limite de tamano (bytes) para una categoria; cae al default si falta."""
@@ -122,6 +128,11 @@ class AttachmentsConfig:
             * _MIB
         )
 
+        raw_secret_patterns = os.environ.get("RESULTARAI_ATTACHMENTS_EXTRA_SECRET_PATTERNS", "")
+        extra_secret_patterns = tuple(
+            line.strip() for line in raw_secret_patterns.splitlines() if line.strip()
+        )
+
         return cls(
             storage_dir=storage_dir,
             tenant=tenant,
@@ -132,6 +143,7 @@ class AttachmentsConfig:
             zip_bomb_max_ratio=zip_bomb_max_ratio,
             extraction_timeout_seconds=extraction_timeout,
             extraction_memory_limit_bytes=extraction_memory,
+            extra_secret_patterns=extra_secret_patterns,
         )
 
 

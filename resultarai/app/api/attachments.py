@@ -23,19 +23,23 @@ magic bytes.
 
 from __future__ import annotations
 
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DbSession
 
+from resultarai.adapters.persistence_postgres.models import Attachment, User
 from resultarai.adapters.persistence_postgres.models import Session as SessionModel
-from resultarai.adapters.persistence_postgres.models import User
 from resultarai.app.attachments import (
     AttachmentRejectedError,
     AttachmentsConfig,
+    NoPendingConfirmationError,
     UploadSource,
+    confirm_test_data,
     create_attachment,
+    is_sendable,
 )
 from resultarai.app.identity import get_current_user, get_db
 
@@ -120,4 +124,50 @@ def upload_attachment_endpoint(
         size_bytes=attachment.size_bytes,
         sha256=attachment.sha256,
         created_at=attachment.created_at.isoformat(),
+    )
+
+
+class TestDataConfirmationResponse(BaseModel):
+    """Estado del adjunto tras confirmar que su PII son datos de prueba (tarea 5.2)."""
+
+    id: str
+    status: str
+    requires_test_data_confirmation: bool
+    sendable: bool
+
+
+@router.post("/attachments/{attachment_id}/confirm-test-data")
+def confirm_test_data_endpoint(
+    attachment_id: uuid.UUID,
+    db: Annotated[DbSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> TestDataConfirmationResponse:
+    """Confirma que la PII detectada (N2) en el adjunto son datos de prueba (ANEXO §4.4).
+
+    Solo el **dueno** puede confirmar: un adjunto ajeno o inexistente responde 404 sin
+    filtrar existencia (mismo criterio que la subida). La confirmacion queda en el audit
+    log append-only (`confirmation.confirm_test_data`) y baja el bloqueo de envio N2. Si el
+    adjunto no tiene una confirmacion pendiente (sin PII, ya confirmada, o bloqueado por N3)
+    responde 409, sin re-auditar.
+    """
+    attachment = db.get(Attachment, attachment_id)
+    if attachment is None or attachment.uploaded_by != str(current_user.id):
+        raise HTTPException(status_code=404, detail="Adjunto no encontrado.")
+
+    try:
+        confirm_test_data(db, attachment, current_user)
+    except NoPendingConfirmationError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail={"error_code": "no_pending_confirmation", "params": {}},
+        ) from exc
+
+    scan_result = attachment.scan_result or {}
+    return TestDataConfirmationResponse(
+        id=str(attachment.id),
+        status=attachment.status,
+        requires_test_data_confirmation=bool(
+            scan_result.get("requires_test_data_confirmation", False)
+        ),
+        sendable=is_sendable(attachment),
     )

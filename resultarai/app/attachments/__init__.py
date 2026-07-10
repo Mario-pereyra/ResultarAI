@@ -1,16 +1,28 @@
 """Contexto de adjuntos: subida, validacion de seguridad OWASP y persistencia (d14).
 
-Alcance actual (tareas 2.1-2.5, 3.5): endpoint de subida multipart, limites por tipo y por
-mensaje configurables, validacion de tipo real (allowlist + magic bytes), rechazo de
-formatos activos/peligrosos y de imagenes en V1, proteccion zip-bomb OOXML y worker de
-parseo aislado con timeout + memoria acotada (transicion de estados uploaded -> extracting
--> ready/error). La sanitizacion, el escaneo N2/N3 y la composicion del mensaje llegan en
+Alcance actual (tareas 2.1-2.5, 3.5, 4.1-4.3, 5.1-5.3): endpoint de subida multipart,
+limites por tipo y por mensaje configurables, validacion de tipo real (allowlist + magic
+bytes), rechazo de formatos activos/peligrosos y de imagenes en V1, proteccion zip-bomb
+OOXML, worker de parseo aislado con timeout + memoria acotada, sanitizacion, heuristica
+anti prompt-injection y escaneo de niveles de datos N2/N3 (secretos -> bloqueo; PII ->
+confirmacion auditada). La composicion del mensaje y la persistencia con dedup llegan en
 tareas posteriores del mismo change.
 """
 
 from __future__ import annotations
 
 from resultarai.app.attachments.config import AttachmentsConfig
+from resultarai.app.attachments.confirmation import (
+    NoPendingConfirmationError,
+    confirm_test_data,
+)
+from resultarai.app.attachments.data_scan import (
+    PiiFinding,
+    SecretFinding,
+    is_sendable,
+    scan_for_pii,
+    scan_for_secrets,
+)
 from resultarai.app.attachments.errors import (
     AttachmentExtractionError,
     AttachmentRejectedError,
@@ -52,15 +64,22 @@ __all__ = [
     "ImageNotSupportedError",
     "LegacyDocError",
     "MacrosNotAllowedError",
+    "NoPendingConfirmationError",
     "PdfPasswordError",
+    "PiiFinding",
+    "SecretFinding",
     "TooManyAttachmentsError",
     "TypeForgedError",
     "TypeNotAllowedError",
     "UploadSource",
     "ZipBombSuspectedError",
+    "confirm_test_data",
     "create_attachment",
     "extract_attachment",
     "inspect_ooxml_for_zip_bomb",
+    "is_sendable",
     "run_extraction",
     "run_in_isolated_worker",
+    "scan_for_pii",
+    "scan_for_secrets",
 ]

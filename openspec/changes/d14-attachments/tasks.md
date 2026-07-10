@@ -29,9 +29,9 @@
 
 ## 5. Escaneo de niveles de datos N2/N3
 
-- [ ] 5.1 Escáner N3 (secretos: claves API, `Password=`, cadenas de conexión, JWT, private keys) sobre la extracción → estado `bloqueado` con línea/ubicación. Verificación: escenario "secreto detectado bloquea el adjunto" con su mensaje §10 (ANEXO §4.4). `[modelo: opus]`
-- [ ] 5.2 Escáner N2 (PII: emails, teléfonos, CI/NIT bolivianos) con Presidio + reconocedores propios ES/BO → advertencia con detalle + checkbox "Confirmo que son datos de prueba" auditado. Verificación: escenario "PII detectada requiere confirmación registrada en el audit log" (ANEXO §4.4). `[modelo: opus]`
-- [ ] 5.3 Persistir el resultado del escaneo en `scan_result` del adjunto (schema de `b04`), consultable por Admin. Verificación: `scan_result` refleja hallazgos N2/N3 y flags de inyección y es recuperable en telemetría (ANEXO §4.4). `[modelo: sonnet]`
+- [x] 5.1 Escáner N3 (secretos: claves API, `Password=`, cadenas de conexión, JWT, private keys) sobre la extracción → estado `bloqueado` con línea/ubicación. Verificación: escenario "secreto detectado bloquea el adjunto" con su mensaje §10 (ANEXO §4.4). `[modelo: opus]`
+- [x] 5.2 Escáner N2 (PII: emails, teléfonos, CI/NIT bolivianos) con Presidio + reconocedores propios ES/BO → advertencia con detalle + checkbox "Confirmo que son datos de prueba" auditado. Verificación: escenario "PII detectada requiere confirmación registrada en el audit log" (ANEXO §4.4). `[modelo: opus]`
+- [x] 5.3 Persistir el resultado del escaneo en `scan_result` del adjunto (schema de `b04`), consultable por Admin. Verificación: `scan_result` refleja hallazgos N2/N3 y flags de inyección y es recuperable en telemetría (ANEXO §4.4). `[modelo: sonnet]`
 
 ## 6. Presupuesto, truncado y composición del mensaje
 

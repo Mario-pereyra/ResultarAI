@@ -648,6 +648,14 @@ wheels = [
 ]
 
 [[package]]
+name = "es-core-news-sm"
+version = "3.8.0"
+source = { url = "https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl" }
+wheels = [
+    { url = "https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl", hash = "sha256:e451a83d6df79b87e9eed0cb553f03e99e36a3bab18a7b79f0dcfd1fdf875e12" },
+]
+
+[[package]]
 name = "et-xmlfile"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2837,6 +2845,7 @@ dependencies = [
     { name = "alembic" },
     { name = "argon2-cffi" },
     { name = "cryptography" },
+    { name = "es-core-news-sm" },
     { name = "fastapi" },
     { name = "itsdangerous" },
     { name = "langfuse" },
@@ -2874,6 +2883,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.13.0" },
     { name = "argon2-cffi", specifier = ">=25.1.0" },
     { name = "cryptography", specifier = ">=49.0.0" },
+    { name = "es-core-news-sm", url = "https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl" },
     { name = "fastapi", specifier = ">=0.139.0" },
     { name = "itsdangerous", specifier = ">=2.2.0" },
     { name = "langfuse", specifier = ">=4.13.2" },
