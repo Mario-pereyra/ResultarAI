@@ -12,9 +12,13 @@ type Translator = Awaited<ReturnType<typeof getTranslations>>;
  * el nombre mostrado en el composer ("Escribile a {agent}…", vista 05)
  * queda hardcodeado con el `name` literal del manifiesto hasta que `d15`
  * lo resuelva dinámicamente.
+ *
+ * Exportados (no solo `const` de módulo): `history-labels.ts` (tarea 7.1,
+ * historial vista 12) los reutiliza para el filtro por agente y el nombre
+ * visible de cada fila, sin duplicar el literal.
  */
-const DEFAULT_CHAT_AGENT_ID = "default_chat";
-const DEFAULT_CHAT_AGENT_DISPLAY_NAME = "Chat por Defecto";
+export const DEFAULT_CHAT_AGENT_ID = "default_chat";
+export const DEFAULT_CHAT_AGENT_DISPLAY_NAME = "Chat por Defecto";
 
 /** Arma `ChatContentLabels` desde el namespace `Chat` de `messages/es.json`,
  * compartido por `chat/page.tsx` y `chat/[sessionId]/page.tsx`. */
@@ -137,5 +141,9 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
       requestSentNote: t("quota.requestSentNote"),
     },
     quotaComposerDisabledReason: t("quota.composerDisabledReason"),
+    // Tarea 7.3 (historial vista 12): motivo inline del composer cuando el
+    // agente de la sesión ya no es invocable (`GET /api/agents/{id}` -> 404) --
+    // la sesión se puede LEER pero no continuar, ver `chat-content.tsx`.
+    agentDisabledComposerReason: t("agentDisabled.composerReason"),
   };
 }

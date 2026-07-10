@@ -130,6 +130,8 @@ const LABELS: ChatContentLabels = {
     requestSentNote: "Te avisamos cuando un admin la resuelva.",
   },
   quotaComposerDisabledReason: "Alcanzaste tu cuota mensual. Solicitá una liberación para seguir escribiendo.",
+  agentDisabledComposerReason:
+    "Este agente ya no está disponible. Podés leer la conversación, pero no continuarla.",
 };
 
 const STARTER_PROMPTS = ["Ayudame a redactar un resumen ejecutivo", "Dame ideas para esta semana"];
@@ -337,6 +339,60 @@ function stubSessionFetch(sessionDetail: unknown) {
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 }
+
+/**
+ * Mismo stub que `stubSessionFetch`, pero `GET /api/agents/default_chat`
+ * responde 404 (`get_agent_endpoint`: agente no catalogado o no invocable) --
+ * la señal de "sesión con agente deshabilitado" de la tarea 7.3.
+ */
+function stubSessionFetchWithDisabledAgent(sessionDetail: unknown) {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url === "/api/agents/default_chat") {
+      return new Response(JSON.stringify({ detail: "Agente no encontrado o no disponible." }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    if (url === "/api/sessions/session-1" && (!init?.method || init.method === "GET")) {
+      return new Response(JSON.stringify(sessionDetail), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    throw new Error(`fetch inesperado en este test: ${url}`);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+describe("ChatContent — sesión con agente deshabilitado (tarea 7.3, historial vista 12)", () => {
+  it("agente deshabilitado: los mensajes persistidos siguen visibles y el composer queda deshabilitado con motivo", async () => {
+    stubSessionFetchWithDisabledAgent(sessionDetailFor([undefined, undefined]));
+    renderChatContent("funcional", "session-1");
+
+    // La sesión se puede LEER: el árbol de mensajes ya persistido no depende
+    // de si el agente sigue siendo invocable.
+    await screen.findByText("Respuesta 2");
+    expect(screen.getByText("Pregunta 1")).toBeTruthy();
+
+    // El composer queda deshabilitado con el motivo inline (mismo patrón que
+    // QUOTA, tarea 6.2) -- nunca se pierde la posibilidad de leer el resto.
+    const textarea = screen.getByLabelText("Mensaje") as HTMLTextAreaElement;
+    expect(textarea.disabled).toBe(true);
+    expect(screen.getByText(LABELS.agentDisabledComposerReason)).toBeTruthy();
+  });
+
+  it("agente disponible (control): el composer sigue activo sin ningún motivo inline", async () => {
+    stubSessionFetch(sessionDetailFor([undefined, undefined]));
+    renderChatContent("funcional", "session-1");
+
+    await screen.findByText("Respuesta 2");
+    const textarea = screen.getByLabelText("Mensaje") as HTMLTextAreaElement;
+    expect(textarea.disabled).toBe(false);
+    expect(screen.queryByText(LABELS.agentDisabledComposerReason)).toBeNull();
+  });
+});
 
 describe("ChatContent — taxímetro: suma acumulada de dos turnos (tarea 4.2)", () => {
   it("Admin: el taxímetro suma cost_usd de los dos turnos, con costo y chips por fila", async () => {

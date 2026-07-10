@@ -503,6 +503,69 @@
       "requestSent": "Solicitud enviada",
       "requestSentNote": "Te avisamos cuando un admin la resuelva.",
       "composerDisabledReason": "Alcanzaste tu cuota mensual. Solicitá una liberación para seguir escribiendo."
+    },
+    "agentDisabled": {
+      "composerReason": "Este agente ya no está disponible. Podés leer la conversación, pero no continuarla."
     }
+  },
+  "History": {
+    "title": "Historial",
+    "newSession": "Nueva consulta",
+    "search": {
+      "label": "Buscar en tus conversaciones",
+      "placeholder": "Buscar en tus conversaciones…"
+    },
+    "agentFilter": {
+      "label": "Filtrar por agente",
+      "all": "Todos los agentes"
+    },
+    "tabs": {
+      "label": "Estado de las sesiones",
+      "active": "Activas",
+      "archived": "Archivadas"
+    },
+    "columns": {
+      "session": "Sesión",
+      "lastActivity": "Última actividad"
+    },
+    "row": {
+      "untitled": "Conversación sin título",
+      "messageCountOne": "{n} mensaje",
+      "messageCountOther": "{n} mensajes",
+      "branchesAriaLabelOne": "esta sesión tiene {n} rama",
+      "branchesAriaLabelOther": "esta sesión tiene {n} ramas",
+      "matchInTitle": "coincidencia en el título",
+      "matchInMessage": "coincidencia en un mensaje"
+    },
+    "cost": {
+      "columnLabel": "Costo",
+      "unavailableTooltip": "El costo por sesión todavía no está disponible.",
+      "periodTotalPrefix": "Este mes:",
+      "periodSessionsOne": "{n} sesión activa",
+      "periodSessionsOther": "{n} sesiones activas"
+    },
+    "empty": {
+      "firstTime": {
+        "title": "Todavía no tenés conversaciones",
+        "hint": "Elegí un agente del catálogo para empezar tu primera consulta.",
+        "cta": "Ir al catálogo"
+      },
+      "noResults": {
+        "title": "Sin resultados para «{q}»",
+        "titleGeneric": "Sin resultados con los filtros aplicados",
+        "hint": "Probá con otro término o quitá el filtro de agente.",
+        "clear": "Limpiar búsqueda"
+      },
+      "archived": {
+        "title": "No archivaste ninguna conversación",
+        "hint": "Archivar guarda la conversación fuera de la lista activa — nunca se borra nada."
+      }
+    },
+    "error": {
+      "title": "No pudimos cargar tu historial",
+      "why": "El servicio respondió con un error temporal. Tus conversaciones están a salvo.",
+      "retry": "Reintentar"
+    },
+    "loading": "Cargando tu historial…"
   }
 }

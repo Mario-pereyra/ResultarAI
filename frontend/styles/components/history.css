@@ -1,0 +1,129 @@
+/*
+ * styles/components/history.css — Historial de sesiones (d13-chat-conversacion,
+ * tareas 7.1-7.4 del frontend, `design/VISTAS/02-chat.md` vista 12).
+ *
+ * Consumido por `app/(shell)/chat/history-content.tsx`. A diferencia de
+ * `chat.css` (que porta la anatomía §5 de `design/mockups/tokens.css` casi
+ * verbatim), la vista 12 usa en el mockup (`design/mockups/12-historial.html`)
+ * una hoja de estilos LOCAL a ese archivo de documentación (`.hist`, `.sess`,
+ * etc.) que nunca se integró a `tokens.css` como componente reusable -- la
+ * implementación real reutiliza en cambio `Table`/`Input`/`Select`/`Tag`/
+ * `Skeleton`/`EmptyState`/`Tabs` del design system (`components/ui/*`, ya con
+ * su CSS portado) para el buscador/filtro/filas/columnas/estados. DESVÍO
+ * DOCUMENTADO respecto al mockup: el buscador y el filtro del mockup llevan
+ * un `<label class="sr-only">` (solo ícono + placeholder visibles); acá se
+ * usan `Input`/`Select` tal cual (con su `<label>` VISIBLE, que ambos
+ * componentes exigen siempre -- `field.tsx`: "ningún control se renderiza
+ * sin label asociado") en vez de duplicar esa anatomía con markup propio --
+ * más accesible que el ícono-solo del mockup y consistente con el resto del
+ * producto, a costa de un toolbar visualmente menos compacto. Este archivo
+ * solo agrega las clases ESPECÍFICAS de esta vista que ningún componente
+ * base cubre (layout del toolbar, línea de metadatos de la fila, insignia
+ * de ramas, total del período). SOLO tokens de `styles/tokens.css`
+ * (auditoría de colores, tarea 4.9 de d10-design-system-shell), nunca
+ * valores literales.
+ */
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.history-toolbar {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin: var(--sp-4) 0;
+}
+.history-toolbar .field {
+  margin-bottom: 0;
+}
+.history-toolbar__search {
+  flex: 2;
+  min-width: 220px;
+}
+.history-toolbar__agent {
+  flex: 1;
+  min-width: 180px;
+}
+
+.history-tabs {
+  margin-bottom: var(--sp-4);
+}
+
+.history-total {
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--ink-dim);
+  margin: 0 0 var(--sp-3);
+}
+
+.history-row__title-link {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: var(--fs-body);
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.history-row__title-link:hover { color: var(--accent); }
+.history-row__title-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--r-xs);
+}
+.history-row__title-link mark {
+  background: var(--accent-soft);
+  color: inherit;
+  border-radius: var(--r-xs);
+  padding: 0 1px;
+}
+
+.history-row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+.history-row__meta mark {
+  background: var(--accent-soft);
+  color: inherit;
+  border-radius: var(--r-xs);
+  padding: 0 1px;
+}
+
+.history-row__branch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--info);
+}
+
+.history-row {
+  cursor: pointer;
+}
+
+.history-skeleton-row td {
+  padding-top: var(--sp-3);
+  padding-bottom: var(--sp-3);
+}
+.history-skeleton-row__lines {
+  display: grid;
+  gap: 6px;
+}

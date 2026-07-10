@@ -155,3 +155,55 @@ export interface EscalateSessionResponse {
   origin_session_title: string | null;
   escalated_session_title: string | null;
 }
+
+/**
+ * Una fila de `GET /sessions` (tarea 2.1, historial -- vista 12). Espejo de
+ * `SessionSummaryResponse` (`resultarai/app/api/chat.py`). OJO: no trae
+ * `cost_usd` -- el listado del backend todavía no expone costo por sesión
+ * (hueco documentado en `openspec/BACKLOG-DESCUBRIMIENTOS.md`, tarea 7.4 de
+ * `d13-chat-conversacion`); la columna de costo (solo Admin) se renderiza con
+ * un placeholder hasta que ese campo exista.
+ */
+export interface SessionSummary {
+  id: string;
+  agent_id: string | null;
+  title: string | null;
+  model_profile: string;
+  last_activity_at: string | null;
+  message_count: number;
+  branch_count: number;
+}
+
+/** Respuesta de `GET /sessions` (tarea 2.1). */
+export interface ListSessionsResponse {
+  items: SessionSummary[];
+  limit: number;
+  offset: number;
+}
+
+/**
+ * Una coincidencia de `GET /sessions/search` (tarea 2.4, vista 12 §C). Espejo
+ * de `SessionSearchHitResponse` -- `snippet` es el fragmento de texto
+ * (título o contenido de mensaje) alrededor del término encontrado;
+ * `match_start`/`match_end` son offsets DENTRO de `snippet`, no del texto
+ * completo (ver el docstring de `_build_snippet` en
+ * `resultarai/app/use_cases/chat/history.py`).
+ */
+export interface SessionSearchHit {
+  session_id: string;
+  agent_id: string | null;
+  title: string | null;
+  last_activity_at: string | null;
+  match_type: "title" | "message";
+  message_id: string | null;
+  snippet: string;
+  match_start: number;
+  match_end: number;
+}
+
+/** Respuesta de `GET /sessions/search` (tarea 2.4). */
+export interface SearchSessionsResponse {
+  items: SessionSearchHit[];
+  limit: number;
+  offset: number;
+}

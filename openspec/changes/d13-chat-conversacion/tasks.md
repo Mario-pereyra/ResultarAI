@@ -50,10 +50,10 @@
 
 ## 7. UI — historial de sesiones (vista 12)
 
-- [ ] 7.1 Lista de sesiones con buscador (debounce 300 ms), filtro por agente, tabs Activas/Archivadas con contador, fila con agente/título/última actividad/mensajes/indicador de ramas (`⑂ N`). Verificación: prueba de componente con una sesión de dos ramas mostrando el contador correcto. `[modelo: sonnet]`
-- [ ] 7.2 Estados vacío (primera vez / sin resultados de búsqueda / sin archivadas), carga (skeleton) y error con reintento (textos ya definidos en la vista 12). Verificación: prueba de componente por cada uno de los 4 estados. `[modelo: haiku]`
-- [ ] 7.3 Retomar sesión abre en la última rama activa con scroll al final; sesión con agente deshabilitado se puede leer pero el composer queda deshabilitado con motivo. Verificación: prueba de componente que abre una sesión con agente deshabilitado y confirma el composer inactivo. `[modelo: sonnet]`
-- [ ] 7.4 Columna de costo por sesión y total del período, visible solo para Admin. Verificación: prueba de componente por rol confirmando la ausencia de la columna para Técnico/Funcional. `[modelo: sonnet]`
+- [x] 7.1 Lista de sesiones con buscador (debounce 300 ms), filtro por agente, tabs Activas/Archivadas con contador, fila con agente/título/última actividad/mensajes/indicador de ramas (`⑂ N`). Verificación: prueba de componente con una sesión de dos ramas mostrando el contador correcto. `[modelo: sonnet]`
+- [x] 7.2 Estados vacío (primera vez / sin resultados de búsqueda / sin archivadas), carga (skeleton) y error con reintento (textos ya definidos en la vista 12). Verificación: prueba de componente por cada uno de los 4 estados. `[modelo: haiku]`
+- [x] 7.3 Retomar sesión abre en la última rama activa con scroll al final; sesión con agente deshabilitado se puede leer pero el composer queda deshabilitado con motivo. Verificación: prueba de componente que abre una sesión con agente deshabilitado y confirma el composer inactivo. `[modelo: sonnet]`
+- [x] 7.4 Columna de costo por sesión y total del período, visible solo para Admin. Verificación: prueba de componente por rol confirmando la ausencia de la columna para Técnico/Funcional. `[modelo: sonnet]`
 
 ## 8. Responsive
 

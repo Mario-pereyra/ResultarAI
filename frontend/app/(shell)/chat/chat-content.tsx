@@ -89,6 +89,11 @@ export interface ChatContentLabels {
   /** Motivo inline del composer deshabilitado por `QUOTA` (tarea 6.2, vista
    * 10 §Interacciones) -- ver `Composer.disabledReason`. */
   quotaComposerDisabledReason: string;
+  /** Motivo inline del composer deshabilitado por agente no invocable
+   * (tarea 7.3, vista 12 §Interacciones: "sesión cuyo agente fue
+   * desactivado: se puede leer pero no continuar, composer deshabilitado
+   * con motivo") -- ver `Composer.disabledReason`. */
+  agentDisabledComposerReason: string;
 }
 
 export interface ChatContentProps {
@@ -294,6 +299,19 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   // monta jamás, aunque llegue el evento. Defensa en profundidad: el backend
   // ya suprime el marcador; esta bandera es la re-verificación de la UI.
   const [escalationEnabled, setEscalationEnabled] = useState(false);
+  // Tarea 7.3 (historial vista 12, "sesión con agente deshabilitado"): `true`
+  // cuando `GET /api/agents/{id}` respondió 404 para el agente REAL de la
+  // sesión -- ver `effectiveAgentId` y el efecto de `loadAgent` más abajo.
+  // La sesión sigue siendo LEGIBLE (los mensajes ya cargados no dependen de
+  // esto); solo el composer queda deshabilitado con motivo (ver el render).
+  const [composerDisabledByAgent, setComposerDisabledByAgent] = useState(false);
+  // Agente REAL de la sesión ya persistida (`detail.agent_id` de
+  // `GET /sessions/{id}`), distinto de `labels.agentId` (fijo en
+  // "default_chat", el único agente con el que HOY se crean sesiones
+  // nuevas -- selector de catálogo real es `d15`). Para una sesión nueva
+  // (`sessionId` todavía `null`) no hay agente real que resolver todavía:
+  // `effectiveAgentId` (más abajo) cae a `labels.agentId`.
+  const [sessionAgentId, setSessionAgentId] = useState<string | null>(null);
   // Tarea 5.3 (persistencia): ids de sesiones escaladas desde esta sesión
   // (`escalated_session_ids` del detalle) y origen de esta sesión si ella misma
   // nació de una escalación (`forked_from_id`, para la nota-enlace de vuelta
@@ -381,6 +399,12 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         // nota-enlace de vuelta). Ver `renderEscalation` y `leadingNote`.
         setEscalatedSessionIds(detail.escalated_session_ids);
         setForkedFromId(detail.forked_from_id);
+        // Tarea 7.3: agente REAL de la sesión (puede diferir de
+        // `labels.agentId` cuando el selector de catálogo -- `d15` -- deje de
+        // ser un único agente fijo) -- dispara el efecto de `loadAgent` de
+        // abajo con el id correcto para decidir si el composer queda
+        // deshabilitado.
+        setSessionAgentId(detail.agent_id);
 
         // Reanudar sesión (tarea 2.5): si otra pestaña/dispositivo dejó un
         // turno en curso, re-attachearse al stream real en vez de mostrar
@@ -415,14 +439,36 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialSessionId]);
 
-  // Tarea 3.5: resuelve las sugerencias de inicio del agente una sola vez.
-  // Falla en silencio (sin sugerencias) si el endpoint no responde -- no es
-  // condición para que el resto del chat funcione.
+  // Tarea 7.3: agente contra el que se resuelve `GET /api/agents/{id}` --
+  // el REAL de la sesión ya cargada (`sessionAgentId`, seteado por
+  // `loadSession` desde `detail.agent_id`) si existe; si no (sesión nueva
+  // todavía sin crear, o `detail.agent_id` nulo), cae a `labels.agentId`
+  // (fijo en "default_chat" hasta que exista selector de catálogo, `d15`).
+  const effectiveAgentId = sessionAgentId ?? labels.agentId;
+
+  // Tarea 3.5 (sugerencias de inicio) + tarea 7.3 (agente deshabilitado):
+  // resuelve el agente de la sesión. Un 404 (`get_agent_endpoint`: agente no
+  // catalogado o no invocable -- draft/deprecated/inactive) es la señal de
+  // "sesión con agente deshabilitado" de la vista 12 (§Interacciones): la
+  // sesión se puede LEER (`messages` ya viene de `loadSession`, independiente
+  // de este efecto) pero el composer queda deshabilitado con motivo (ver el
+  // render, `composerDisabledByAgent`). Cualquier OTRO error de red/servidor
+  // falla en silencio (sin sugerencias, sin deshabilitar el composer): no es
+  // la misma señal que un 404 explícito y no debería bloquear al usuario por
+  // un problema transitorio.
   useEffect(() => {
     let cancelled = false;
     async function loadAgent() {
       try {
-        const res = await fetch(`/api/agents/${labels.agentId}`);
+        const res = await fetch(`/api/agents/${effectiveAgentId}`);
+        if (res.status === 404) {
+          if (!cancelled) {
+            setStarterPrompts([]);
+            setEscalationEnabled(false);
+            setComposerDisabledByAgent(true);
+          }
+          return;
+        }
         if (!res.ok) return;
         const data = (await res.json()) as {
           starter_prompts: string[];
@@ -434,17 +480,20 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
           // `escalation_enabled: true` la tarjeta podrá montarse. Si la lectura
           // falla, queda en `false` (fail-closed) y nunca se muestra.
           setEscalationEnabled(data.escalation_enabled);
+          setComposerDisabledByAgent(false);
         }
       } catch {
         // Sin sugerencias no rompe el chat: la vista 05 sigue funcional.
         // `escalationEnabled` queda en `false`: la escalación no se ofrece.
+        // `composerDisabledByAgent` NO se toca acá (ver el docstring de
+        // arriba: una falla de red no es la misma señal que un 404 explícito).
       }
     }
     void loadAgent();
     return () => {
       cancelled = true;
     };
-  }, [labels.agentId]);
+  }, [effectiveAgentId]);
 
   // Pliega el turno en curso dentro del historial persistido cuando cierra
   // (la columna deja de mostrar el bloque "en streaming" y pasa a
@@ -988,9 +1037,18 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         // inactivo -- evita un segundo `sendTurn` concurrente sobre el mismo
         // `turnStream` (que solo sostiene un turno en curso a la vez). Tarea
         // 6.2: QUOTA además lo bloquea con un motivo propio (vista 10
-        // §Interacciones: "es bloqueo, no solo error de turno").
-        disabled={editingMessageId !== null || quotaBlocked}
-        disabledReason={quotaBlocked ? labels.quotaComposerDisabledReason : undefined}
+        // §Interacciones: "es bloqueo, no solo error de turno"). Tarea 7.3:
+        // agente no invocable también lo bloquea con motivo propio (vista 12
+        // §Interacciones) -- la sesión sigue siendo legible, solo el composer
+        // se apaga.
+        disabled={editingMessageId !== null || quotaBlocked || composerDisabledByAgent}
+        disabledReason={
+          quotaBlocked
+            ? labels.quotaComposerDisabledReason
+            : composerDisabledByAgent
+              ? labels.agentDisabledComposerReason
+              : undefined
+        }
         streaming={isStreamingTurn}
         value={composerText}
         onChange={setComposerText}
