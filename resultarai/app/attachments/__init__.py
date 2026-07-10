@@ -1,0 +1,66 @@
+"""Contexto de adjuntos: subida, validacion de seguridad OWASP y persistencia (d14).
+
+Alcance actual (tareas 2.1-2.5, 3.5): endpoint de subida multipart, limites por tipo y por
+mensaje configurables, validacion de tipo real (allowlist + magic bytes), rechazo de
+formatos activos/peligrosos y de imagenes en V1, proteccion zip-bomb OOXML y worker de
+parseo aislado con timeout + memoria acotada (transicion de estados uploaded -> extracting
+-> ready/error). La sanitizacion, el escaneo N2/N3 y la composicion del mensaje llegan en
+tareas posteriores del mismo change.
+"""
+
+from __future__ import annotations
+
+from resultarai.app.attachments.config import AttachmentsConfig
+from resultarai.app.attachments.errors import (
+    AttachmentExtractionError,
+    AttachmentRejectedError,
+    CompressedNotAllowedError,
+    ExecutableRejectedError,
+    ExtractionFailedError,
+    ExtractionTimeoutError,
+    FileTooLargeError,
+    ImageNotSupportedError,
+    LegacyDocError,
+    MacrosNotAllowedError,
+    PdfPasswordError,
+    TooManyAttachmentsError,
+    TypeForgedError,
+    TypeNotAllowedError,
+    ZipBombSuspectedError,
+)
+from resultarai.app.attachments.extraction import (
+    ExtractionOutcome,
+    extract_attachment,
+    run_extraction,
+)
+from resultarai.app.attachments.filetypes import FileCategory
+from resultarai.app.attachments.upload import UploadSource, create_attachment
+from resultarai.app.attachments.worker import run_in_isolated_worker
+from resultarai.app.attachments.zip_guard import inspect_ooxml_for_zip_bomb
+
+__all__ = [
+    "AttachmentExtractionError",
+    "AttachmentRejectedError",
+    "AttachmentsConfig",
+    "CompressedNotAllowedError",
+    "ExecutableRejectedError",
+    "ExtractionFailedError",
+    "ExtractionOutcome",
+    "ExtractionTimeoutError",
+    "FileCategory",
+    "FileTooLargeError",
+    "ImageNotSupportedError",
+    "LegacyDocError",
+    "MacrosNotAllowedError",
+    "PdfPasswordError",
+    "TooManyAttachmentsError",
+    "TypeForgedError",
+    "TypeNotAllowedError",
+    "UploadSource",
+    "ZipBombSuspectedError",
+    "create_attachment",
+    "extract_attachment",
+    "inspect_ooxml_for_zip_bomb",
+    "run_extraction",
+    "run_in_isolated_worker",
+]

@@ -14,6 +14,7 @@ from resultarai.adapters.persistence_postgres.connection import get_db_session
 from resultarai.adapters.persistence_postgres.models import User
 from resultarai.adapters.tracing_langfuse.feedback import submit_feedback
 from resultarai.app.api.admin import router as admin_router
+from resultarai.app.api.attachments import router as attachments_router
 from resultarai.app.api.auth import router as auth_router
 from resultarai.app.api.chat import get_feedback_submitter, get_registries
 from resultarai.app.api.chat import router as chat_router
@@ -139,6 +140,7 @@ def create_app() -> FastAPI:
     app.include_router(notifications_router)
     app.include_router(chat_router)
     app.include_router(chat_stream_router)
+    app.include_router(attachments_router)
 
     # Inyección de dependencias
     app.dependency_overrides[get_db] = get_db_override
