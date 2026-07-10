@@ -6,6 +6,7 @@ from typing import Any
 from uuid import UUID
 
 from sqlalchemy.orm import Session as DbSession
+
 from resultarai.adapters.persistence_postgres.notifications import PostgresNotificationRepository
 from resultarai.app.use_cases.notifications.types import NOTIFICATION_TYPES
 
@@ -42,7 +43,8 @@ def emit_notification(
     # 3. Validar rol/destinatario mediante el recipient_resolver
     if not type_info.recipient_resolver(db, r_id):
         raise ValueError(
-            f"El destinatario {recipient_id} no cumple con los requisitos del rol para {notification_type}"
+            f"El destinatario {recipient_id} no cumple con los requisitos del rol "
+            f"para {notification_type}"
         )
 
     # 4. Persistir la notificación

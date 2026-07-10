@@ -9,10 +9,10 @@ Usage:
 
 from __future__ import annotations
 
-import sys
 import uuid
 
 from sqlalchemy import func, select
+from sqlalchemy.orm import Session as DbSession
 
 from resultarai.adapters.persistence_postgres.connection import get_db_session
 from resultarai.adapters.persistence_postgres.models import (
@@ -30,7 +30,7 @@ from resultarai.adapters.persistence_postgres.notifications import (
 
 # Each entry will produce one notification.  ``read`` controls whether the
 # notification is immediately marked as read after creation.
-SEED_NOTIFICATIONS: list[dict] = [
+SEED_NOTIFICATIONS: list[dict[str, object]] = [
     # -- quota_release_requested --
     {
         "type": "quota_release_requested",
@@ -84,7 +84,7 @@ SEED_NOTIFICATIONS: list[dict] = [
 ]
 
 
-def _find_admin_user_id(db) -> uuid.UUID | None:  # noqa: ANN001
+def _find_admin_user_id(db: DbSession) -> uuid.UUID | None:
     """Return the ID of the first active admin user, or ``None``."""
     stmt = (
         select(User.id)
@@ -92,17 +92,18 @@ def _find_admin_user_id(db) -> uuid.UUID | None:  # noqa: ANN001
         .order_by(User.created_at)
         .limit(1)
     )
-    return db.execute(stmt).scalar_one_or_none()
+    result: uuid.UUID | None = db.execute(stmt).scalar_one_or_none()
+    return result
 
 
-def _notifications_exist(db, recipient_id: uuid.UUID) -> bool:  # noqa: ANN001
+def _notifications_exist(db: DbSession, recipient_id: uuid.UUID) -> bool:
     """Return ``True`` if seed-like notifications already exist."""
     count = db.execute(
         select(func.count(Notification.id)).where(
             Notification.recipient_id == recipient_id,
         )
     ).scalar_one()
-    return count > 0
+    return bool(count > 0)
 
 
 def seed_notifications() -> None:
@@ -114,6 +115,7 @@ def seed_notifications() -> None:
 
         if admin_id is None:
             from resultarai.app.identity import hash_password
+
             default_admin = User(
                 username="admin_dev",
                 display_name="Admin Dev",
@@ -136,12 +138,18 @@ def seed_notifications() -> None:
 
         created = 0
         for entry in SEED_NOTIFICATIONS:
+            notification_type = entry["type"]
+            payload = entry["payload"]
+            deep_link = entry.get("deep_link")
+            assert isinstance(notification_type, str)
+            assert isinstance(payload, dict)
+            assert deep_link is None or isinstance(deep_link, str)
             notif = repo.create(
                 db=db,
                 recipient_id=admin_id,
-                notification_type=entry["type"],
-                payload=entry["payload"],
-                deep_link=entry.get("deep_link"),
+                notification_type=notification_type,
+                payload=payload,
+                deep_link=deep_link,
             )
             if entry.get("read"):
                 notif.read_at = get_utc_now()

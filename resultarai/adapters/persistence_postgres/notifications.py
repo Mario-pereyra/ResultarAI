@@ -6,14 +6,21 @@ import datetime
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session as DbSession
+
 from resultarai.adapters.persistence_postgres.models import Notification, get_utc_now
-from resultarai.app.use_cases.notifications.ports import NotificationRepository
 
 
-class PostgresNotificationRepository(NotificationRepository):
-    """Postgres implementation of NotificationRepository."""
+class PostgresNotificationRepository:
+    """Postgres implementation of NotificationRepository.
+
+    Satisface estructuralmente el Protocol ``NotificationRepository`` de
+    ``resultarai/app/use_cases/notifications/ports.py`` sin heredarlo: un adapter
+    no puede importar ``app/`` (contrato de capas app -> adapters -> core de
+    import-linter); el tipado estructural de los Protocols hace innecesaria la
+    herencia nominal.
+    """
 
     def create(
         self,

@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session as DbSession
 
-from resultarai.adapters.persistence_postgres.models import User, Group, GroupMember
+from resultarai.adapters.persistence_postgres.models import Group, GroupMember, User
 from resultarai.app.identity import (
     get_db,
     require_admin,
@@ -205,17 +205,19 @@ def list_groups(
     """Devuelve la lista de grupos con sus miembros."""
     stmt = select(Group).order_by(Group.name.asc())
     groups = db.execute(stmt).scalars().all()
-    
+
     result = []
     for g in groups:
         member_stmt = select(GroupMember).where(GroupMember.group_id == g.id)
         members = db.execute(member_stmt).scalars().all()
-        result.append({
-            "id": str(g.id),
-            "name": g.name,
-            "description": g.description,
-            "member_ids": [str(m.user_id) for m in members]
-        })
+        result.append(
+            {
+                "id": str(g.id),
+                "name": g.name,
+                "description": g.description,
+                "member_ids": [str(m.user_id) for m in members],
+            }
+        )
     return result
 
 

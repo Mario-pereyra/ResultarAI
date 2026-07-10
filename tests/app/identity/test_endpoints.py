@@ -575,23 +575,24 @@ def test_audit_log_entries(client: TestClient) -> None:
 def test_security_brute_force_release(client: TestClient) -> None:
     """9.1 Test de fuerza bruta: bloqueo y liberación por tiempo o por acción de Admin."""
     pwd = "ValidPassword123!"
-    user_id = make_user("brute-force-user", role="tecnico", password_hash=hash_password(pwd))
-    
+    make_user("brute-force-user", role="tecnico", password_hash=hash_password(pwd))
+
     # 5 intentos fallidos
     for _ in range(5):
         client.post("/api/auth/login", json={"username": "brute-force-user", "password": "bad"})
-        
+
     # Bloqueado
     r = client.post("/api/auth/login", json={"username": "brute-force-user", "password": pwd})
     assert r.status_code == 400
     assert r.json()["detail"] == "ACCOUNT_LOCKED"
-    
+
     # Liberación por acción del Admin (limpia intentos en la DB)
     from resultarai.app.identity import clear_attempts
+
     with get_db_session() as db:
         clear_attempts(db, "brute-force-user")
         db.commit()
-        
+
     # Vuelve a poder entrar
     r = client.post("/api/auth/login", json={"username": "brute-force-user", "password": pwd})
     assert r.status_code == 200
@@ -602,24 +603,29 @@ def test_security_revoked_or_expired_session_returns_401(client: TestClient) -> 
     """9.2 Test de sesión revocada o expirada -> 401 en cualquier endpoint autenticado."""
     pwd = "ValidPassword123!"
     user_id = make_user("session-fail-user", role="tecnico", password_hash=hash_password(pwd))
-    
+
     # login
     client.post("/api/auth/login", json={"username": "session-fail-user", "password": pwd})
     assert SESSION_COOKIE in client.cookies
-    
+
     # Revocar sesión del servidor manualmente
     from resultarai.app.identity import revoke_all_sessions
+
     with get_db_session() as db:
         revoke_all_sessions(db, user_id)
         db.commit()
-        
+
     # Intentar acceder a endpoints de sección 3 (auth), 4 (admin), 5 (me)
-    r3 = post_csrf(client, "/api/auth/password", json={"current_password": pwd, "new_password": "NewPassword123!"})
+    r3 = post_csrf(
+        client,
+        "/api/auth/password",
+        json={"current_password": pwd, "new_password": "NewPassword123!"},
+    )
     assert r3.status_code == 401
-    
+
     r4 = client.get("/api/admin/users")
     assert r4.status_code == 401
-    
+
     r5 = client.get("/api/me/agreement/status")
     assert r5.status_code == 401
 
@@ -629,7 +635,7 @@ def test_security_body_userid_ignored(client: TestClient) -> None:
     pwd = "ValidPassword123!"
     user_a = make_user("user-alice", role="admin", password_hash=hash_password(pwd))
     user_b = make_user("user-bob", role="tecnico", password_hash=hash_password(pwd))
-    
+
     # Enrolar TOTP para alice para poder loguearse como admin completo
     secret_base32 = pyotp.random_base32()
     totp_config = TotpConfig.from_env()
@@ -638,44 +644,47 @@ def test_security_body_userid_ignored(client: TestClient) -> None:
     with get_db_session() as db:
         db.add(TotpSecret(user_id=user_a, encrypted_secret=encrypted_secret))
         db.commit()
-        
+
     # Login Alice
     login_admin(client, "user-alice", pwd, secret_base32)
-    
+
     # 1. Endpoint Sección 3 (auth): password con userId ajeno
     # (El endpoint cambia la contraseña de Alice, no de Bob)
-    r3 = post_csrf(client, "/api/auth/password", json={
-        "current_password": pwd,
-        "new_password": "NewPassword123!",
-        "userId": str(user_b)
-    })
+    r3 = post_csrf(
+        client,
+        "/api/auth/password",
+        json={"current_password": pwd, "new_password": "NewPassword123!", "userId": str(user_b)},
+    )
     assert r3.status_code == 200
-    
+
     # Verificar que la contraseña de Alice cambió, pero la de Bob sigue igual
     r_alice_old = client.post("/api/auth/login", json={"username": "user-alice", "password": pwd})
     assert r_alice_old.status_code == 400
-    
+
     # 2. Endpoint Sección 4 (admin): crear usuario con userId ajeno en body
-    r4 = post_csrf(client, "/api/admin/users", json={
-        "username": "user-charlie",
-        "display_name": "Charlie",
-        "role": "funcional",
-        "userId": str(user_b)
-    })
+    r4 = post_csrf(
+        client,
+        "/api/admin/users",
+        json={
+            "username": "user-charlie",
+            "display_name": "Charlie",
+            "role": "funcional",
+            "userId": str(user_b),
+        },
+    )
     assert r4.status_code == 200
-    
+
     # 3. Endpoint Sección 5 (me): aceptar acuerdo
     # (El acuerdo es aceptado para el usuario autenticado (Alice), no para Bob)
     # Primero publicar acuerdo
     r_pub = post_csrf(client, "/api/admin/agreement/publish", json={"text": "Acuerdo de prueba"})
     version_id = r_pub.json()["version_id"]
-    
-    r5 = post_csrf(client, "/api/me/agreement/accept", json={
-        "version_id": version_id,
-        "userId": str(user_b)
-    })
+
+    r5 = post_csrf(
+        client, "/api/me/agreement/accept", json={"version_id": version_id, "userId": str(user_b)}
+    )
     assert r5.status_code == 200
-    
+
     # Verificar que el estado del acuerdo para Bob sigue siendo pendiente (no aceptó)
     # Logout Alice, Login Bob
     post_csrf(client, "/api/auth/logout")
@@ -688,16 +697,16 @@ def test_security_body_userid_ignored(client: TestClient) -> None:
 def test_security_cookie_attributes_and_csrf_rejection(client: TestClient) -> None:
     """9.4 Test de atributos de cookie y de rechazo de mutaciones sin token CSRF válido."""
     pwd = "ValidPassword123!"
-    user_id = make_user("csrf-attr-user", role="tecnico", password_hash=hash_password(pwd))
-    
+    make_user("csrf-attr-user", role="tecnico", password_hash=hash_password(pwd))
+
     # Iniciar sesión con configuración de cookies segura forzada
     r_login = client.post("/api/auth/login", json={"username": "csrf-attr-user", "password": pwd})
     assert r_login.status_code == 200
-    
+
     # Obtener las cabeceras Set-Cookie
     cookies_headers = r_login.headers.get_list("set-cookie")
     assert len(cookies_headers) >= 2
-    
+
     # Buscar cookie de sesión y CSRF
     session_cookie_header = None
     csrf_cookie_header = None
@@ -706,23 +715,21 @@ def test_security_cookie_attributes_and_csrf_rejection(client: TestClient) -> No
             session_cookie_header = header
         elif "resultarai_csrf=" in header:
             csrf_cookie_header = header
-            
+
     assert session_cookie_header is not None
     assert csrf_cookie_header is not None
-    
+
     # session cookie: HttpOnly, SameSite=Lax
     assert "httponly" in session_cookie_header.lower()
     assert "samesite=lax" in session_cookie_header.lower()
-    
+
     # csrf cookie: SameSite=Lax, NO HttpOnly
     assert "httponly" not in csrf_cookie_header.lower()
     assert "samesite=lax" in csrf_cookie_header.lower()
-    
+
     # Mutaciones sin CSRF header -> 403
-    r_no_csrf = client.post("/api/me/wizard/preferences", json={
-        "preferred_language": "es",
-        "preferred_theme": "dark"
-    })
+    r_no_csrf = client.post(
+        "/api/me/wizard/preferences", json={"preferred_language": "es", "preferred_theme": "dark"}
+    )
     assert r_no_csrf.status_code == 403
     assert r_no_csrf.json()["detail"] == "CSRF token inválido o ausente."
-

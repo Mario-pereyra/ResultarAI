@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Callable
+from collections.abc import Callable
 from uuid import UUID
+
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session as DbSession
 
@@ -42,6 +43,7 @@ class CatalogNewsPayload(BaseModel):
 def resolve_admin_recipient(db: DbSession, recipient_id: UUID) -> bool:
     """Verifica que el destinatario sea un Administrador activo."""
     from resultarai.adapters.persistence_postgres.models import User
+
     user = db.get(User, recipient_id)
     return user is not None and user.role == "admin" and user.status == "active"
 
@@ -49,6 +51,7 @@ def resolve_admin_recipient(db: DbSession, recipient_id: UUID) -> bool:
 def resolve_any_recipient(db: DbSession, recipient_id: UUID) -> bool:
     """Verifica que el destinatario sea cualquier usuario activo."""
     from resultarai.adapters.persistence_postgres.models import User
+
     user = db.get(User, recipient_id)
     return user is not None and user.status == "active"
 

@@ -90,17 +90,27 @@ def list_notifications(
 
     # Count total for this status
     if status == "unread":
-        total = _repo.count_unread(db, recipient_id=current_user.id, retention_window=_DEFAULT_RETENTION)
+        total = _repo.count_unread(
+            db, recipient_id=current_user.id, retention_window=_DEFAULT_RETENTION
+        )
     elif status == "read":
         all_items = _repo.list_notifications(
-            db=db, recipient_id=current_user.id, status="read",
-            limit=10000, offset=0, retention_window=_DEFAULT_RETENTION,
+            db=db,
+            recipient_id=current_user.id,
+            status="read",
+            limit=10000,
+            offset=0,
+            retention_window=_DEFAULT_RETENTION,
         )
         total = len(all_items)
     else:
         all_items = _repo.list_notifications(
-            db=db, recipient_id=current_user.id, status=None,
-            limit=10000, offset=0, retention_window=_DEFAULT_RETENTION,
+            db=db,
+            recipient_id=current_user.id,
+            status=None,
+            limit=10000,
+            offset=0,
+            retention_window=_DEFAULT_RETENTION,
         )
         total = len(all_items)
 

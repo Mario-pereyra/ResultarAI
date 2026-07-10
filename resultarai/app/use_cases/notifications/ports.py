@@ -7,6 +7,7 @@ from typing import Any, Protocol
 from uuid import UUID
 
 from sqlalchemy.orm import Session as DbSession
+
 from resultarai.adapters.persistence_postgres.models import Notification
 
 

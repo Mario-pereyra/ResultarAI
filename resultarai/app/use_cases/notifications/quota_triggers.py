@@ -31,9 +31,11 @@ def request_quota_release_test_trigger(
         raise ValueError(f"Usuario solicitante no encontrado: {requestor_id}")
 
     # Find all active admins
-    admins = db.execute(
-        select(User).where(User.role == "admin", User.status == "active")
-    ).scalars().all()
+    admins = (
+        db.execute(select(User).where(User.role == "admin", User.status == "active"))
+        .scalars()
+        .all()
+    )
 
     notifications = []
     for admin in admins:

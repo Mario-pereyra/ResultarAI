@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterator
-from typing import Annotated, Any
+from typing import Any
 from uuid import UUID
 
 from cryptography.fernet import Fernet
@@ -13,17 +13,17 @@ from cryptography.fernet import Fernet
 _STABLE_KEY = Fernet.generate_key().decode("utf-8")
 os.environ.setdefault("IDENTITY_TOTP_ENCRYPTION_KEY", _STABLE_KEY)
 
+import datetime
+
 import pyotp
 import pytest
-from fastapi import Depends
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session as DbSession
 
 from resultarai.adapters.persistence_postgres.connection import SessionLocal, get_db_session
-from resultarai.adapters.persistence_postgres.models import Notification, TotpSecret, User
+from resultarai.adapters.persistence_postgres.models import TotpSecret
 from resultarai.app.api import create_app
 from resultarai.app.identity import (
-    SESSION_COOKIE,
     SessionConfig,
     TotpConfig,
     get_db,
@@ -35,8 +35,6 @@ from resultarai.app.use_cases.notifications.quota_triggers import (
     resolve_quota_release_test_trigger,
 )
 from tests.app.identity.conftest import make_user
-
-import datetime
 
 _CONFIG = SessionConfig(
     signing_key="test-notif-key-for-notifications-and-access-control",
@@ -115,7 +113,9 @@ def test_quota_release_request_notifies_all_admins() -> None:
     admin_pwd = "AdminPassword123!"
     admin1_id, _ = make_completed_admin("notif-admin1", hash_password(admin_pwd))
     admin2_id, _ = make_completed_admin("notif-admin2", hash_password(admin_pwd))
-    requestor_id = make_user("notif-requestor", role="funcional", password_hash=hash_password("Pass123!"))
+    requestor_id = make_user(
+        "notif-requestor", role="funcional", password_hash=hash_password("Pass123!")
+    )
 
     with get_db_session() as db:
         notifications = request_quota_release_test_trigger(
@@ -136,7 +136,9 @@ def test_quota_release_request_notifies_all_admins() -> None:
 
 def test_quota_release_resolve_notifies_requestor() -> None:
     """3.2 El solicitante es notificado de la decisión (concedida y denegada)."""
-    requestor_id = make_user("notif-resolv", role="tecnico", password_hash=hash_password("Pass123!"))
+    requestor_id = make_user(
+        "notif-resolv", role="tecnico", password_hash=hash_password("Pass123!")
+    )
 
     # Concedida
     with get_db_session() as db:
@@ -179,12 +181,25 @@ def test_list_notifications_filtered_unread(client: TestClient) -> None:
     login_admin(client, "list-admin", admin_pwd, secret)
 
     # Create test notifications via DB directly
-    from resultarai.adapters.persistence_postgres.notifications import PostgresNotificationRepository
+    from resultarai.adapters.persistence_postgres.notifications import (
+        PostgresNotificationRepository,
+    )
+
     repo = PostgresNotificationRepository()
 
     with get_db_session() as db:
-        repo.create(db, admin_id, "quota_release_requested", {"requestor_username": "x", "quota_name": "a", "current_consumption": 1.0})
-        n2 = repo.create(db, admin_id, "quota_release_requested", {"requestor_username": "y", "quota_name": "b", "current_consumption": 2.0})
+        repo.create(
+            db,
+            admin_id,
+            "quota_release_requested",
+            {"requestor_username": "x", "quota_name": "a", "current_consumption": 1.0},
+        )
+        n2 = repo.create(
+            db,
+            admin_id,
+            "quota_release_requested",
+            {"requestor_username": "y", "quota_name": "b", "current_consumption": 2.0},
+        )
         repo.mark_read(db, n2.id, admin_id)
         db.commit()
 
@@ -201,12 +216,20 @@ def test_list_notifications_pagination(client: TestClient) -> None:
     admin_id, secret = make_completed_admin("page-admin", hash_password(admin_pwd))
     login_admin(client, "page-admin", admin_pwd, secret)
 
-    from resultarai.adapters.persistence_postgres.notifications import PostgresNotificationRepository
+    from resultarai.adapters.persistence_postgres.notifications import (
+        PostgresNotificationRepository,
+    )
+
     repo = PostgresNotificationRepository()
 
     with get_db_session() as db:
         for i in range(5):
-            repo.create(db, admin_id, "quota_release_requested", {"requestor_username": f"u{i}", "quota_name": "q", "current_consumption": float(i)})
+            repo.create(
+                db,
+                admin_id,
+                "quota_release_requested",
+                {"requestor_username": f"u{i}", "quota_name": "q", "current_consumption": float(i)},
+            )
         db.commit()
 
     r1 = client.get("/api/notifications?page=1&page_size=2")
@@ -229,15 +252,28 @@ def test_list_notifications_pagination(client: TestClient) -> None:
 def test_user_cannot_see_other_user_notifications(client: TestClient) -> None:
     """4.1 Un usuario no ve las notificaciones de otro."""
     admin_pwd = "AdminPassword123!"
-    admin_a_id, secret_a = make_completed_admin("vis-admin-a", hash_password(admin_pwd))
+    admin_a_id, _secret_a = make_completed_admin("vis-admin-a", hash_password(admin_pwd))
     admin_b_id, secret_b = make_completed_admin("vis-admin-b", hash_password(admin_pwd))
 
-    from resultarai.adapters.persistence_postgres.notifications import PostgresNotificationRepository
+    from resultarai.adapters.persistence_postgres.notifications import (
+        PostgresNotificationRepository,
+    )
+
     repo = PostgresNotificationRepository()
 
     with get_db_session() as db:
-        repo.create(db, admin_a_id, "quota_release_requested", {"requestor_username": "x", "quota_name": "q", "current_consumption": 1.0})
-        repo.create(db, admin_b_id, "quota_release_requested", {"requestor_username": "y", "quota_name": "q", "current_consumption": 2.0})
+        repo.create(
+            db,
+            admin_a_id,
+            "quota_release_requested",
+            {"requestor_username": "x", "quota_name": "q", "current_consumption": 1.0},
+        )
+        repo.create(
+            db,
+            admin_b_id,
+            "quota_release_requested",
+            {"requestor_username": "y", "quota_name": "q", "current_consumption": 2.0},
+        )
         db.commit()
 
     # Login as admin B
@@ -256,13 +292,31 @@ def test_unread_count(client: TestClient) -> None:
     admin_id, secret = make_completed_admin("cnt-admin", hash_password(admin_pwd))
     login_admin(client, "cnt-admin", admin_pwd, secret)
 
-    from resultarai.adapters.persistence_postgres.notifications import PostgresNotificationRepository
+    from resultarai.adapters.persistence_postgres.notifications import (
+        PostgresNotificationRepository,
+    )
+
     repo = PostgresNotificationRepository()
 
     with get_db_session() as db:
-        n1 = repo.create(db, admin_id, "quota_release_requested", {"requestor_username": "a", "quota_name": "q", "current_consumption": 1.0})
-        repo.create(db, admin_id, "quota_release_requested", {"requestor_username": "b", "quota_name": "q", "current_consumption": 2.0})
-        repo.create(db, admin_id, "quota_release_requested", {"requestor_username": "c", "quota_name": "q", "current_consumption": 3.0})
+        n1 = repo.create(
+            db,
+            admin_id,
+            "quota_release_requested",
+            {"requestor_username": "a", "quota_name": "q", "current_consumption": 1.0},
+        )
+        repo.create(
+            db,
+            admin_id,
+            "quota_release_requested",
+            {"requestor_username": "b", "quota_name": "q", "current_consumption": 2.0},
+        )
+        repo.create(
+            db,
+            admin_id,
+            "quota_release_requested",
+            {"requestor_username": "c", "quota_name": "q", "current_consumption": 3.0},
+        )
         db.commit()
         notif_id = n1.id
 
@@ -283,11 +337,19 @@ def test_mark_notification_read(client: TestClient) -> None:
     admin_id, secret = make_completed_admin("mark-admin", hash_password(admin_pwd))
     login_admin(client, "mark-admin", admin_pwd, secret)
 
-    from resultarai.adapters.persistence_postgres.notifications import PostgresNotificationRepository
+    from resultarai.adapters.persistence_postgres.notifications import (
+        PostgresNotificationRepository,
+    )
+
     repo = PostgresNotificationRepository()
 
     with get_db_session() as db:
-        n1 = repo.create(db, admin_id, "quota_release_requested", {"requestor_username": "x", "quota_name": "q", "current_consumption": 1.0})
+        n1 = repo.create(
+            db,
+            admin_id,
+            "quota_release_requested",
+            {"requestor_username": "x", "quota_name": "q", "current_consumption": 1.0},
+        )
         db.commit()
         notif_id = n1.id
 
@@ -300,13 +362,21 @@ def test_mark_notification_read_foreign_rejected(client: TestClient) -> None:
     """4.3 Acceso directo a una notificación ajena es rechazado."""
     admin_pwd = "AdminPassword123!"
     admin_a_id, _ = make_completed_admin("for-admin-a", hash_password(admin_pwd))
-    admin_b_id, secret_b = make_completed_admin("for-admin-b", hash_password(admin_pwd))
+    _admin_b_id, secret_b = make_completed_admin("for-admin-b", hash_password(admin_pwd))
 
-    from resultarai.adapters.persistence_postgres.notifications import PostgresNotificationRepository
+    from resultarai.adapters.persistence_postgres.notifications import (
+        PostgresNotificationRepository,
+    )
+
     repo = PostgresNotificationRepository()
 
     with get_db_session() as db:
-        n_a = repo.create(db, admin_a_id, "quota_release_requested", {"requestor_username": "x", "quota_name": "q", "current_consumption": 1.0})
+        n_a = repo.create(
+            db,
+            admin_a_id,
+            "quota_release_requested",
+            {"requestor_username": "x", "quota_name": "q", "current_consumption": 1.0},
+        )
         db.commit()
         foreign_id = n_a.id
 
@@ -323,12 +393,20 @@ def test_mark_all_read(client: TestClient) -> None:
     admin_id, secret = make_completed_admin("all-admin", hash_password(admin_pwd))
     login_admin(client, "all-admin", admin_pwd, secret)
 
-    from resultarai.adapters.persistence_postgres.notifications import PostgresNotificationRepository
+    from resultarai.adapters.persistence_postgres.notifications import (
+        PostgresNotificationRepository,
+    )
+
     repo = PostgresNotificationRepository()
 
     with get_db_session() as db:
         for i in range(3):
-            repo.create(db, admin_id, "quota_release_requested", {"requestor_username": f"u{i}", "quota_name": "q", "current_consumption": float(i)})
+            repo.create(
+                db,
+                admin_id,
+                "quota_release_requested",
+                {"requestor_username": f"u{i}", "quota_name": "q", "current_consumption": float(i)},
+            )
         db.commit()
 
     r = post_csrf(client, "/api/notifications/read-all")
