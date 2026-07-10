@@ -55,9 +55,14 @@ class _CountingResponseGenerator:
 
     def __init__(self) -> None:
         self.calls = 0
+        # Respuesta fija opcional: permite forzar texto adversarial (p. ej. el
+        # marcador de escalación crudo) sin duplicar la fixture del cliente.
+        self.reply_override: str | None = None
 
     def __call__(self, *, session: Any, history: Any) -> str:
         self.calls += 1
+        if self.reply_override is not None:
+            return self.reply_override
         return f"respuesta generada #{self.calls}"
 
 
@@ -412,3 +417,37 @@ def test_regenerate_in_foreign_session_returns_404_without_creating_anything(
         matching = [m for m in siblings if m.session_id == owner_session_id]
         assert len(matching) == 1
         assert str(matching[0].id) == owner_assistant_id
+
+
+def test_sync_paths_never_persist_raw_escalation_marker(
+    client: TestClient, response_generator: _CountingResponseGenerator
+) -> None:
+    """El marcador crudo tampoco se persiste por el camino síncrono (review 10.1).
+
+    El gateway de b05 deja `<<<NEEDS_PRO>>>` dentro de `LLMResponse.text` (solo
+    señala `needs_pro`); `send_turn`/`regenerate_response` deben filtrarlo antes
+    del INSERT — si no, saldría por el detalle de sesión y los snippets de
+    búsqueda. Espejo síncrono de la garantía ya testeada en streaming (1.4).
+    """
+    _create_user_and_login(client, "marker-sync")
+    session_id = _create_session(client)
+    response_generator.reply_override = "puedo ayudarte <<<NEEDS_PRO>>> con eso"
+
+    send = post_csrf(
+        client,
+        f"/api/sessions/{session_id}/messages",
+        json={"text": "consulta que dispara el marcador"},
+    )
+    assert send.status_code == 201
+    assistant_content = send.json()["assistant_message"]["content"]
+    assert "<<<NEEDS_PRO>>>" not in assistant_content
+    assert "puedo ayudarte" in assistant_content
+
+    regen = post_csrf(client, f"/api/messages/{send.json()['assistant_message']['id']}/regenerate")
+    assert regen.status_code == 201
+    assert "<<<NEEDS_PRO>>>" not in regen.json()["message"]["content"]
+
+    detail = client.get(f"/api/sessions/{session_id}")
+    assert detail.status_code == 200
+    for message in detail.json()["messages"]:
+        assert "<<<NEEDS_PRO>>>" not in message["content"]

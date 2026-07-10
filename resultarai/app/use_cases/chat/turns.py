@@ -64,6 +64,7 @@ from resultarai.app.use_cases.chat._branching import (
     find_active_leaf,
     find_owned_session,
 )
+from resultarai.app.use_cases.chat._marker import strip_escalation_marker
 from resultarai.app.use_cases.chat.telemetry import build_raw_turn_metadata
 from resultarai.app.use_cases.chat.titles import generate_session_title
 
@@ -220,6 +221,9 @@ def send_turn(
     generation_started_at = time.monotonic()
     response_text = generate_response(session=session, history=history)
     latency_ms = round((time.monotonic() - generation_started_at) * 1000)
+    # Regla dura del change (review 10.1): el marcador de escalación jamás se
+    # persiste ni viaja al cliente, tampoco por el camino síncrono.
+    response_text = strip_escalation_marker(response_text)
 
     assistant_message = Message(
         session_id=session_id,
@@ -282,6 +286,9 @@ def regenerate_response(
     generation_started_at = time.monotonic()
     response_text = generate_response(session=session, history=history)
     latency_ms = round((time.monotonic() - generation_started_at) * 1000)
+    # Regla dura del change (review 10.1): el marcador de escalación jamás se
+    # persiste ni viaja al cliente, tampoco por el camino síncrono.
+    response_text = strip_escalation_marker(response_text)
 
     new_message = Message(
         session_id=session.id,

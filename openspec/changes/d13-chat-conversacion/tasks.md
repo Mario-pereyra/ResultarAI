@@ -69,4 +69,4 @@
 
 ## 10. Cierre
 
-- [ ] 10.1 Review final del change: los tres capabilities (`chat-streaming`, `chat-experience`, `session-history`) tienen escenarios cubiertos por al menos un test; ningún endpoint expone el marcador de escalación crudo; las capas por rol se deciden server-side y no solo por CSS/ocultamiento en el cliente; consistencia entre `design.md`, specs y lo implementado. Verificación: checklist del reviewer en el PR. `[modelo: opus]`
+- [x] 10.1 Review final del change: los tres capabilities (`chat-streaming`, `chat-experience`, `session-history`) tienen escenarios cubiertos por al menos un test; ningún endpoint expone el marcador de escalación crudo; las capas por rol se deciden server-side y no solo por CSS/ocultamiento en el cliente; consistencia entre `design.md`, specs y lo implementado. Verificación: checklist del reviewer en el PR. `[modelo: opus]`

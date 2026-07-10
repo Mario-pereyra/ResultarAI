@@ -114,6 +114,7 @@ from resultarai.app.use_cases.chat._branching import (
     find_active_leaf,
     find_owned_session,
 )
+from resultarai.app.use_cases.chat._marker import ESCALATION_MARKER, strip_escalation_marker
 from resultarai.app.use_cases.chat.stream_registry import (
     BufferedSseEvent,
     TurnStreamBuffer,
@@ -136,9 +137,11 @@ __all__ = [
     "TurnFragment",
     "filter_escalation_marker",
     "start_turn_stream",
+    "strip_escalation_marker",
 ]
 
-_ESCALATION_MARKER = "<<<NEEDS_PRO>>>"
+# Reexportado desde `_marker.py` (módulo hoja compartido con turns.py).
+_ESCALATION_MARKER = ESCALATION_MARKER
 # Ventana de texto ya emitido que se recuerda solo para aproximar el `reason` del evento
 # de escalación (ver docstring del módulo); no afecta qué se entrega como fragmentos.
 _REASON_WINDOW_CHARS = 200
