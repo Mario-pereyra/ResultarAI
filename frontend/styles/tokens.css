@@ -94,6 +94,17 @@
   --z-toast: 100;
   --z-tooltip: 110;
 
+  /* Objetivo táctil mínimo en móvil (design/DESIGN-SYSTEM.md §10
+     Accesibilidad: "objetivos ≥44×44 px en móvil -- filas, flechas de rama,
+     cierre de chips con padding extendido"). Token ÚNICO -- a diferencia
+     del color (§3, 4 sets tema×marca), el tamaño de un objetivo táctil no
+     varía por tema ni marca, así que vive acá junto al resto de §2 Tokens
+     globales (misma sección que --sp-*) y NO se duplica en los 4 bloques
+     de la sección 3. Consumido desde la tarea 8.1 de d13-chat-conversacion
+     (flechas del selector de ramas, botón "Editar", acciones de feedback,
+     tarjetas de error) en styles/components/chat.css/history.css. */
+  --touch-target-min: 44px;
+
   /* Breakpoints (informativos: las custom properties no funcionan en @media;
      usar los valores literales en los mockups)
      --bp-mobile:  380px   (chat, catálogo, aprobaciones HITL)

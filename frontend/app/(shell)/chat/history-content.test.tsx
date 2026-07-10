@@ -28,6 +28,7 @@ const LABELS: HistoryContentLabels = {
   search: {
     label: "Buscar en tus conversaciones",
     placeholder: "Buscar en tus conversaciones…",
+    toggle: "Buscar",
   },
   agentFilter: {
     label: "Filtrar por agente",
@@ -50,6 +51,9 @@ const LABELS: HistoryContentLabels = {
     branchesAriaLabelOther: "esta sesión tiene {n} ramas",
     matchInTitle: "coincidencia en el título",
     matchInMessage: "coincidencia en un mensaje",
+    actionsColumnLabel: "Acciones",
+    menuLabel: "Acciones de la sesión",
+    resume: "Retomar",
   },
   cost: {
     columnLabel: "Costo",
@@ -387,4 +391,100 @@ describe("HistoryContent — columna de costo solo Admin (tarea 7.4)", () => {
       expect(screen.queryByText(/Este mes:/)).toBeNull();
     },
   );
+});
+
+describe("HistoryContent — buscador colapsado a ícono en móvil (tarea 8.2)", () => {
+  /**
+   * El ícono/campo viven SIEMPRE en el DOM (mismo mecanismo "dual-render +
+   * CSS decide" que `.ai-banner__text--*`, ver `styles/components/history.css`
+   * `.history-search-toggle`/`.history-toolbar__search`): jsdom no evalúa
+   * `@media`, así que estas pruebas cubren el COMPORTAMIENTO (tap expande +
+   * foco) -- el breakpoint que oculta el campo en desktop/tablet se audita
+   * estáticamente en `styles/mobile-adaptations.test.ts`.
+   */
+  it('el ícono "Buscar" está presente junto al campo (con su <label> accesible de siempre)', async () => {
+    stubHistoryFetch({ list: [SESSION_WITH_BRANCHES] });
+    renderHistory();
+
+    await screen.findByText("Parametrización MV_PAISLOC Bolivia");
+    expect(screen.getByRole("button", { name: "Buscar" })).toBeTruthy();
+    expect(screen.getByLabelText("Buscar en tus conversaciones")).toBeTruthy();
+  });
+
+  it('tocar el ícono "Buscar" agrega .is-expanded al campo y le da foco', async () => {
+    stubHistoryFetch({ list: [SESSION_WITH_BRANCHES] });
+    renderHistory();
+
+    await screen.findByText("Parametrización MV_PAISLOC Bolivia");
+    const search = screen.getByLabelText("Buscar en tus conversaciones") as HTMLInputElement;
+    const wrapper = search.closest(".history-toolbar__search");
+    expect(wrapper?.classList.contains("is-expanded")).toBe(false);
+
+    await userEvent.click(screen.getByRole("button", { name: "Buscar" }));
+
+    expect(wrapper?.classList.contains("is-expanded")).toBe(true);
+    expect(document.activeElement).toBe(search);
+  });
+});
+
+describe("HistoryContent — menú de acciones de fila por long-press en móvil (tarea 8.2)", () => {
+  it('el disparador "⋮" (fallback accesible) abre el menú con "Retomar" sin necesitar long-press', async () => {
+    stubHistoryFetch({ list: [SESSION_WITH_BRANCHES] });
+    renderHistory();
+
+    await screen.findByText("Parametrización MV_PAISLOC Bolivia");
+    await userEvent.click(screen.getByRole("button", { name: "Acciones de la sesión" }));
+
+    const item = screen.getByRole("menuitem", { name: "Retomar" });
+    expect(item).toBeTruthy();
+
+    await userEvent.click(item);
+    expect(pushMock).toHaveBeenCalledWith("/chat/session-1");
+  });
+
+  it("long-press (pointerdown + 500ms) sobre la fila abre el menú de acciones SIN navegar", async () => {
+    stubHistoryFetch({ list: [SESSION_WITH_BRANCHES] });
+    renderHistory();
+
+    await screen.findByText("Parametrización MV_PAISLOC Bolivia");
+    expect(screen.queryByRole("menu")).toBeNull();
+
+    const row = screen.getByText("Parametrización MV_PAISLOC Bolivia").closest("tr");
+    expect(row).not.toBeNull();
+
+    vi.useFakeTimers();
+    fireEvent.pointerDown(row as HTMLElement);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    vi.useRealTimers();
+    fireEvent.pointerUp(row as HTMLElement);
+    fireEvent.click(row as HTMLElement);
+
+    expect(screen.getByRole("menu")).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Retomar" })).toBeTruthy();
+    // El long-press abrió el menú -- NO navegó (el click posterior quedó
+    // suprimido, ver `useLongPress.consumeLongPress`).
+    expect(pushMock).not.toHaveBeenCalled();
+  });
+
+  it("soltar antes del umbral (tap corto) sigue navegando normalmente -- no rompe el click existente", async () => {
+    stubHistoryFetch({ list: [SESSION_WITH_BRANCHES] });
+    renderHistory();
+
+    await screen.findByText("Parametrización MV_PAISLOC Bolivia");
+    const row = screen.getByText("Parametrización MV_PAISLOC Bolivia").closest("tr") as HTMLElement;
+
+    vi.useFakeTimers();
+    fireEvent.pointerDown(row);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    vi.useRealTimers();
+    fireEvent.pointerUp(row);
+    fireEvent.click(row);
+
+    expect(pushMock).toHaveBeenCalledWith("/chat/session-1");
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
 });

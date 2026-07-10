@@ -513,7 +513,8 @@
     "newSession": "Nueva consulta",
     "search": {
       "label": "Buscar en tus conversaciones",
-      "placeholder": "Buscar en tus conversaciones…"
+      "placeholder": "Buscar en tus conversaciones…",
+      "toggle": "Buscar"
     },
     "agentFilter": {
       "label": "Filtrar por agente",
@@ -535,7 +536,10 @@
       "branchesAriaLabelOne": "esta sesión tiene {n} rama",
       "branchesAriaLabelOther": "esta sesión tiene {n} ramas",
       "matchInTitle": "coincidencia en el título",
-      "matchInMessage": "coincidencia en un mensaje"
+      "matchInMessage": "coincidencia en un mensaje",
+      "actionsColumnLabel": "Acciones",
+      "menuLabel": "Acciones de la sesión",
+      "resume": "Retomar"
     },
     "cost": {
       "columnLabel": "Costo",

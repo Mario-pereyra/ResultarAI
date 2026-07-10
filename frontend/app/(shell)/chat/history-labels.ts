@@ -16,6 +16,7 @@ export function buildHistoryLabels(t: Translator): HistoryContentLabels {
     search: {
       label: t("search.label"),
       placeholder: t("search.placeholder"),
+      toggle: t("search.toggle"),
     },
     agentFilter: {
       label: t("agentFilter.label"),
@@ -38,6 +39,9 @@ export function buildHistoryLabels(t: Translator): HistoryContentLabels {
       branchesAriaLabelOther: t("row.branchesAriaLabelOther", { n: "{n}" }),
       matchInTitle: t("row.matchInTitle"),
       matchInMessage: t("row.matchInMessage"),
+      actionsColumnLabel: t("row.actionsColumnLabel"),
+      menuLabel: t("row.menuLabel"),
+      resume: t("row.resume"),
     },
     cost: {
       columnLabel: t("cost.columnLabel"),

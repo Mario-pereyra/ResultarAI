@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { SearchIcon } from "@/components/shell/icons";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,8 @@ import type {
   SessionSummary,
 } from "@/lib/chat/types";
 import { useSession } from "@/lib/session-context";
+import { HistoryRowActions, type HistoryRowActionsHandle } from "./history-row-actions";
+import { HistoryTableRow } from "./history-row";
 import { DEFAULT_CHAT_AGENT_DISPLAY_NAME, DEFAULT_CHAT_AGENT_ID } from "./labels";
 
 /** Debounce del buscador (tarea 7.1, vista 12 §Interacciones: "debounce 300 ms"). */
@@ -39,7 +42,14 @@ type HistoryTabId = "active" | "archived";
 export interface HistoryContentLabels {
   title: string;
   newSession: string;
-  search: { label: string; placeholder: string };
+  search: {
+    label: string;
+    placeholder: string;
+    /** `aria-label` del ícono de búsqueda colapsado en móvil (tarea 8.2,
+     * vista 12 §Móvil: "búsqueda colapsada a ícono") -- ver
+     * `.history-search-toggle` en `history-content.tsx`. */
+    toggle: string;
+  };
   agentFilter: { label: string; all: string };
   tabs: { label: string; active: string; archived: string };
   /** Encabezados `<th>` de la tabla -- el `<caption>` va oculto
@@ -59,6 +69,14 @@ export interface HistoryContentLabels {
     branchesAriaLabelOther: string;
     matchInTitle: string;
     matchInMessage: string;
+    /** Encabezado accesible (sr-only) de la columna del menú "⋮" de acciones
+     * (tarea 8.2, solo visible en móvil, ver `styles/components/history.css`
+     * `.history-row__actions`) -- ver `HistoryRowActionsLabels`. */
+    actionsColumnLabel: string;
+    /** `aria-label` del disparador "⋮" -- ver `HistoryRowActionsLabels.menuLabel`. */
+    menuLabel: string;
+    /** Ítem de menú "Retomar" -- ver `HistoryRowActionsLabels.resume`. */
+    resume: string;
   };
   cost: {
     columnLabel: string;
@@ -220,6 +238,29 @@ export function HistoryContent({ labels }: HistoryContentProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  // Buscador colapsado a ícono en móvil (tarea 8.2, vista 12 §Móvil): el
+  // campo (`Input`, con su <label> accesible SIEMPRE en el DOM, ver el
+  // render) queda oculto por CSS hasta que este estado pasa a `true` --
+  // desktop/tablet lo ignoran (siempre visible ahí, ver
+  // `styles/components/history.css`). Irrelevante fuera de móvil, así que
+  // arranca en `false` sin costo en los demás breakpoints.
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Foco al expandir (vista 12 §Móvil "tap lo expande con foco"): recién acá
+  // -- un render después de que `searchExpanded` pase a `true` -- el input
+  // ya es visible por CSS y puede recibir foco real.
+  useEffect(() => {
+    if (searchExpanded) searchInputRef.current?.focus();
+  }, [searchExpanded]);
+
+  // Refs imperativos del menú "⋮" de cada fila (tarea 8.2), uno por
+  // `sessionId` -- el long-press de `HistoryTableRow` necesita abrir el
+  // menú de LA FILA que se está presionando, no un menú global compartido.
+  // Mismo patrón de `Map` + callback ref que `itemRefs` de
+  // `components/ui/dropdown.tsx`.
+  const rowActionsRefs = useRef(new Map<string, HistoryRowActionsHandle>());
+
   // Debounce 300 ms (tarea 7.1): el fetch de abajo depende de
   // `debouncedQuery`, no de `searchInput` -- tipear no dispara ningún
   // request hasta que el usuario deja de escribir por 300 ms.
@@ -298,12 +339,10 @@ export function HistoryContent({ labels }: HistoryContentProps) {
     router.push(`/chat/${sessionId}`);
   }
 
-  function handleRowClick(event: React.MouseEvent<HTMLTableRowElement>, sessionId: string) {
-    // El título de la fila ya es un `<button>` enfocable (ver más abajo) --
-    // si el click vino de ahí, su propio `onClick` ya navegó; evita un
-    // segundo `router.push` al mismo destino.
-    if (event.target instanceof HTMLElement && event.target.closest("button")) return;
-    handleRowActivate(sessionId);
+  // Tap en el ícono de búsqueda colapsado (tarea 8.2, móvil): revela el
+  // campo -- el foco real lo aplica el efecto de arriba, un render después.
+  function handleSearchToggle() {
+    setSearchExpanded(true);
   }
 
   const tabItems: TabItem[] = [
@@ -321,8 +360,26 @@ export function HistoryContent({ labels }: HistoryContentProps) {
       </div>
 
       <div className="history-toolbar">
-        <div className="history-toolbar__search">
+        {/* Tarea 8.2 (vista 12 §Móvil: "búsqueda colapsada a ícono"): botón
+            visible SOLO en móvil (`.history-search-toggle`, ver
+            `styles/components/history.css`) que revela el campo de abajo.
+            En desktop/tablet no hace nada (el campo ya está siempre
+            visible ahí) -- CSS lo oculta por completo en esos anchos. */}
+        <button
+          type="button"
+          className="history-search-toggle"
+          aria-label={labels.search.toggle}
+          onClick={handleSearchToggle}
+        >
+          <SearchIcon />
+        </button>
+        <div
+          className={
+            searchExpanded ? "history-toolbar__search is-expanded" : "history-toolbar__search"
+          }
+        >
           <Input
+            ref={searchInputRef}
             label={labels.search.label}
             type="search"
             placeholder={labels.search.placeholder}
@@ -436,16 +493,26 @@ export function HistoryContent({ labels }: HistoryContentProps) {
                 <TableHeaderCell>{labels.columns.session}</TableHeaderCell>
                 <TableHeaderCell>{labels.columns.lastActivity}</TableHeaderCell>
                 {isAdmin ? <TableHeaderCell>{labels.cost.columnLabel}</TableHeaderCell> : null}
+                {/* Tarea 8.2: columna del menú "⋮" -- oculta por completo en
+                    desktop/tablet (`.history-row__actions`, CSS), visible
+                    solo en móvil. El <th> sr-only mantiene la anatomía de
+                    tabla correcta (cada <td> con su <th> correspondiente)
+                    incluso mientras la columna está oculta. */}
+                <TableHeaderCell>
+                  <span className="sr-only">{labels.row.actionsColumnLabel}</span>
+                </TableHeaderCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {visibleRows.map((row) => {
                 const title = row.title?.trim() ? row.title : labels.row.untitled;
                 return (
-                  <TableRow
+                  <HistoryTableRow
                     key={row.sessionId}
+                    sessionId={row.sessionId}
+                    onActivate={handleRowActivate}
+                    onLongPressOpenMenu={() => rowActionsRefs.current.get(row.sessionId)?.openMenu()}
                     className="history-row"
-                    onClick={(event) => handleRowClick(event, row.sessionId)}
                   >
                     <TableCell>
                       <Tag variant="neutral" outline>
@@ -523,7 +590,21 @@ export function HistoryContent({ labels }: HistoryContentProps) {
                         </span>
                       </TableCell>
                     ) : null}
-                  </TableRow>
+                    {/* Tarea 8.2: menú "⋮" de acciones de la fila (móvil) --
+                        el disparador SIEMPRE está en el DOM, `.history-row__actions`
+                        lo oculta en desktop/tablet (ver el <th> sr-only de
+                        arriba y `styles/components/history.css`). */}
+                    <TableCell>
+                      <HistoryRowActions
+                        ref={(node) => {
+                          if (node) rowActionsRefs.current.set(row.sessionId, node);
+                          else rowActionsRefs.current.delete(row.sessionId);
+                        }}
+                        labels={{ menuLabel: labels.row.menuLabel, resume: labels.row.resume }}
+                        onResume={() => handleRowActivate(row.sessionId)}
+                      />
+                    </TableCell>
+                  </HistoryTableRow>
                 );
               })}
             </TableBody>

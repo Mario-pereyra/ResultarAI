@@ -75,3 +75,25 @@ a {
   border-color: color-mix(in srgb, var(--warn) 40%, transparent);
 }
 .error-card--warn .error-card__icon, .error-card--warn .error-card__code { color: var(--warn); }
+
+/* Móvil (tarea 8.1 de d13-chat-conversacion, vista 10 §Móvil: "tarjetas a
+   ancho completo; botones apilados, primario abajo"): `.error-card` ya es
+   ancho completo (sin `max-width` propio, ver arriba) -- esto solo apila
+   las acciones. Se define acá (no en styles/components/chat.css) porque
+   `.error-card` es compartida por `components/chat/error-card.tsx`
+   (GATEWAY_OFFLINE/QUOTA, vista 10) Y por el banner global del shell
+   (`components/shell/gateway-error.tsx`, ver ambos docstrings): mismo
+   breakpoint que el resto del chat/shell (767px, DS §3.3). Hoy cada tarjeta
+   de este change (`GatewayOfflineCard`/`QuotaCard`) solo tiene UN botón, así
+   que el apilado es en la práctica un `width: 100%` sin reordenar nada --
+   `column` (no `column-reverse`) queda listo para cuando una tarjeta sume
+   una segunda acción secundaria (p. ej. "Ver consumo", vista 10 §Datos, aún
+   sin implementar). */
+@media (max-width: 767px) {
+  .error-card__actions {
+    flex-direction: column;
+  }
+  .error-card__actions .btn {
+    width: 100%;
+  }
+}

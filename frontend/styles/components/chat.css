@@ -77,6 +77,19 @@
   max-height: calc(100vh - 260px);
 }
 
+/* Móvil (tarea 8.1, vista 05 §Móvil: "columna a ancho completo con gutter
+   16 px"): el máximo de 760px de arriba deja de importar (el viewport ya es
+   más angosto), así que esto solo ajusta el padding -- gutter único de 16px
+   (--sp-4) en vez del --sp-6 vertical de desktop -- y reserva lugar abajo
+   para el composer FIJO (`.chat-composer` más abajo) + el área segura del
+   dispositivo, para que el último mensaje nunca quede tapado. */
+@media (max-width: 767px) {
+  .msg-column {
+    padding: var(--sp-4);
+    padding-bottom: calc(var(--sp-9) * 2 + env(safe-area-inset-bottom));
+  }
+}
+
 /* ── Botón flotante "Nuevos mensajes" (tarea 3.3) ────────────────────── */
 .msg-new-messages-btn {
   position: absolute;
@@ -99,6 +112,15 @@
 .msg-new-messages-btn:focus-visible {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
+}
+
+/* Móvil (tarea 8.1): el composer fijo (ver `.chat-composer` más abajo) cubre
+   la franja inferior del viewport -- este botón sube la misma distancia
+   para no quedar oculto detrás. */
+@media (max-width: 767px) {
+  .msg-new-messages-btn {
+    bottom: calc(var(--sp-9) * 2 + env(safe-area-inset-bottom));
+  }
 }
 
 /* ── Línea de actividad plegada (tarea 3.3: "consultando…") ─────────── */
@@ -162,6 +184,18 @@
 .msg-feedback__btn.is-active {
   color: var(--accent);
   background: var(--accent-soft);
+}
+
+/* Móvil (tarea 8.1, vista 05 §Móvil: "acciones de turno con objetivo táctil
+   ≥44 px"): `.btn--sm` (button.css) fija 28px de alto -- `min-height` gana
+   sobre esa altura explícita (así lo resuelve el motor CSS cuando el
+   mínimo es mayor, sin tocar `button.css`) y `min-width` agranda el ancho
+   sin alterar el ícono/padding visual de 👍/👎. */
+@media (max-width: 767px) {
+  .msg-feedback__btn {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
 }
 
 .msg-feedback__popover {
@@ -332,6 +366,17 @@
   text-align: center;
 }
 
+/* Móvil (tarea 8.1, vista 09 §Móvil / DS §8.20): objetivo táctil ≥44 px
+   "con padding invisible" -- `min-width`/`min-height` ganan sobre el
+   tamaño visual de 26px de arriba (la caja real crece; el ícono/borde no
+   cambian de tamaño), sin tocar el resto de la apariencia. */
+@media (max-width: 767px) {
+  .branch-sel__arrow {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
+}
+
 /* ── Edición inline de mensaje (tarea 5.5, vista 09 §Layout/§Interacciones)
    Ver `components/chat/message-edit.tsx`. ─────────────────────────────── */
 
@@ -382,6 +427,16 @@
 @media (hover: none) {
   .edit-btn {
     opacity: 1;
+  }
+}
+
+/* Móvil (tarea 8.1, DS §10: "objetivos ≥44×44 px en móvil"): mismo criterio
+   que `.branch-sel__arrow` -- crece el objetivo táctil sin cambiar el
+   tamaño visual del ícono (lápiz 26px de por sí). */
+@media (max-width: 767px) {
+  .edit-btn {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
   }
 }
 
@@ -715,9 +770,13 @@
   font-size: var(--fs-caption);
 }
 
-/* Móvil: botones apilados a ancho completo, primario primero en el DOM pero
-   abajo en la zona del pulgar (vista 08 §Móvil). */
-@media (max-width: 640px) {
+/* Móvil (tarea 8.1): botones apilados a ancho completo, primario primero en
+   el DOM pero abajo en la zona del pulgar (vista 08 §Móvil). Breakpoint
+   corregido a 767px (antes 640px, tarea 5.3) para usar el MISMO mecanismo
+   que el resto del shell/chat (`styles/shell.css`, DS §3.3: "móvil 380 ·
+   tablet 768") -- entre 641 y 767px quedaba una franja donde esta tarjeta
+   no se apilaba pero el resto de la UI ya se consideraba móvil. */
+@media (max-width: 767px) {
   .escalate-card__actions {
     flex-direction: column-reverse;
   }
@@ -776,6 +835,28 @@
   margin: 0;
   font-size: var(--fs-caption);
   color: var(--ink-faint);
+}
+
+/* Móvil (tarea 8.1, vista 05 §Móvil: "composer fijo abajo con safe-area"):
+   se despega del flujo de `.chat-shell` y queda anclado al borde inferior
+   del VIEWPORT (no de `.msg-column`, que sigue centrada/acotada a 760px en
+   el resto de breakpoints) -- `env(safe-area-inset-bottom)` suma el área
+   segura del dispositivo (notch/home indicator); en dispositivos/navegadores
+   sin soporte resuelve a 0, sin efecto. `z-index: var(--z-nav)` (mismo nivel
+   que la navegación del shell, tokens.css §2) lo mantiene por encima del
+   contenido pero por debajo de dropdowns/overlays/modals. */
+@media (max-width: 767px) {
+  .chat-composer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-nav);
+    max-width: none;
+    width: 100%;
+    background: var(--bg);
+    padding-bottom: calc(var(--sp-3) + env(safe-area-inset-bottom));
+  }
 }
 
 /* ── Contenido markdown sanitizado (tareas 3.1/3.2) ─────────────────── */

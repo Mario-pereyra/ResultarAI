@@ -57,8 +57,8 @@
 
 ## 8. Responsive
 
-- [ ] 8.1 Adaptación móvil de columna de mensajes, composer con área segura fija, acciones de turno y flechas del selector de ramas con objetivo táctil ≥44 px, tarjetas de error a ancho completo con botones apilados. Verificación: prueba de componente/visual en viewport móvil sobre las vistas 05, 08, 09 y 10. `[modelo: sonnet]`
-- [ ] 8.2 Adaptación móvil del historial (vista 12): búsqueda colapsada a ícono, acciones en menú por long-press. Verificación: prueba de componente/visual en viewport móvil sobre la vista 12. `[modelo: sonnet]`
+- [x] 8.1 Adaptación móvil de columna de mensajes, composer con área segura fija, acciones de turno y flechas del selector de ramas con objetivo táctil ≥44 px, tarjetas de error a ancho completo con botones apilados. Verificación: prueba de componente/visual en viewport móvil sobre las vistas 05, 08, 09 y 10. `[modelo: sonnet]`
+- [x] 8.2 Adaptación móvil del historial (vista 12): búsqueda colapsada a ícono, acciones en menú por long-press. Verificación: prueba de componente/visual en viewport móvil sobre la vista 12. `[modelo: sonnet]`
 
 ## 9. Tests end-to-end de los flujos de diseño
 

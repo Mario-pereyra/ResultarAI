@@ -127,3 +127,78 @@
   display: grid;
   gap: 6px;
 }
+
+/* ── Buscador colapsado a ícono en móvil (tarea 8.2, vista 12 §Móvil:
+   "búsqueda colapsada a ícono") ──────────────────────────────────────────
+   El campo (`Input`, con su <label> accesible SIEMPRE en el DOM -- ver la
+   nota de cabecera de este archivo sobre por qué se usa `Input` tal cual en
+   vez del ícono-solo del mockup) queda oculto en móvil hasta que
+   `.is-expanded` lo revela; en desktop/tablet (fuera del breakpoint móvil
+   de abajo) se ve siempre, como hoy. Mismo mecanismo "dual-render + CSS
+   decide" que `.ai-banner__text--*` (`styles/shell.css`): jsdom no evalúa
+   `@media`, así que la clase/el input siguen accesibles en los tests
+   (`getByLabelText` los encuentra igual) -- ver `styles/mobile-adaptations.test.ts`
+   para la auditoría estática del breakpoint. */
+.history-search-toggle {
+  display: none;
+}
+@media (max-width: 767px) {
+  .history-search-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--ink-dim);
+    cursor: pointer;
+  }
+  .history-search-toggle:hover {
+    color: var(--ink);
+    border-color: var(--ink-faint);
+  }
+  .history-search-toggle:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .history-search-toggle svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .history-toolbar__search {
+    display: none;
+  }
+  .history-toolbar__search.is-expanded {
+    display: block;
+    flex-basis: 100%;
+  }
+}
+
+/* ── Menú de acciones de fila por long-press (tarea 8.2, vista 12 §Móvil:
+   "acciones en menú ⋯ (long-press)") ─────────────────────────────────────
+   El disparador "⋮" (`Dropdown`, ver `app/(shell)/chat/history-row-actions.tsx`)
+   vive SIEMPRE en el DOM (cada fila lo monta); oculto en desktop/tablet
+   -- esta vista todavía no implementa acciones secundarias de escritorio
+   por fila (hueco documentado en openspec/BACKLOG-DESCUBRIMIENTOS.md,
+   tarea 7.1) -- y visible en móvil, donde es además el FALLBACK ACCESIBLE
+   del gesto de long-press (tap directo, sin depender del temporizador). */
+.history-row__actions {
+  display: none;
+}
+@media (max-width: 767px) {
+  .history-row__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  /* Objetivo táctil ≥44 px (tarea 8.1/DS §10) -- clase propia (no
+     `.dropdown__trigger` a secas) para no afectar otros consumidores de
+     `Dropdown` (campana/menú de usuario del topbar), fuera de alcance de
+     esta tarea. */
+  .history-row__menu-trigger {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+  }
+}
