@@ -1,5 +1,5 @@
 import userEvent from "@testing-library/user-event";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SessionProvider, type SessionContextValue } from "@/lib/session-context";
 import { ChatContent, type ChatContentLabels } from "./chat-content";
@@ -16,10 +16,15 @@ import { ChatContent, type ChatContentLabels } from "./chat-content";
  * visibilidad del taxímetro (tarea 4.2).
  */
 
+// `push` estable entre renders (un `vi.fn()` inline daría una instancia nueva
+// por render, imposible de aseverar): tarea 5.3 necesita comprobar la
+// navegación a la sesión escalada.
+const { pushMock } = vi.hoisted(() => ({ pushMock: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     replace: vi.fn(),
-    push: vi.fn(),
+    push: pushMock,
   }),
 }));
 
@@ -71,12 +76,39 @@ const LABELS: ChatContentLabels = {
     viewTrace: "ver traza",
     viewTraceAriaLabel: "Ver traza de este turno en Langfuse",
   },
+  alternateModel: {
+    label: "modelo alterno",
+    funcionalExplanation:
+      "Esta respuesta la generó un modelo alternativo porque el habitual no estaba disponible. La calidad puede variar.",
+    profilePrefix: "Perfil:",
+    reasonPrefix: "Motivo:",
+  },
+  toolCall: {
+    parametersLabel: "Parámetros",
+    latencyLabel: "Latencia:",
+  },
+  versionSelector: {
+    versionAriaLabel: "versión {n} de {m}",
+    previousVersion: "Versión anterior",
+    nextVersion: "Versión siguiente",
+  },
+  escalation: {
+    title: "Este caso amerita el modelo Pro",
+    consequence: "Se abre una conversación nueva con el contexto de esta.",
+    targetProfileLabel: "Perfil de destino:",
+    confirm: "Continuar con Pro",
+    dismiss: "Seguir con Flash",
+    doneLink: "Continuaste esta consulta en Pro — abrir conversación",
+    dismissedNote: "Decidiste seguir con Flash",
+  },
+  escalationOriginLink: "Esta conversación continúa una consulta anterior — abrir",
 };
 
 const STARTER_PROMPTS = ["Ayudame a redactar un resumen ejecutivo", "Dame ideas para esta semana"];
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  pushMock.mockClear();
 });
 
 function sessionFor(role: SessionContextValue["user"]["role"]): SessionContextValue {
@@ -367,5 +399,378 @@ describe("ChatContent — estado degradado del taxímetro, solo Admin (tarea 4.4
     expect(screen.queryByText("~USD 0,0300")).toBeNull();
     const status = screen.getByRole("status", { name: /Costo de sesión/ });
     expect(status.getAttribute("data-tip")).toBeNull();
+  });
+});
+
+/**
+ * Tarea 5.3 (integración de la tarjeta de escalación en `ChatContent`): el
+ * GATE por `escalation_enabled`, la persistencia tras recarga y la navegación
+ * a la sesión escalada. La aparición de la tarjeta se ejercita por la vía de
+ * RECARGA (el detalle de sesión trae `turn_metadata.escalation` poblado), que
+ * pasa por el MISMO gate y el mismo `renderEscalation` que el flujo vivo por
+ * SSE -- sin necesidad de simular el stream acá (el flujo vivo lo cubren las
+ * pruebas de `EscalationCard` y `use-turn-stream`).
+ */
+const ESCALATION_META = {
+  is_alternate_model: false,
+  compacted: false,
+  escalation: { reason: "Tu consulta cruza varias localizaciones.", target_profile: "deepseek-v4-pro" },
+};
+
+function escalationSessionDetail(escalatedSessionIds: string[]): unknown {
+  return {
+    id: "session-1",
+    agent_id: "default_chat",
+    title: "Conversación",
+    model_profile: "deepseek-v4-flash",
+    forked_from_id: null,
+    escalated_session_ids: escalatedSessionIds,
+    active_leaf_id: "a1",
+    in_progress_turn: null,
+    messages: [
+      {
+        id: "u1",
+        parent_id: null,
+        role: "user",
+        content: "Pregunta compleja",
+        status: "complete",
+        created_at: "2026-07-10T14:00:00Z",
+        turn_metadata: null,
+      },
+      {
+        id: "a1",
+        parent_id: "u1",
+        role: "assistant",
+        content: "Respuesta parcial",
+        status: "complete",
+        created_at: "2026-07-10T14:00:03Z",
+        turn_metadata: ESCALATION_META,
+      },
+    ],
+  };
+}
+
+/** Stub que responde el agente (con `escalation_enabled` parametrizable), el
+ * detalle de la sesión y el `POST /escalate` (201, sesión de destino nueva). */
+function stubEscalationFetch(options: {
+  escalationEnabled: boolean;
+  detail: unknown;
+}) {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url === "/api/agents/default_chat") {
+      return new Response(
+        JSON.stringify({
+          id: "default_chat",
+          name: "Chat por Defecto",
+          starter_prompts: [],
+          escalation_enabled: options.escalationEnabled,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (url === "/api/sessions/session-1" && (!init?.method || init.method === "GET")) {
+      return new Response(JSON.stringify(options.detail), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    if (url === "/api/sessions/session-1/escalate" && init?.method === "POST") {
+      return new Response(
+        JSON.stringify({
+          escalated_session_id: "session-2",
+          origin_session_id: "session-1",
+          model_profile: "deepseek-v4-pro",
+          seeded_message_id: "seed-1",
+          created: true,
+          origin_session_title: "Conversación",
+          escalated_session_title: "Conversación (Pro)",
+        }),
+        { status: 201, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    throw new Error(`fetch inesperado en este test: ${url} (${init?.method ?? "GET"})`);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return fetchMock;
+}
+
+describe("ChatContent — tarjeta de escalación: GATE por escalation_enabled (tarea 5.3)", () => {
+  it("escalación deshabilitada: la tarjeta NO existe en el DOM aunque el turno traiga el evento", async () => {
+    stubEscalationFetch({ escalationEnabled: false, detail: escalationSessionDetail([]) });
+    renderChatContent("funcional", "session-1");
+
+    // La conversación carga normalmente...
+    await screen.findByText("Respuesta parcial");
+    // ...pero la tarjeta nunca se monta: ni CTA, ni razón, ni título.
+    expect(screen.queryByRole("button", { name: LABELS.escalation.confirm })).toBeNull();
+    expect(screen.queryByRole("button", { name: LABELS.escalation.dismiss })).toBeNull();
+    expect(screen.queryByText(LABELS.escalation.title)).toBeNull();
+  });
+
+  it("escalación habilitada: la tarjeta se monta tras la respuesta del turno que la disparó", async () => {
+    stubEscalationFetch({ escalationEnabled: true, detail: escalationSessionDetail([]) });
+    renderChatContent("funcional", "session-1");
+
+    expect(await screen.findByRole("button", { name: LABELS.escalation.confirm })).toBeTruthy();
+    expect(screen.getByRole("button", { name: LABELS.escalation.dismiss })).toBeTruthy();
+    expect(screen.getByText(ESCALATION_META.escalation.reason)).toBeTruthy();
+    expect(screen.getByText("deepseek-v4-pro")).toBeTruthy();
+  });
+});
+
+describe("ChatContent — tarjeta de escalación: confirmar navega a la sesión nueva (tarea 5.3)", () => {
+  it('"Continuar con Pro" hace UNA sola llamada a /escalate y navega a /chat/{id}, con nota-enlace', async () => {
+    const user = userEvent.setup();
+    const fetchMock = stubEscalationFetch({
+      escalationEnabled: true,
+      detail: escalationSessionDetail([]),
+    });
+    renderChatContent("funcional", "session-1");
+
+    const confirm = await screen.findByRole("button", { name: LABELS.escalation.confirm });
+    await user.click(confirm);
+
+    // Navega a la sesión escalada devuelta por el backend.
+    expect(pushMock).toHaveBeenCalledWith("/chat/session-2");
+    // Deja la nota-enlace en la sesión origen (estado escalado).
+    expect(await screen.findByText(LABELS.escalation.doneLink)).toBeTruthy();
+
+    // Exactamente UNA llamada a /escalate, con el origin_message_id del turno.
+    const escalateCalls = fetchMock.mock.calls.filter(
+      ([input]) => String(input) === "/api/sessions/session-1/escalate",
+    );
+    expect(escalateCalls).toHaveLength(1);
+    const body = JSON.parse((escalateCalls[0][1] as RequestInit).body as string);
+    expect(body).toEqual({ origin_message_id: "u1" });
+  });
+
+  it("doble clic rápido en «Continuar con Pro»: una sola llamada a /escalate", async () => {
+    const fetchMock = stubEscalationFetch({
+      escalationEnabled: true,
+      detail: escalationSessionDetail([]),
+    });
+    renderChatContent("funcional", "session-1");
+
+    const confirm = await screen.findByRole("button", { name: LABELS.escalation.confirm });
+    // Dos disparos SINCRÓNICOS (antes de cualquier re-render): el guard de
+    // re-entrada, no el `disabled`, es lo que garantiza una sola llamada.
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/chat/session-2"));
+    const escalateCalls = fetchMock.mock.calls.filter(
+      ([input]) => String(input) === "/api/sessions/session-1/escalate",
+    );
+    expect(escalateCalls).toHaveLength(1);
+  });
+});
+
+describe("ChatContent — tarjeta de escalación: persistencia tras recarga (tarea 5.3)", () => {
+  it("sesión ya escalada: la tarjeta arranca en estado escalado (nota-enlace), no en reposo", async () => {
+    stubEscalationFetch({
+      escalationEnabled: true,
+      detail: escalationSessionDetail(["session-2"]),
+    });
+    renderChatContent("funcional", "session-1");
+
+    // Nota-enlace directamente, sin los botones de reposo.
+    expect(await screen.findByText(LABELS.escalation.doneLink)).toBeTruthy();
+    expect(screen.queryByRole("button", { name: LABELS.escalation.confirm })).toBeNull();
+  });
+
+  it("sesión escalada (destino): muestra la nota-enlace de VUELTA al origen", async () => {
+    const detail = escalationSessionDetail([]);
+    (detail as { forked_from_id: string | null }).forked_from_id = "session-origin";
+    stubEscalationFetch({ escalationEnabled: true, detail });
+    renderChatContent("funcional", "session-1");
+
+    const back = await screen.findByRole("button", { name: LABELS.escalationOriginLink });
+    await userEvent.setup().click(back);
+    expect(pushMock).toHaveBeenCalledWith("/chat/session-origin");
+  });
+});
+
+/**
+ * Tarea 5.4 (selector de versiones de ramas, vista 09 / Flujo G): al cargar una
+ * sesión con ramas, el detalle trae TODAS las versiones como lista plana con
+ * `parent_id` + `active_leaf_id`; el selector "‹ N/M ›" aparece junto al mensaje
+ * ramificado y alternar re-renderiza SOLO la porción posterior de la rama
+ * seleccionada, con scroll anclado al mensaje ramificado y conservando la rama no
+ * seleccionada intacta.
+ */
+
+/** Metadatos de turno del agente (Funcional: sin `telemetry`, mismo shape que
+ * `layer_turn_metadata`) reutilizando el helper de arriba. */
+function branchedSessionDetail(): unknown {
+  return {
+    id: "session-1",
+    agent_id: "default_chat",
+    title: "Conversación con ramas",
+    model_profile: "deepseek-v4-flash",
+    forked_from_id: null,
+    escalated_session_ids: [],
+    // La rama activa es la editada (`a2b`), así el default muestra la rama B.
+    active_leaf_id: "a2b",
+    in_progress_turn: null,
+    // u1 ── a1 ─┬─ u2a ── a2a (rama A)
+    //           └─ u2b ── a2b (rama B, editada = activa)
+    messages: [
+      { id: "u1", parent_id: null, role: "user", content: "Hola", status: "complete", created_at: "2026-07-10T14:00:00Z", turn_metadata: null },
+      { id: "a1", parent_id: "u1", role: "assistant", content: "Respuesta inicial", status: "complete", created_at: "2026-07-10T14:00:03Z", turn_metadata: assistantTurnMetadata() },
+      { id: "u2a", parent_id: "a1", role: "user", content: "Pregunta A", status: "complete", created_at: "2026-07-10T14:01:00Z", turn_metadata: null },
+      { id: "a2a", parent_id: "u2a", role: "assistant", content: "rama A", status: "complete", created_at: "2026-07-10T14:01:05Z", turn_metadata: assistantTurnMetadata() },
+      { id: "u2b", parent_id: "a1", role: "user", content: "Pregunta B", status: "complete", created_at: "2026-07-10T14:02:00Z", turn_metadata: null },
+      { id: "a2b", parent_id: "u2b", role: "assistant", content: "rama B", status: "complete", created_at: "2026-07-10T14:02:05Z", turn_metadata: assistantTurnMetadata() },
+    ],
+  };
+}
+
+/** Instala un mock de `scrollIntoView` (jsdom no lo implementa) que registra el
+ * `data-message-id` del elemento sobre el que se llamó. Devuelve el array de ids
+ * y un restaurador para no contaminar otros tests. */
+function trackScrollIntoView(): { scrolledIds: (string | null)[]; restore: () => void } {
+  const scrolledIds: (string | null)[] = [];
+  const original = Element.prototype.scrollIntoView;
+  Element.prototype.scrollIntoView = vi.fn(function (this: HTMLElement) {
+    scrolledIds.push(this.getAttribute("data-message-id"));
+  });
+  return {
+    scrolledIds,
+    restore: () => {
+      Element.prototype.scrollIntoView = original;
+    },
+  };
+}
+
+describe("ChatContent — selector de versiones de ramas (tarea 5.4)", () => {
+  it("alterna entre dos ramas dos veces conservando el contenido EXACTO de cada una, con scroll anclado y sin re-montar el prefijo", async () => {
+    const user = userEvent.setup();
+    stubSessionFetch(branchedSessionDetail());
+    const { container } = renderChatContent("funcional", "session-1");
+
+    // Default: rama activa = la editada (rama B), selector "2/2" en el mensaje
+    // ramificado; la rama A no está en el DOM (no se mezcla ni se pierde: vive
+    // en el árbol, no renderizada).
+    await screen.findByText("rama B");
+    expect(screen.getByText("2/2")).toBeTruthy();
+    expect(screen.queryByText("rama A")).toBeNull();
+
+    // Prefijo previo al punto de bifurcación: se captura su nodo para probar que
+    // NO se re-monta al alternar (clave estable por message id).
+    const u1Before = container.querySelector('[data-message-id="u1"]');
+    const a1Before = container.querySelector('[data-message-id="a1"]');
+    expect(u1Before).not.toBeNull();
+
+    const { scrolledIds, restore } = trackScrollIntoView();
+    try {
+      // 1) B -> A (flecha ‹): se muestran EXACTAMENTE los mensajes posteriores de
+      //    la rama A; la rama B desaparece del DOM (queda intacta en memoria).
+      await user.click(screen.getByRole("button", { name: "Versión anterior" }));
+      await screen.findByText("rama A");
+      expect(screen.getByText("Pregunta A")).toBeTruthy();
+      expect(screen.queryByText("rama B")).toBeNull();
+      expect(screen.queryByText("Pregunta B")).toBeNull();
+      expect(screen.getByText("1/2")).toBeTruthy();
+      // Scroll anclado al mensaje ramificado recién seleccionado (u2a).
+      expect(scrolledIds.at(-1)).toBe("u2a");
+      // Prefijo NO re-montado: mismo nodo del DOM.
+      expect(container.querySelector('[data-message-id="u1"]')).toBe(u1Before);
+      expect(container.querySelector('[data-message-id="a1"]')).toBe(a1Before);
+
+      // 2) A -> B (flecha ›): vuelve la rama B con su contenido exacto.
+      await user.click(screen.getByRole("button", { name: "Versión siguiente" }));
+      await screen.findByText("rama B");
+      expect(screen.queryByText("rama A")).toBeNull();
+      expect(screen.getByText("2/2")).toBeTruthy();
+      expect(scrolledIds.at(-1)).toBe("u2b");
+
+      // 3) B -> A de nuevo: el contenido de la rama A sigue EXACTO (no se corrompió).
+      await user.click(screen.getByRole("button", { name: "Versión anterior" }));
+      await screen.findByText("rama A");
+      expect(screen.queryByText("rama B")).toBeNull();
+      expect(screen.getByText("1/2")).toBeTruthy();
+
+      // 4) A -> B: cierra el segundo ciclo; ambas ramas conservaron su contenido.
+      await user.click(screen.getByRole("button", { name: "Versión siguiente" }));
+      await screen.findByText("rama B");
+      expect(screen.queryByText("rama A")).toBeNull();
+      expect(screen.getByText("2/2")).toBeTruthy();
+
+      // El prefijo nunca se re-montó en todo el ciclo.
+      expect(container.querySelector('[data-message-id="u1"]')).toBe(u1Before);
+    } finally {
+      restore();
+    }
+  });
+
+  it("editar por primera vez: el detalle post-edición trae 2 versiones y el selector aparece con «2/2» en el mensaje editado", async () => {
+    // Shape real de una sesión tras la primera edición (el `POST` con
+    // `edits_message_id` creó un hermano): el mensaje editado y su original
+    // comparten `parent_id null`; la rama activa es la editada.
+    const detail = {
+      id: "session-1",
+      agent_id: "default_chat",
+      title: "Conversación",
+      model_profile: "deepseek-v4-flash",
+      forked_from_id: null,
+      escalated_session_ids: [],
+      active_leaf_id: "a-edit",
+      in_progress_turn: null,
+      messages: [
+        { id: "u-orig", parent_id: null, role: "user", content: "Pregunta con error", status: "complete", created_at: "2026-07-10T14:00:00Z", turn_metadata: null },
+        { id: "a-orig", parent_id: "u-orig", role: "assistant", content: "Respuesta al original", status: "complete", created_at: "2026-07-10T14:00:03Z", turn_metadata: assistantTurnMetadata() },
+        { id: "u-edit", parent_id: null, role: "user", content: "Pregunta corregida", status: "complete", created_at: "2026-07-10T14:05:00Z", turn_metadata: null },
+        { id: "a-edit", parent_id: "u-edit", role: "assistant", content: "Respuesta a la corrección", status: "complete", created_at: "2026-07-10T14:05:03Z", turn_metadata: assistantTurnMetadata() },
+      ],
+    };
+    stubSessionFetch(detail);
+    renderChatContent("funcional", "session-1");
+
+    // Por default se ve la versión editada (2/2) y su respuesta.
+    await screen.findByText("Respuesta a la corrección");
+    expect(screen.getByText("Pregunta corregida")).toBeTruthy();
+    expect(screen.getByText("2/2")).toBeTruthy();
+    // El selector es operable: "‹" vuelve a la versión original.
+    expect(screen.getByRole("group", { name: "versión 2 de 2" })).toBeTruthy();
+  });
+
+  it("raíz editada (parent_id null con 2 versiones): alternar cambia toda la conversación", async () => {
+    const user = userEvent.setup();
+    const detail = {
+      id: "session-1",
+      agent_id: "default_chat",
+      title: "Conversación",
+      model_profile: "deepseek-v4-flash",
+      forked_from_id: null,
+      escalated_session_ids: [],
+      active_leaf_id: "ab",
+      in_progress_turn: null,
+      messages: [
+        { id: "ra", parent_id: null, role: "user", content: "Pregunta raíz A", status: "complete", created_at: "2026-07-10T14:00:00Z", turn_metadata: null },
+        { id: "aa", parent_id: "ra", role: "assistant", content: "raíz respuesta A", status: "complete", created_at: "2026-07-10T14:00:03Z", turn_metadata: assistantTurnMetadata() },
+        { id: "rb", parent_id: null, role: "user", content: "Pregunta raíz B", status: "complete", created_at: "2026-07-10T14:05:00Z", turn_metadata: null },
+        { id: "ab", parent_id: "rb", role: "assistant", content: "raíz respuesta B", status: "complete", created_at: "2026-07-10T14:05:03Z", turn_metadata: assistantTurnMetadata() },
+      ],
+    };
+    stubSessionFetch(detail);
+    renderChatContent("funcional", "session-1");
+
+    // Default = raíz activa (B).
+    await screen.findByText("raíz respuesta B");
+    expect(screen.getByText("2/2")).toBeTruthy();
+    expect(screen.queryByText("raíz respuesta A")).toBeNull();
+
+    const { restore } = trackScrollIntoView();
+    try {
+      // Alternar a la raíz A cambia TODA la conversación (raíz + respuesta).
+      await user.click(screen.getByRole("button", { name: "Versión anterior" }));
+      await screen.findByText("raíz respuesta A");
+      expect(screen.getByText("Pregunta raíz A")).toBeTruthy();
+      expect(screen.queryByText("raíz respuesta B")).toBeNull();
+      expect(screen.getByText("1/2")).toBeTruthy();
+    } finally {
+      restore();
+    }
   });
 });

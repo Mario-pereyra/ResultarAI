@@ -1,18 +1,35 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { ActivityIndicatorLabels } from "@/components/chat/activity-indicator";
+import type { AlternateModelTagLabels } from "@/components/chat/alternate-model-tag";
 import { Composer, type ComposerHandle, type ComposerLabels } from "@/components/chat/composer";
+import { EscalationCard, type EscalationCardLabels } from "@/components/chat/escalation-card";
 import type { FeedbackActionsLabels } from "@/components/chat/feedback-actions";
 import { MessageColumn, type ChatMessageItem } from "@/components/chat/message-column";
 import { SessionTaximeter, type SessionTaximeterLabels } from "@/components/chat/session-taximeter";
 import { StarterSuggestions } from "@/components/chat/starter-suggestions";
+import type { ToolCallLineLabels } from "@/components/chat/tool-call-line";
 import type { TurnTelemetryLabels } from "@/components/chat/turn-telemetry-row";
+import { VersionSelector, type VersionSelectorLabels } from "@/components/chat/version-selector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { csrfHeaders } from "@/lib/csrf";
-import { resolveActiveBranch } from "@/lib/chat/session-tree";
-import type { CreatedSession, SessionDetail, TurnTelemetry } from "@/lib/chat/types";
+import {
+  resolveVisiblePath,
+  versionNav,
+  type BranchChoices,
+  type SessionBranchTree,
+} from "@/lib/chat/session-tree";
+import type {
+  CreatedSession,
+  EscalateSessionResponse,
+  SessionDetail,
+  SessionTreeMessage,
+  TurnEscalation,
+  TurnTelemetry,
+  VisibleToolCallView,
+} from "@/lib/chat/types";
 import { useTurnStream } from "@/lib/chat/use-turn-stream";
 import { useSession } from "@/lib/session-context";
 
@@ -38,6 +55,19 @@ export interface ChatContentLabels {
   taximeter: SessionTaximeterLabels;
   /** Fila de telemetría por turno (tareas 4.2/4.3) -- ver `TurnTelemetryRow`. */
   telemetry: TurnTelemetryLabels;
+  /** Etiqueta "modelo alterno" (tarea 5.1) -- ver `AlternateModelTag`. */
+  alternateModel: AlternateModelTagLabels;
+  /** Tool calls colapsadas/expandibles (tarea 5.2) -- ver `ToolCallLine`. */
+  toolCall: ToolCallLineLabels;
+  /** Selector de versiones "‹ N/M ›" de ramas (tarea 5.4) -- ver `VersionSelector`. */
+  versionSelector: VersionSelectorLabels;
+  /** Tarjeta de escalación a Pro (tarea 5.3) -- ver `EscalationCard`. */
+  escalation: EscalationCardLabels;
+  /** Nota-enlace de VUELTA en una sesión escalada hacia su origen (tarea 5.3,
+   * vista 08, bidireccional): «Esta conversación continúa una consulta
+   * anterior — abrir». Se muestra al tope del flujo cuando la sesión tiene
+   * `forked_from_id`. */
+  escalationOriginLink: string;
 }
 
 export interface ChatContentProps {
@@ -73,6 +103,75 @@ function extractTelemetry(turnMetadata: Record<string, unknown> | null): TurnTel
   const raw = turnMetadata.telemetry;
   if (!raw || typeof raw !== "object") return undefined;
   return raw as TurnTelemetry;
+}
+
+/**
+ * Lee `is_alternate_model` de `turn_metadata` (tarea 5.1) -- a diferencia de
+ * `telemetry`, esta clave SIEMPRE está presente para los tres roles
+ * (`layer_turn_metadata`, ver `resultarai/app/use_cases/chat/telemetry.py`),
+ * así que acá alcanza con leerla directo (`false` para `turn_metadata: null`,
+ * mensajes de usuario o una sesión sin ese turno todavía).
+ */
+function extractIsAlternateModel(turnMetadata: Record<string, unknown> | null): boolean {
+  if (!turnMetadata) return false;
+  return Boolean(turnMetadata.is_alternate_model);
+}
+
+/**
+ * Lee `tool_calls` de `turn_metadata` (tarea 5.2) -- ver el docstring de
+ * `VisibleToolCallView` en `lib/chat/types.ts`: ningún camino de
+ * persistencia de d13 lo puebla todavía (streaming real de b06 pendiente),
+ * así que esto hoy siempre devuelve `undefined`; queda listo para cuando
+ * `turn_metadata.tool_calls` empiece a llegar del backend.
+ */
+function extractToolCalls(
+  turnMetadata: Record<string, unknown> | null,
+): VisibleToolCallView[] | undefined {
+  if (!turnMetadata) return undefined;
+  const raw = turnMetadata.tool_calls;
+  if (!Array.isArray(raw)) return undefined;
+  return raw as VisibleToolCallView[];
+}
+
+/**
+ * Lee `escalation` de `turn_metadata` (tarea 5.3) -- `layer_turn_metadata`
+ * (`resultarai/app/use_cases/chat/telemetry.py`) SIEMPRE incluye la clave
+ * `escalation` para los tres roles, con valor `null` cuando el turno no emitió
+ * el marcador `<<<NEEDS_PRO>>>`. Devuelve `undefined` (no `null`) cuando no hay
+ * escalación, para que `ChatMessageItem.escalation` quede sin poblar y la
+ * tarjeta no se monte (mismo criterio de "ausencia, no valor vacío").
+ */
+function extractEscalation(
+  turnMetadata: Record<string, unknown> | null,
+): TurnEscalation | undefined {
+  if (!turnMetadata) return undefined;
+  const raw = turnMetadata.escalation;
+  if (!raw || typeof raw !== "object") return undefined;
+  return raw as TurnEscalation;
+}
+
+/**
+ * Traduce un mensaje del árbol de la sesión (`GET /sessions/{id}`) a su
+ * `ChatMessageItem` de UI. Se usa tanto al cargar la sesión como al alternar de
+ * versión (tarea 5.4): en ambos casos el `id` viaja tal cual, así la clave de
+ * React mantiene montado el prefijo previo al punto de bifurcación cuando cambia
+ * la rama (solo se re-monta lo posterior).
+ */
+function treeMessageToChatItem(message: SessionTreeMessage): ChatMessageItem {
+  return {
+    id: message.id,
+    role: message.role === "user" ? "user" : "assistant",
+    content: message.content,
+    createdAt: message.created_at,
+    status: message.status,
+    telemetry: extractTelemetry(message.turn_metadata),
+    isAlternateModel: extractIsAlternateModel(message.turn_metadata),
+    toolCalls: extractToolCalls(message.turn_metadata),
+    escalation: extractEscalation(message.turn_metadata),
+    // El origen re-planteado al escalar es el mensaje de usuario del turno = el
+    // `parent_id` de esta respuesta (id real, persistido).
+    escalationOriginUserMessageId: message.parent_id ?? undefined,
+  };
 }
 
 /**
@@ -130,6 +229,36 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   // `GET /api/agents/{id}` -- ver `MessageColumn`, que solo las muestra en
   // el estado vacío (sin mensajes ni turno en curso).
   const [starterPrompts, setStarterPrompts] = useState<string[]>([]);
+  // Tarea 5.3 (GATE ABSOLUTO): `agent.escalation_enabled` del mismo
+  // `GET /api/agents/{id}`. Arranca en `false` (fail-closed): hasta que el
+  // agente resuelva --o si la lectura falla-- la tarjeta de escalación NO se
+  // monta jamás, aunque llegue el evento. Defensa en profundidad: el backend
+  // ya suprime el marcador; esta bandera es la re-verificación de la UI.
+  const [escalationEnabled, setEscalationEnabled] = useState(false);
+  // Tarea 5.3 (persistencia): ids de sesiones escaladas desde esta sesión
+  // (`escalated_session_ids` del detalle) y origen de esta sesión si ella misma
+  // nació de una escalación (`forked_from_id`, para la nota-enlace de vuelta
+  // bidireccional). Ambos vienen de `GET /sessions/{id}`; vacíos en una sesión
+  // nueva.
+  const [escalatedSessionIds, setEscalatedSessionIds] = useState<string[]>([]);
+  const [forkedFromId, setForkedFromId] = useState<string | null>(null);
+
+  // Tarea 5.4 (selector de versiones): árbol COMPLETO de la sesión (todas las
+  // ramas, no solo la activa) tal como llega de `GET /sessions/{id}`, más su hoja
+  // activa. `messages` (arriba) es la rama VISIBLE derivada de este árbol; se
+  // guarda el árbol aparte para resolver `versionNav`/`resolveVisiblePath` al
+  // alternar sin volver a pedir el detalle.
+  const [treeMessages, setTreeMessages] = useState<SessionTreeMessage[]>([]);
+  const [activeLeafId, setActiveLeafId] = useState<string | null>(null);
+  // Versión elegida por punto de bifurcación (estado LOCAL): alternar solo agrega
+  // o reemplaza una entrada acá; el árbol NUNCA se muta, así la rama no
+  // seleccionada queda intacta y es recuperable con un ‹/›.
+  const [branchChoices, setBranchChoices] = useState<BranchChoices>(() => new Map());
+  // Ancla de scroll al alternar (tarea 5.4): id del mensaje ramificado recién
+  // seleccionado + un nonce para re-disparar el efecto aunque el id se repita.
+  const [branchScroll, setBranchScroll] = useState<{ messageId: string; nonce: number } | null>(
+    null,
+  );
 
   // Evita plegar el mismo turno dos veces si el efecto de abajo se
   // re-ejecuta (p. ej. por un re-render intermedio antes de que
@@ -144,17 +273,22 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         const res = await fetch(`/api/sessions/${id}`);
         if (!res.ok) throw new Error("No se pudo cargar la sesión.");
         const detail = (await res.json()) as SessionDetail;
-        const branch = resolveActiveBranch(detail.messages, detail.active_leaf_id);
-        setMessages(
-          branch.map((message) => ({
-            id: message.id,
-            role: message.role === "user" ? "user" : "assistant",
-            content: message.content,
-            createdAt: message.created_at,
-            status: message.status,
-            telemetry: extractTelemetry(message.turn_metadata),
-          })),
-        );
+        // Tarea 5.4: se guarda el árbol completo y se resetea la elección de
+        // versiones -- al (re)cargar se muestra la rama activa (default), que tras
+        // una edición/regeneración es justo la versión nueva (`active_leaf_id`).
+        const tree: SessionBranchTree = {
+          messages: detail.messages,
+          activeLeafId: detail.active_leaf_id,
+        };
+        const emptyChoices: BranchChoices = new Map();
+        setTreeMessages(detail.messages);
+        setActiveLeafId(detail.active_leaf_id);
+        setBranchChoices(emptyChoices);
+        setMessages(resolveVisiblePath(tree, emptyChoices).map(treeMessageToChatItem));
+        // Tarea 5.3: metadatos de escalación de la sesión (persistencia +
+        // nota-enlace de vuelta). Ver `renderEscalation` y `leadingNote`.
+        setEscalatedSessionIds(detail.escalated_session_ids);
+        setForkedFromId(detail.forked_from_id);
 
         // Reanudar sesión (tarea 2.5): si otra pestaña/dispositivo dejó un
         // turno en curso, re-attachearse al stream real en vez de mostrar
@@ -198,10 +332,20 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
       try {
         const res = await fetch(`/api/agents/${labels.agentId}`);
         if (!res.ok) return;
-        const data = (await res.json()) as { starter_prompts: string[] };
-        if (!cancelled) setStarterPrompts(data.starter_prompts);
+        const data = (await res.json()) as {
+          starter_prompts: string[];
+          escalation_enabled: boolean;
+        };
+        if (!cancelled) {
+          setStarterPrompts(data.starter_prompts);
+          // Tarea 5.3 (GATE ABSOLUTO): solo con el agente confirmando
+          // `escalation_enabled: true` la tarjeta podrá montarse. Si la lectura
+          // falla, queda en `false` (fail-closed) y nunca se muestra.
+          setEscalationEnabled(data.escalation_enabled);
+        }
       } catch {
         // Sin sugerencias no rompe el chat: la vista 05 sigue funcional.
+        // `escalationEnabled` queda en `false`: la escalación no se ofrece.
       }
     }
     void loadAgent();
@@ -224,6 +368,11 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
 
     const metadata = turnStream.doneMetadata;
     const finalText = turnStream.text;
+    // Tarea 5.3: la escalación puede llegar en el `done` o como evento SSE
+    // `escalation` aparte -- se toma de cualquiera de los dos (el hook conserva
+    // `turnStream.escalation` hasta el `reset` de abajo). Se pliega junto al
+    // mensaje para que la tarjeta se monte tras esta respuesta.
+    const escalation = metadata.escalation ?? turnStream.escalation ?? undefined;
     setMessages((prev) => {
       if (prev.some((message) => message.id === metadata.assistant_message_id)) return prev;
       return [
@@ -234,6 +383,12 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
           content: finalText,
           status: metadata.stopped ? "stopped" : "complete",
           telemetry: metadata.telemetry,
+          isAlternateModel: metadata.is_alternate_model,
+          toolCalls: metadata.tool_calls,
+          escalation: escalation ?? undefined,
+          // id REAL del mensaje de usuario del turno (no el eco optimista):
+          // el `origin_message_id` exacto a re-plantear si el usuario escala.
+          escalationOriginUserMessageId: metadata.user_message_id,
         },
       ];
     });
@@ -242,6 +397,23 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     turnStream.reset();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [turnStream.status, turnStream.doneMetadata]);
+
+  // Tarea 5.4: al alternar de versión, el scroll queda anclado al mensaje
+  // ramificado (vista 09 §Interacciones). Corre DESPUÉS del commit (la nueva
+  // porción posterior de la rama ya está en el DOM), busca la fila por su
+  // `data-message-id` estable y la trae a la vista. Mismo patrón medible en
+  // jsdom que `use-auto-scroll.ts`: `scrollIntoView` es mockeable sobre el
+  // elemento real (jsdom no implementa scroll, así que se guarda el chequeo de
+  // que exista para no romper en tests que no lo mockean).
+  useEffect(() => {
+    if (!branchScroll) return;
+    const anchor = document.querySelector<HTMLElement>(
+      `[data-message-id="${branchScroll.messageId}"]`,
+    );
+    if (anchor && typeof anchor.scrollIntoView === "function") {
+      anchor.scrollIntoView({ block: "start", behavior: "auto" });
+    }
+  }, [branchScroll]);
 
   const ensureSession = useCallback(async (): Promise<string | null> => {
     if (sessionId) return sessionId;
@@ -281,6 +453,28 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   function handleStarterSelect(text: string) {
     setComposerText(text);
     composerRef.current?.focus();
+  }
+
+  // Tarea 5.3: crea la sesión escalada a Pro. Se invoca EXCLUSIVAMENTE desde el
+  // click en "Continuar con Pro" de `EscalationCard` (nunca automáticamente).
+  // El backend es idempotente (201 al crear, 200 si ya existía por doble clic /
+  // doble pestaña): en ambos casos devolvemos el id de destino y la tarjeta
+  // navega ahí sin distinguir el caso ni mostrar error.
+  async function escalate(
+    originUserMessageId: string | undefined,
+  ): Promise<{ escalatedSessionId: string }> {
+    if (!sessionId) throw new Error("No hay sesión para escalar.");
+    const res = await fetch(`/api/sessions/${sessionId}/escalate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...csrfHeaders() },
+      // `origin_message_id` explícito cuando lo conocemos (el mensaje de
+      // usuario exacto del turno); si falta, el backend re-plantea el último
+      // mensaje de usuario de la rama activa.
+      body: JSON.stringify(originUserMessageId ? { origin_message_id: originUserMessageId } : {}),
+    });
+    if (!res.ok) throw new Error("No se pudo escalar la sesión.");
+    const data = (await res.json()) as EscalateSessionResponse;
+    return { escalatedSessionId: data.escalated_session_id };
   }
 
   if (loadingSession) {
@@ -331,6 +525,92 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   ]);
   const showTaximeterBar = user.role === "tecnico" || user.role === "admin";
 
+  // Tarea 5.3: la tarjeta de escalación se renderiza tras la respuesta del
+  // ÚLTIMO turno que emitió el marcador (una a la vez, coherente con "la
+  // conversación siguió y la tarjeta anterior queda inerte" de la vista 08).
+  // Solo mira los mensajes ya plegados: el gate por `escalation_enabled` de
+  // más abajo es lo que decide si finalmente se monta.
+  const lastEscalationMessageId = escalationEnabled
+    ? [...messages].reverse().find((message) => message.escalation)?.id ?? null
+    : null;
+
+  /**
+   * Alterna a la versión `targetId` del punto de bifurcación `parentKey`
+   * (tarea 5.4). Reemplaza la elección en el estado LOCAL, re-deriva la rama
+   * VISIBLE con `resolveVisiblePath` (sin mutar el árbol -> la otra rama queda
+   * intacta) y ancla el scroll al mensaje ramificado recién seleccionado.
+   *
+   * Como el `id` del prefijo previo al punto de bifurcación no cambia, la clave
+   * de React re-monta SOLO la porción posterior de la rama; lo anterior se
+   * conserva montado.
+   */
+  function handleSelectVersion(parentKey: string, targetId: string) {
+    const nextChoices = new Map(branchChoices);
+    nextChoices.set(parentKey, targetId);
+    setBranchChoices(nextChoices);
+    setMessages(
+      resolveVisiblePath({ messages: treeMessages, activeLeafId }, nextChoices).map(
+        treeMessageToChatItem,
+      ),
+    );
+    setBranchScroll((prev) => ({ messageId: targetId, nonce: (prev?.nonce ?? 0) + 1 }));
+  }
+
+  /**
+   * Devuelve el selector "‹ N/M ›" para `message`, o `null` si el mensaje no
+   * tiene versiones hermanas (tarea 5.4). Lo resuelve contra el árbol COMPLETO
+   * (`treeMessages`), no contra la rama visible: un mensaje del prefijo común
+   * sigue teniendo su grupo de hermanos correcto. Los mensajes vivos/optimistas
+   * (turno en streaming aún no persistido) no están en el árbol -> `versionNav`
+   * devuelve `null` y no muestran selector, que es lo correcto (un turno nuevo
+   * todavía no tiene versiones alternativas).
+   */
+  function renderVersionSelector(message: ChatMessageItem): ReactNode {
+    const nav = versionNav(treeMessages, message.id);
+    if (!nav || nav.count <= 1) return null;
+    const { parentKey, prevId, nextId } = nav;
+    return (
+      <VersionSelector
+        index={nav.index}
+        count={nav.count}
+        onPrev={prevId ? () => handleSelectVersion(parentKey, prevId) : undefined}
+        onNext={nextId ? () => handleSelectVersion(parentKey, nextId) : undefined}
+        labels={labels.versionSelector}
+      />
+    );
+  }
+
+  /**
+   * Devuelve la tarjeta de escalación para `message`, o `null`.
+   *
+   * GATE ABSOLUTO (defensa en profundidad): sin `escalationEnabled` no se monta
+   * NADA -- ver `lastEscalationMessageId`, que ya es `null` en ese caso. Solo
+   * la más reciente de las respuestas con escalación la muestra.
+   *
+   * Persistencia tras recarga (tarea 5.3 punto 5, aproximación documentada):
+   * el detalle expone `escalated_session_ids` pero NO un mapeo turno->sesión
+   * escalada ni el título de destino. Aproximación elegida: si la sesión tiene
+   * al menos una sesión escalada, la tarjeta arranca en estado `escalated`
+   * (nota-enlace hacia `escalated_session_ids[0]`); si no, en reposo. El
+   * refinamiento (mapear cada turno con SU sesión escalada y su título) queda
+   * anotado en `openspec/BACKLOG-DESCUBRIMIENTOS.md`.
+   */
+  function renderEscalation(message: ChatMessageItem): ReactNode {
+    if (message.id !== lastEscalationMessageId || !message.escalation) return null;
+    const persistedEscalatedId = escalatedSessionIds[0] ?? null;
+    return (
+      <EscalationCard
+        reason={message.escalation.reason}
+        targetProfile={message.escalation.target_profile}
+        labels={labels.escalation}
+        initialStatus={persistedEscalatedId ? "escalated" : "idle"}
+        escalatedSessionId={persistedEscalatedId}
+        onEscalate={() => escalate(message.escalationOriginUserMessageId)}
+        onNavigateEscalated={(id) => router.push(`/chat/${id}`)}
+      />
+    );
+  }
+
   return (
     <div className="chat-shell">
       {/* El chequeo de rol de acá arriba es solo para no dejar un
@@ -352,6 +632,7 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         className="chat-shell__messages"
         messages={messages}
         streaming={streaming}
+        role={user.role}
         labels={{
           emptyGreeting: labels.emptyGreeting,
           stoppedCaption: labels.stoppedCaption,
@@ -361,12 +642,32 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
           newMessages: labels.newMessages,
           feedback: labels.feedback,
           telemetry: labels.telemetry,
+          alternateModel: labels.alternateModel,
+          toolCall: labels.toolCall,
         }}
         emptyStateExtra={
           starterPrompts.length > 0 ? (
             <StarterSuggestions prompts={starterPrompts} onSelect={handleStarterSelect} />
           ) : null
         }
+        leadingNote={
+          // Tarea 5.3 (nota-enlace de VUELTA, bidireccional): esta sesión nació
+          // de una escalación -> enlace a su origen (`forked_from_id`).
+          forkedFromId ? (
+            <button
+              type="button"
+              className="escalate-card__origin-link"
+              onClick={() => router.push(`/chat/${forkedFromId}`)}
+            >
+              <span className="escalate-card__branch-icon" aria-hidden="true">
+                ↳
+              </span>
+              {labels.escalationOriginLink}
+            </button>
+          ) : null
+        }
+        renderEscalation={renderEscalation}
+        renderVersionSelector={renderVersionSelector}
       />
       {showSendError ? (
         <p className="chat-shell__error" role="alert">

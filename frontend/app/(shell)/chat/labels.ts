@@ -69,5 +69,33 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
       viewTrace: t("telemetry.viewTrace"),
       viewTraceAriaLabel: t("telemetry.viewTraceAriaLabel"),
     },
+    alternateModel: {
+      label: t("alternateModel.label"),
+      funcionalExplanation: t("alternateModel.funcionalExplanation"),
+      profilePrefix: t("alternateModel.profilePrefix"),
+      reasonPrefix: t("alternateModel.reasonPrefix"),
+    },
+    toolCall: {
+      parametersLabel: t("toolCall.parametersLabel"),
+      latencyLabel: t("toolCall.latencyLabel"),
+    },
+    versionSelector: {
+      // Plantilla ICU-lite: el componente interpola {n}/{m} con la versión en
+      // vivo (dato de runtime del cliente, no resoluble acá). El "N/M" visual
+      // no se traduce (DS §4.2); esto es solo el `aria-label` del selector.
+      versionAriaLabel: t("branch.versionAriaLabel", { n: "{n}", m: "{m}" }),
+      previousVersion: t("branch.previousVersion"),
+      nextVersion: t("branch.nextVersion"),
+    },
+    escalation: {
+      title: t("escalation.title"),
+      consequence: t("escalation.consequence"),
+      targetProfileLabel: t("escalation.targetProfileLabel"),
+      confirm: t("escalation.confirm"),
+      dismiss: t("escalation.dismiss"),
+      doneLink: t("escalation.doneLink"),
+      dismissedNote: t("escalation.dismissedNote"),
+    },
+    escalationOriginLink: t("escalation.originLink"),
   };
 }

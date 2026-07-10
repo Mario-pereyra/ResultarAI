@@ -1,7 +1,9 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { useTurnStream } from "@/lib/chat/use-turn-stream";
 import { createControlledReader, mockSseResponse, sseFrame } from "@/lib/chat/test-support/sse-mock";
+import type { TurnTelemetry, VisibleToolCallView } from "@/lib/chat/types";
 import { MessageColumn, type StreamingTurnStatus } from "./message-column";
 
 const LABELS = {
@@ -35,6 +37,17 @@ const LABELS = {
     cacheWriteTooltip: "prefijo escrito al cache para los próximos turnos",
     viewTrace: "ver traza",
     viewTraceAriaLabel: "Ver traza de este turno en Langfuse",
+  },
+  alternateModel: {
+    label: "modelo alterno",
+    funcionalExplanation:
+      "Esta respuesta la generó un modelo alternativo porque el habitual no estaba disponible. La calidad puede variar.",
+    profilePrefix: "Perfil:",
+    reasonPrefix: "Motivo:",
+  },
+  toolCall: {
+    parametersLabel: "Parámetros",
+    latencyLabel: "Latencia:",
   },
 };
 
@@ -262,5 +275,121 @@ describe("MessageColumn — estados base", () => {
     expect(screen.getByText("Hola")).toBeTruthy();
     expect(screen.getByText(/En qué te ayudo/)).toBeTruthy();
     expect(screen.queryByTestId("stream-cursor")).toBeNull();
+  });
+});
+
+/** Telemetría de Técnico/Admin con fallback -- misma forma que arma
+ * `layer_turn_metadata` (`telemetry.py`) para un turno servido por un
+ * perfil de fallback. */
+const ALTERNATE_MODEL_TELEMETRY: TurnTelemetry = {
+  cost_usd: 0.0042,
+  model_profile_id: "kimi-k2.6",
+  primary_model_profile_id: "deepseek-v4-flash",
+  fallback_reason: "proveedor caído 14:31",
+  latency_ms: 3200,
+  cache_hit_tokens: null,
+  cache_miss_tokens: null,
+  cache_write_tokens: null,
+};
+
+describe('MessageColumn — etiqueta "modelo alterno" por rol sobre un turno real (tarea 5.1)', () => {
+  it("Funcional (mensaje sin telemetry): tag con texto simple, sin el nombre del perfil en el DOM", () => {
+    render(
+      <MessageColumn
+        messages={[{ id: "a1", role: "assistant", content: "Respuesta", isAlternateModel: true }]}
+        labels={LABELS}
+      />,
+    );
+    const tag = screen.getByText("modelo alterno");
+    expect(tag.getAttribute("aria-label")).toBe(LABELS.alternateModel.funcionalExplanation);
+    expect(document.body.innerHTML).not.toContain("kimi-k2.6");
+  });
+
+  it("Técnico/Admin (mensaje con telemetry): el tag expone el nombre del perfil de forma accesible", () => {
+    render(
+      <MessageColumn
+        messages={[
+          {
+            id: "a1",
+            role: "assistant",
+            content: "Respuesta",
+            isAlternateModel: true,
+            telemetry: ALTERNATE_MODEL_TELEMETRY,
+          },
+        ]}
+        labels={LABELS}
+      />,
+    );
+    const tag = screen.getByText("modelo alterno");
+    expect(tag.getAttribute("aria-label")).toContain("kimi-k2.6");
+  });
+
+  it("turno normal (is_alternate_model false): no muestra ningún tag", () => {
+    render(
+      <MessageColumn
+        messages={[{ id: "a1", role: "assistant", content: "Respuesta", isAlternateModel: false }]}
+        labels={LABELS}
+      />,
+    );
+    expect(screen.queryByText("modelo alterno")).toBeNull();
+  });
+});
+
+/** Fixture conforme al contrato `tool-call-visibility` de c09-mcp-tools
+ * (`VisibleToolCallView`, espejo de `render_for_role` en
+ * `resultarai/core/audit/visibility.py`). */
+const TOOL_CALL: VisibleToolCallView = {
+  tool_name: "buscar_documentacion",
+  status: "executed",
+  status_label: "ejecutada",
+  simple_description:
+    "Se consultó «buscar_documentacion». Resultado: MATA010 — Parámetros de localización.",
+  parameters: { query: "MV_PAISLOC" },
+  result_preview: "MATA010 — Parámetros de localización.",
+  duration_ms: 820,
+};
+
+describe("MessageColumn — tool calls colapsadas/expandibles por rol sobre un turno real (tarea 5.2)", () => {
+  it("colapsada por defecto para cualquier rol: no muestra la descripción ni parámetros hasta expandir", () => {
+    render(
+      <MessageColumn
+        messages={[{ id: "a1", role: "assistant", content: "Respuesta", toolCalls: [TOOL_CALL] }]}
+        labels={LABELS}
+        role="tecnico"
+      />,
+    );
+    expect(screen.getByRole("button", { name: /buscar_documentacion/ })).toBeTruthy();
+    expect(screen.queryByText(TOOL_CALL.simple_description)).toBeNull();
+  });
+
+  it("Funcional: al expandir ve lenguaje simple y NO ve parámetros ni latencia en el DOM", async () => {
+    const user = userEvent.setup();
+    render(
+      <MessageColumn
+        messages={[{ id: "a1", role: "assistant", content: "Respuesta", toolCalls: [TOOL_CALL] }]}
+        labels={LABELS}
+        role="funcional"
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /buscar_documentacion/ }));
+    expect(screen.getByText(TOOL_CALL.simple_description)).toBeTruthy();
+    expect(screen.queryByText(LABELS.toolCall.parametersLabel)).toBeNull();
+    expect(document.body.innerHTML).not.toContain("MV_PAISLOC");
+    expect(screen.queryByText(/0,8 s/)).toBeNull();
+  });
+
+  it("Técnico: al expandir la MISMA tool call ve además parámetros completos y latencia", async () => {
+    const user = userEvent.setup();
+    render(
+      <MessageColumn
+        messages={[{ id: "a1", role: "assistant", content: "Respuesta", toolCalls: [TOOL_CALL] }]}
+        labels={LABELS}
+        role="tecnico"
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /buscar_documentacion/ }));
+    expect(screen.getByText(LABELS.toolCall.parametersLabel)).toBeTruthy();
+    expect(screen.getByText(/MV_PAISLOC/)).toBeTruthy();
+    expect(screen.getByText(/0,8 s/)).toBeTruthy();
   });
 });

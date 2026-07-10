@@ -448,6 +448,31 @@
       "cacheWriteTooltip": "prefijo escrito al cache para los próximos turnos",
       "viewTrace": "ver traza",
       "viewTraceAriaLabel": "Ver traza de este turno en Langfuse"
+    },
+    "alternateModel": {
+      "label": "modelo alterno",
+      "funcionalExplanation": "Esta respuesta la generó un modelo alternativo porque el habitual no estaba disponible. La calidad puede variar.",
+      "profilePrefix": "Perfil:",
+      "reasonPrefix": "Motivo:"
+    },
+    "toolCall": {
+      "parametersLabel": "Parámetros",
+      "latencyLabel": "Latencia:"
+    },
+    "escalation": {
+      "title": "Este caso amerita el modelo Pro",
+      "consequence": "Se abre una conversación nueva con el contexto de esta.",
+      "targetProfileLabel": "Perfil de destino:",
+      "confirm": "Continuar con Pro",
+      "dismiss": "Seguir con Flash",
+      "doneLink": "Continuaste esta consulta en Pro — abrir conversación",
+      "dismissedNote": "Decidiste seguir con Flash",
+      "originLink": "Esta conversación continúa una consulta anterior — abrir"
+    },
+    "branch": {
+      "versionAriaLabel": "versión {n} de {m}",
+      "previousVersion": "Versión anterior",
+      "nextVersion": "Versión siguiente"
     }
   }
 }

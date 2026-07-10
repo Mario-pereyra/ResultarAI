@@ -219,8 +219,18 @@
   justify-content: flex-end;
 }
 
-.msg-bubble--user {
+/* Columna del mensaje de usuario: apila la burbuja y, debajo, el selector de
+   versiones (tarea 5.4), ambos alineados al borde derecho de la burbuja. */
+.msg-user-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   max-width: 85%;
+  min-width: 0;
+}
+
+.msg-bubble--user {
+  max-width: 100%;
   background: var(--bg-raised);
   border: 1px solid var(--line);
   border-radius: var(--r-lg);
@@ -261,6 +271,55 @@
 
 .msg-meta__stopped {
   color: var(--warn);
+}
+
+/* ── Selector de versiones de rama "‹ N/M ›" (tarea 5.4, vista 09) ────────
+   Se ancla junto al mensaje ramificado; el objetivo táctil ≥44 px de las
+   flechas se ajusta en la tarea 8.1. */
+.branch-sel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  margin-top: var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--ink-dim);
+}
+
+.branch-sel__arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-raised);
+  color: var(--ink-dim);
+  font-size: var(--fs-body);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.branch-sel__arrow:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.branch-sel__arrow:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.branch-sel__arrow:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.branch-sel__count {
+  min-width: 2.5em;
+  text-align: center;
 }
 
 /* ── Fila de telemetría por turno (tareas 4.2/4.3, vista 06 §2) ──────────
@@ -350,6 +409,195 @@
 .chip-cache--write {
   color: var(--info);
   background: color-mix(in srgb, var(--info) 12%, transparent);
+}
+
+/* ── Tool calls colapsadas/expandibles (tarea 5.2, contrato
+   `tool-call-visibility` de c09-mcp-tools) ─────────────────────────────
+   Log de `ToolCallLine` por turno, antes de la respuesta -- ver
+   `components/chat/tool-call-line.tsx`. */
+.tool-call-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-2);
+}
+
+.tool-call-line__trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--bg-raised);
+  color: var(--ink-dim);
+  font-size: var(--fs-caption);
+  text-align: left;
+  cursor: pointer;
+}
+.tool-call-line__trigger:hover {
+  background: color-mix(in srgb, var(--ink) 6%, var(--bg-raised));
+}
+.tool-call-line__trigger:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.tool-call-line__icon {
+  flex: none;
+}
+
+.tool-call-line__chevron {
+  margin-left: auto;
+  flex: none;
+  transition: transform var(--dur-2) ease;
+}
+.tool-call-line__trigger[aria-expanded="true"] .tool-call-line__chevron {
+  transform: rotate(90deg);
+}
+
+.tool-call-line__detail {
+  margin-top: var(--sp-1);
+  padding: var(--sp-2) var(--sp-3);
+  border-left: 2px solid var(--line-strong);
+  color: var(--ink-dim);
+  font-size: var(--fs-caption);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.tool-call-line__result {
+  margin: 0;
+}
+
+.tool-call-line__params-label {
+  margin: 0;
+  font-weight: 600;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 10px;
+}
+
+.tool-call-line__params {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tool-call-line__latency {
+  margin: 0;
+  font-family: var(--font-mono);
+}
+
+/* ── Tarjeta de escalación a Pro (tarea 5.3, vista 08) ──────────────────
+   Entra como contenido del stream, tras la respuesta del turno -- no es un
+   modal (DS §8.15). Ver `components/chat/escalation-card.tsx`. */
+.escalate-card {
+  margin-top: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--accent-alt);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--accent-alt) 6%, var(--bg-raised));
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.escalate-card__title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.escalate-card__icon {
+  flex: none;
+  color: var(--accent-alt);
+}
+
+.escalate-card__reason {
+  margin: 0;
+  color: var(--ink-dim);
+}
+
+.escalate-card__consequence {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: var(--fs-caption);
+}
+
+.escalate-card__profile {
+  align-self: flex-start;
+  font-family: var(--font-mono);
+}
+
+.escalate-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}
+
+/* Estados colapsados: nota-enlace (escalada) y línea atenuada (descartada). */
+.escalate-card--collapsed {
+  padding: var(--sp-2) var(--sp-3);
+  border-style: dashed;
+  background: transparent;
+}
+
+.escalate-card__done-link,
+.escalate-card__origin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--info);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.escalate-card__done-link:focus-visible,
+.escalate-card__origin-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.escalate-card__origin-link {
+  margin-bottom: var(--sp-2);
+  font-size: var(--fs-caption);
+}
+
+.escalate-card__branch-icon {
+  flex: none;
+}
+
+.escalate-card__dismissed {
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: var(--fs-caption);
+}
+
+/* Móvil: botones apilados a ancho completo, primario primero en el DOM pero
+   abajo en la zona del pulgar (vista 08 §Móvil). */
+@media (max-width: 640px) {
+  .escalate-card__actions {
+    flex-direction: column-reverse;
+  }
+  .escalate-card__actions .btn {
+    width: 100%;
+  }
 }
 
 /* ── Cursor de bloque parpadeante (tarea 3.1) ───────────────────────── */
