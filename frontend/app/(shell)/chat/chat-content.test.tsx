@@ -1,6 +1,6 @@
 import userEvent from "@testing-library/user-event";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createControlledReader, mockSseResponse, sseFrame } from "@/lib/chat/test-support/sse-mock";
 import { SessionProvider, type SessionContextValue } from "@/lib/session-context";
 import { ChatContent, type ChatContentLabels } from "./chat-content";
@@ -112,6 +112,24 @@ const LABELS: ChatContentLabels = {
     reprocessWarningOther: "Crear una rama acá reprocesa {n} mensajes",
   },
   compactionIndicator: "Resumimos el historial de esta conversación.",
+  gatewayOffline: {
+    title: "El servicio de IA no está disponible",
+    technicalWhy: "El proveedor no responde; reintento automático",
+    funcionalWhy: "El asistente no está disponible en este momento",
+    supportCodePrefix: "código para soporte:",
+    retryNow: "Reintentar ahora",
+    retryingIn: "Reintentando en {n} s",
+  },
+  quota: {
+    title: "Alcanzaste tu cuota mensual",
+    technicalWhy: "Tu límite de uso mensual se alcanzó.",
+    funcionalWhy: "Alcanzaste tu límite de uso de este mes",
+    supportCodePrefix: "código para soporte:",
+    requestRelease: "Solicitar liberación",
+    requestSent: "Solicitud enviada",
+    requestSentNote: "Te avisamos cuando un admin la resuelva.",
+  },
+  quotaComposerDisabledReason: "Alcanzaste tu cuota mensual. Solicitá una liberación para seguir escribiendo.",
 };
 
 const STARTER_PROMPTS = ["Ayudame a redactar un resumen ejecutivo", "Dame ideas para esta semana"];
@@ -962,5 +980,172 @@ describe("ChatContent — edición de mensaje (tarea 5.5)", () => {
     expect(screen.queryByLabelText("Editar mensaje")).toBeNull();
     // Cancelar NUNCA llama a ningún endpoint.
     expect(fetchMock.mock.calls.length).toBe(callsBeforeEdit);
+  });
+});
+
+/**
+ * Tareas 6.1/6.2 (tarjetas de error accionables, vista 10 -- subconjunto
+ * `GATEWAY_OFFLINE`/`QUOTA`). La redacción por rol (tarea 6.3) se ejercita a
+ * fondo en `components/chat/error-card.test.tsx` (los 3 roles × los 2
+ * códigos, sobre el componente compartido que AMBAS tarjetas usan para
+ * decidir esa redacción) -- acá se cubre el flujo end-to-end: clasificación
+ * real del error del hook (`use-turn-stream.ts`), reintento con backoff sin
+ * duplicar el mensaje del usuario, y el bloqueo del composer por cuota.
+ */
+const EMPTY_SESSION_DETAIL = {
+  id: "session-1",
+  agent_id: "default_chat",
+  title: null,
+  model_profile: "deepseek-v4-flash",
+  forked_from_id: null,
+  escalated_session_ids: [],
+  active_leaf_id: null,
+  in_progress_turn: null,
+  messages: [],
+};
+
+/** Stub que responde el agente, el detalle de una sesión vacía y SIEMPRE
+ * `status` en el POST del turno (`.../messages/stream`) -- el doble de
+ * `fetch` que fuerza la clasificación de `classifyTurnError` (ver su
+ * docstring). Cuenta las llamadas al endpoint de stream aparte porque
+ * varias tareas del mismo test necesitan distinguirlas de la carga de
+ * sesión/agente. */
+function stubTurnErrorFetch(status: number) {
+  const reader = createControlledReader();
+  let streamCalls = 0;
+  const bodies: string[] = [];
+  const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = typeof input === "string" ? input : input.toString();
+    if (url === "/api/agents/default_chat") {
+      return new Response(
+        JSON.stringify({
+          id: "default_chat",
+          name: "Chat por Defecto",
+          starter_prompts: [],
+          escalation_enabled: true,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    }
+    if (url === "/api/sessions/session-1" && (!init?.method || init.method === "GET")) {
+      return new Response(JSON.stringify(EMPTY_SESSION_DETAIL), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    if (url === "/api/sessions/session-1/messages/stream" && init?.method === "POST") {
+      streamCalls += 1;
+      bodies.push(JSON.parse(init.body as string).text as string);
+      return mockSseResponse(reader.reader, { status });
+    }
+    throw new Error(`fetch inesperado en este test: ${url} (${init?.method ?? "GET"})`);
+  });
+  vi.stubGlobal("fetch", fetchMock);
+  return { fetchMock, streamCalls: () => streamCalls, bodies };
+}
+
+describe("ChatContent — tarjeta GATEWAY_OFFLINE (tarea 6.1)", () => {
+  // Timers falsos desde el arranque del test (no a mitad de camino): el
+  // countdown arranca su `setInterval` apenas se monta `GatewayOfflineCard`
+  // (justo después del primer fallo), así que si instaláramos
+  // `vi.useFakeTimers()` recién ahí, ese intervalo ya habría quedado
+  // agendado con el `setInterval` REAL -- Vitest solo intercepta llamadas a
+  // temporizadores hechas DESPUÉS de instalar el mock. Por eso todo este
+  // bloque usa `fireEvent` (no `userEvent`, que agenda sus propios
+  // temporizadores reales internos) + `act`/`vi.advanceTimersByTimeAsync`
+  // para asentar cada cadena async a mano.
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it(
+    "503 muestra la tarjeta con countdown; a los 5 s reintenta UNA vez con el mismo texto sin " +
+      "duplicar el mensaje del usuario; segundo fallo -> countdown de 15 s; «Reintentar ahora» " +
+      "dispara de inmediato",
+    async () => {
+      const { streamCalls, bodies } = stubTurnErrorFetch(503);
+      renderChatContent("tecnico", "session-1");
+
+      // Deja resolver la carga de la sesión vacía y del agente (fetch mock
+      // resuelto por Promise, sin `setTimeout` real de por medio, pero
+      // `advanceTimersByTimeAsync` igual asienta la cadena de microtasks).
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      const textarea = screen.getByLabelText("Mensaje") as HTMLTextAreaElement;
+      fireEvent.change(textarea, { target: { value: "Hola" } });
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "Enviar" }));
+        await vi.advanceTimersByTimeAsync(0);
+      });
+
+      // Primer fallo: tarjeta GATEWAY_OFFLINE (Técnico ve el código mono
+      // arriba) con countdown en el primer paso del backoff (5 s). El
+      // mensaje del usuario sigue en el hilo, una sola vez.
+      expect(screen.getByText("GATEWAY_OFFLINE", { selector: ".error-card__code" })).toBeTruthy();
+      expect(screen.getByText("Reintentando en 5 s")).toBeTruthy();
+      expect(screen.getAllByText("Hola")).toHaveLength(1);
+      expect(streamCalls()).toBe(1);
+
+      // El countdown llega a 0: dispara EXACTAMENTE un reintento (un
+      // segundo POST al stream) con el MISMO texto -- el eco del usuario
+      // sigue apareciendo una única vez (no se duplica).
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5000);
+      });
+      expect(streamCalls()).toBe(2);
+      expect(bodies).toEqual(["Hola", "Hola"]);
+      expect(screen.getAllByText("Hola")).toHaveLength(1);
+
+      // El segundo fallo consecutivo pasa al SIGUIENTE paso del backoff (15 s).
+      expect(screen.getByText("Reintentando en 15 s")).toBeTruthy();
+
+      // "Reintentar ahora" dispara un reintento de inmediato, sin esperar
+      // el countdown.
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "Reintentar ahora" }));
+        await vi.advanceTimersByTimeAsync(0);
+      });
+      expect(streamCalls()).toBe(3);
+      expect(bodies).toEqual(["Hola", "Hola", "Hola"]);
+    },
+  );
+});
+
+describe("ChatContent — tarjeta QUOTA (tarea 6.2)", () => {
+  it('402 al enviar un turno: tarjeta QUOTA visible, composer deshabilitado con motivo, botón «Solicitar liberación» presente', async () => {
+    const user = userEvent.setup();
+    const { streamCalls } = stubTurnErrorFetch(402);
+    renderChatContent("funcional", "session-1");
+
+    const textarea = await screen.findByLabelText("Mensaje");
+    await user.type(textarea, "Hola");
+    await user.click(screen.getByRole("button", { name: "Enviar" }));
+
+    // Tarjeta QUOTA visible (rol Funcional: redacción sin jerga, código al
+    // pie -- ver `error-card.test.tsx` para la cobertura exhaustiva de
+    // redacción por rol).
+    await screen.findByText(LABELS.quota.funcionalWhy);
+    expect(screen.getByText(`${LABELS.quota.supportCodePrefix} QUOTA`)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Solicitar liberación" })).toBeTruthy();
+
+    // El composer queda deshabilitado con el motivo inline (bloqueo, no
+    // solo error de turno -- vista 10 §Interacciones).
+    const composerTextarea = screen.getByLabelText("Mensaje") as HTMLTextAreaElement;
+    expect(composerTextarea.disabled).toBe(true);
+    expect(screen.getByText(LABELS.quotaComposerDisabledReason)).toBeTruthy();
+
+    // Click en "Solicitar liberación" no rompe nada (noop documentado hacia
+    // d16-cuotas-liberaciones): sin llamada de red adicional, colapsa a la
+    // nota "solicitud enviada".
+    const callsBeforeRequest = streamCalls();
+    await user.click(screen.getByRole("button", { name: "Solicitar liberación" }));
+    expect(screen.getByText("Solicitud enviada")).toBeTruthy();
+    expect(streamCalls()).toBe(callsBeforeRequest);
   });
 });

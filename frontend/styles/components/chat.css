@@ -945,3 +945,40 @@
 .md-content tbody tr:last-child td {
   border-bottom: none;
 }
+
+/* ── Tarjetas de error accionable embebidas (tareas 6.1/6.2/6.3, vista 10
+   -- subconjunto GATEWAY_OFFLINE/QUOTA) ─────────────────────────────────
+   `.error-card` base (icono/código/título/por qué/acciones) vive en
+   app/globals.css §5.13 -- acá solo las extensiones propias de
+   `components/chat/error-card.tsx` que ese archivo global no necesita
+   (gateway-error.tsx del shell no las usa). */
+.error-card__countdown {
+  margin: 0 0 var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-small);
+  color: var(--ink-dim);
+}
+
+.error-card__support-code {
+  margin: var(--sp-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-caption);
+  color: var(--ink-faint);
+  user-select: all;
+}
+
+.error-card__note {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-caption);
+  color: var(--ink-faint);
+  flex-basis: 100%;
+}
+
+/* ── Composer bloqueado con motivo inline (tarea 6.2, QUOTA) ───────────
+   Reemplaza el hint normal (`.chat-composer__hint`) mientras el composer
+   está deshabilitado por un bloqueo -- mismo elemento, solo cambia el
+   color para distinguirlo de un hint neutro. */
+.chat-composer__hint--blocked {
+  color: var(--danger);
+  font-weight: 600;
+}

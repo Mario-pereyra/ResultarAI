@@ -7,8 +7,13 @@ import type { AlternateModelTagLabels } from "@/components/chat/alternate-model-
 import { Composer, type ComposerHandle, type ComposerLabels } from "@/components/chat/composer";
 import { EscalationCard, type EscalationCardLabels } from "@/components/chat/escalation-card";
 import type { FeedbackActionsLabels } from "@/components/chat/feedback-actions";
+import {
+  GatewayOfflineCard,
+  type GatewayOfflineCardLabels,
+} from "@/components/chat/gateway-offline-card";
 import { MessageColumn, type ChatMessageItem } from "@/components/chat/message-column";
 import { EditMessageButton, MessageEdit, type MessageEditLabels } from "@/components/chat/message-edit";
+import { QuotaCard, type QuotaCardLabels } from "@/components/chat/quota-card";
 import { SessionTaximeter, type SessionTaximeterLabels } from "@/components/chat/session-taximeter";
 import { StarterSuggestions } from "@/components/chat/starter-suggestions";
 import type { ToolCallLineLabels } from "@/components/chat/tool-call-line";
@@ -16,6 +21,7 @@ import type { TurnTelemetryLabels } from "@/components/chat/turn-telemetry-row";
 import { VersionSelector, type VersionSelectorLabels } from "@/components/chat/version-selector";
 import { Skeleton } from "@/components/ui/skeleton";
 import { csrfHeaders } from "@/lib/csrf";
+import { classifyTurnError } from "@/lib/chat/classify-turn-error";
 import {
   countMessagesAfter,
   resolveVisiblePath,
@@ -74,6 +80,15 @@ export interface ChatContentLabels {
   messageEdit: MessageEditLabels;
   /** Indicador discreto de compaction (tarea 5.6) -- ver `CompactionIndicator`. */
   compactionIndicator: string;
+  /** Tarjeta `GATEWAY_OFFLINE` embebida en el flujo (tarea 6.1) -- ver
+   * `GatewayOfflineCard`. */
+  gatewayOffline: GatewayOfflineCardLabels;
+  /** Tarjeta `QUOTA` embebida en el flujo (tarea 6.2, estado UI únicamente,
+   * ver el no-objetivo del proposal) -- ver `QuotaCard`. */
+  quota: QuotaCardLabels;
+  /** Motivo inline del composer deshabilitado por `QUOTA` (tarea 6.2, vista
+   * 10 §Interacciones) -- ver `Composer.disabledReason`. */
+  quotaComposerDisabledReason: string;
 }
 
 export interface ChatContentProps {
@@ -227,6 +242,32 @@ function sumTelemetry(items: ReadonlyArray<TurnTelemetry | undefined>): {
  * evita que crear la sesión a mitad de un turno en streaming desmonte el
  * árbol (navegar de `/chat` a `/chat/{id}` cambiaría de segmento de ruta,
  * ver la nota en `handleTurnDone` sobre CUÁNDO se actualiza la URL).
+ *
+ * Tareas 6.1/6.2 (tarjetas de error accionables, vista 10 -- subconjunto
+ * `GATEWAY_OFFLINE`/`QUOTA`) -- decisión sobre `components/shell/gateway-error.tsx`:
+ * NO se reutiliza. Ese componente (`d10-design-system-shell`, tarea 5.6) es
+ * el banner GLOBAL del shell activado por `useSession().gateway.status`
+ * (una cookie de dev, `?gateway=offline`) para cuando el gateway del modelo
+ * está caído EN GENERAL -- vive fuera del flujo de mensajes y no conoce
+ * turnos, countdown ni reintento con backoff. La tarjeta de esta tarea es
+ * otra cosa: el resultado de UN turno puntual (`use-turn-stream.ts`),
+ * embebida DENTRO del flujo de mensajes en el lugar de la respuesta
+ * fallida (vista 10 §Propósito), con su propio countdown/backoff y sin
+ * relación con el estado global de sesión. Comparten la clase `.error-card`
+ * (`app/globals.css` §5.13, la MISMA anatomía visual) y el patrón de
+ * redacción por rol, pero forzar una abstracción común entre un banner de
+ * shell sin estado de turno y una tarjeta de turno con countdown hubiera
+ * acoplado dos ciclos de vida no relacionados -- ver el docstring de
+ * `components/chat/error-card.tsx` para el detalle.
+ *
+ * Clasificación de errores (`lib/chat/classify-turn-error.ts`): un turno que
+ * termina en `turnStream.status === "error"` se clasifica por
+ * `turnStream.error.status` -- `GATEWAY_OFFLINE` para una respuesta 502/503
+ * del POST del turno o una falla de red que agotó los reintentos internos
+ * del hook (`error.status === null`); `QUOTA` para un `402`, la señal
+ * simulada/inyectada hasta que `d16-cuotas-liberaciones` implemente el
+ * enforcement real (ver el docstring de `classifyTurnError`). Cualquier otro
+ * error sigue mostrando el aviso genérico `chat-shell__error` de siempre.
  */
 export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   const router = useRouter();
@@ -296,6 +337,21 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   // click en "Crear rama" y el evento `done` correspondiente, sin disparar
   // renders propios.
   const editTurnRef = useRef(false);
+
+  // Tarea 6.1 (tarjeta GATEWAY_OFFLINE): intentos consecutivos de
+  // GATEWAY_OFFLINE sobre el turno pendiente actual (backoff 5→15→60 s, ver
+  // `useRetryBackoff`). `0` = sin tarjeta montada. Se resetea a `0` en cada
+  // envío NUEVO del usuario (`handleSubmit`, un problema distinto empieza su
+  // propio backoff desde cero) y cuando el turno finalmente cierra bien (el
+  // efecto de "pliegue" de abajo). Un reintento (automático o manual) NO lo
+  // resetea -- reintentar reutiliza el MISMO turno pendiente.
+  const [gatewayRetryAttempt, setGatewayRetryAttempt] = useState(0);
+  // Texto pendiente de reintento: el MISMO contenido que falló, capturado en
+  // el momento del envío (`handleSubmit`) para que el reintento (automático
+  // o "Reintentar ahora") lo reenvíe sin que el usuario tenga que re-tipearlo
+  // -- el eco de ese mensaje ya está en `messages` desde el envío original,
+  // así que reintentar NUNCA vuelve a pushearlo (sin duplicar, tarea 6.1).
+  const pendingRetryTextRef = useRef<string | null>(null);
 
   const loadSession = useCallback(
     async (id: string) => {
@@ -402,6 +458,12 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     if (foldedTurnIdRef.current === turnStream.doneMetadata.turn_id) return;
     foldedTurnIdRef.current = turnStream.doneMetadata.turn_id;
 
+    // Tarea 6.1: el turno cerró bien -- cualquier backoff de GATEWAY_OFFLINE
+    // en curso para este mensaje ya no aplica (el próximo fallo, si lo hay,
+    // es un problema NUEVO que empieza su propio backoff desde el paso 1).
+    setGatewayRetryAttempt(0);
+    pendingRetryTextRef.current = null;
+
     const metadata = turnStream.doneMetadata;
 
     // Tarea 5.5 (edición -> rama nueva): un turno de edición NO se pliega
@@ -472,11 +534,32 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   // §Estados "Error al crear rama": "el texto editado no se pierde, el
   // textarea persiste"). El aviso de error genérico (`showSendError`, ver
   // el render de abajo) ya cubre la notificación.
+  //
+  // Tarea 6.1 (clasificación de GATEWAY_OFFLINE): un turno de EDICIÓN que
+  // falla usa ese mismo aviso genérico (vista 09), nunca la tarjeta
+  // GATEWAY_OFFLINE de esta tarea -- por eso se sale temprano (`wasEdit`)
+  // ANTES de clasificar, sin incrementar `gatewayRetryAttempt`. Para un
+  // envío normal, cada fallo `GATEWAY_OFFLINE` nuevo (el objeto `error`
+  // cambia de identidad en cada `setError`, ver `use-turn-stream.ts`)
+  // incrementa el intento consecutivo -- `GatewayOfflineCard` traduce ese
+  // número al paso de backoff (`useRetryBackoff`). `QUOTA` no necesita
+  // tracking acá: se deriva directo de `turnStream.error` en el render (ver
+  // `quotaCode` más abajo) porque, a diferencia de GATEWAY_OFFLINE, nunca se
+  // reintenta solo (el composer queda deshabilitado, así que no hay forma de
+  // que el usuario dispare un nuevo intento que necesite un contador).
   useEffect(() => {
-    if (turnStream.status === "error") {
-      editTurnRef.current = false;
+    if (turnStream.status !== "error") return;
+    const wasEdit = editTurnRef.current;
+    editTurnRef.current = false;
+    if (wasEdit) return;
+    if (classifyTurnError(turnStream.error) === "GATEWAY_OFFLINE") {
+      // Sincroniza con `turnStream.error` (sistema externo a este
+      // componente), no "ajusta" un estado derivable en el render: mismo
+      // criterio ya aceptado arriba para `loadSession`.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setGatewayRetryAttempt((n) => n + 1);
     }
-  }, [turnStream.status]);
+  }, [turnStream.status, turnStream.error]);
 
   // Tarea 5.4: al alternar de versión, el scroll queda anclado al mensaje
   // ramificado (vista 09 §Interacciones). Corre DESPUÉS del commit (la nueva
@@ -519,12 +602,34 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     if (!id) return;
 
     setComposerText("");
+    // Tarea 6.1: un envío NUEVO es un problema distinto -- su propio backoff
+    // arranca desde cero, y este es el texto que un eventual reintento debe
+    // reenviar (`retryPendingTurn`, más abajo).
+    setGatewayRetryAttempt(0);
+    pendingRetryTextRef.current = text;
     setMessages((prev) => [...prev, { id: nextLocalMessageId(), role: "user", content: text }]);
     await turnStream.sendTurn(id, text);
   }
 
   function handleStop() {
     void turnStream.cancelTurn();
+  }
+
+  /**
+   * Reenvía el turno pendiente con el MISMO texto que falló (tarea 6.1,
+   * `GatewayOfflineCard.onRetry` -- disparado por el countdown al llegar a
+   * 0 o por "Reintentar ahora"). A diferencia de `handleSubmit`, NO agrega
+   * un mensaje nuevo a `messages`: el eco del intento original ya está ahí
+   * (pusheado una única vez en `handleSubmit`), y -- ver el docstring de
+   * `classifyTurnError` -- un `GATEWAY_OFFLINE` significa que el POST
+   * anterior nunca llegó a procesarse en el backend, así que este reintento
+   * es la primera vez que ese contenido se persiste: nunca duplica un
+   * mensaje ya guardado.
+   */
+  function retryPendingTurn() {
+    const text = pendingRetryTextRef.current;
+    if (!sessionId || !text) return;
+    void turnStream.sendTurn(sessionId, text);
   }
 
   // Tarea 3.5: click en una sugerencia SOLO precarga el composer y le da
@@ -604,17 +709,56 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     );
   }
 
+  // Tareas 6.1/6.2: un turno terminado en error NUNCA pasa por este bloque
+  // -- no tiene texto parcial útil que mostrar como streaming, ver
+  // `errorCardNode`/`errorCard` de `MessageColumn` más abajo, que ocupa el
+  // MISMO lugar en la lista.
   const streaming =
-    turnStream.status === "streaming" ||
-    turnStream.status === "error" ||
-    turnStream.status === "done"
+    turnStream.status === "streaming" || turnStream.status === "done"
       ? { text: turnStream.text, status: turnStream.status }
       : null;
+
+  // Tarea 6.1: la tarjeta GATEWAY_OFFLINE se mantiene montada mientras haya
+  // al menos un intento fallido registrado para el turno pendiente --
+  // INCLUSO durante un reintento en vuelo (`turnStream.status` vuelve a
+  // "streaming" un instante mientras se reenvía), para no mostrar dos veces
+  // la misma tarjeta ni un indicador de actividad genérico en el medio
+  // (vista 10 §Estados: "Reintentando ... la tarjeta no se duplica").
+  const showGatewayOfflineCard = gatewayRetryAttempt > 0;
+  // Tarea 6.2: QUOTA no tiene reintento -- el composer queda deshabilitado,
+  // así que no hay forma de que el usuario dispare un nuevo intento; alcanza
+  // con derivarlo directo del error actual del turno (nunca se vuelve a
+  // "streaming"/"done" sin que algo externo a este change lo resuelva).
+  const quotaBlocked =
+    turnStream.status === "error" && classifyTurnError(turnStream.error) === "QUOTA";
+
+  const errorCardNode = showGatewayOfflineCard ? (
+    // `key={gatewayRetryAttempt}` (no solo la prop `attempt`): fuerza un
+    // REMONTE completo en cada fallo nuevo -- `useRetryBackoff` lee
+    // `attempt` una sola vez al montar (ver su docstring), a propósito,
+    // para no depender de un efecto que "reajuste" estado derivado de una
+    // prop. Sin este `key`, React reutilizaría la MISMA instancia del
+    // componente entre fallos consecutivos y el countdown se quedaría
+    // pegado en el valor del primer intento.
+    <GatewayOfflineCard
+      key={gatewayRetryAttempt}
+      attempt={gatewayRetryAttempt}
+      role={user.role}
+      labels={labels.gatewayOffline}
+      onRetry={retryPendingTurn}
+    />
+  ) : quotaBlocked ? (
+    <QuotaCard role={user.role} labels={labels.quota} />
+  ) : null;
 
   // Derivado durante el render (no vía efecto): un error de streaming se
   // refleja apenas cambia `turnStream.status`, sin el "cascading render"
   // de espejar ese estado en un `useState` propio actualizado por efecto.
-  const showSendError = sendError || turnStream.status === "error";
+  // Tareas 6.1/6.2: un error YA clasificado (GATEWAY_OFFLINE/QUOTA) muestra
+  // su propia tarjeta embebida (`errorCardNode`) en vez de este aviso
+  // genérico -- ambos caminos son mutuamente excluyentes.
+  const showSendError =
+    sendError || (turnStream.status === "error" && !errorCardNode);
   const isStreamingTurn = turnStream.status === "streaming";
 
   // Tarea 4.2: "+ los done en vivo" -- el turno recién cerrado por SSE ya
@@ -830,6 +974,7 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         }
         renderEscalation={renderEscalation}
         renderVersionSelector={renderVersionSelector}
+        errorCard={errorCardNode}
       />
       {showSendError ? (
         <p className="chat-shell__error" role="alert">
@@ -841,8 +986,11 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         labels={labels.composer}
         // Tarea 5.5: mientras se edita un mensaje, el composer normal queda
         // inactivo -- evita un segundo `sendTurn` concurrente sobre el mismo
-        // `turnStream` (que solo sostiene un turno en curso a la vez).
-        disabled={editingMessageId !== null}
+        // `turnStream` (que solo sostiene un turno en curso a la vez). Tarea
+        // 6.2: QUOTA además lo bloquea con un motivo propio (vista 10
+        // §Interacciones: "es bloqueo, no solo error de turno").
+        disabled={editingMessageId !== null || quotaBlocked}
+        disabledReason={quotaBlocked ? labels.quotaComposerDisabledReason : undefined}
         streaming={isStreamingTurn}
         value={composerText}
         onChange={setComposerText}

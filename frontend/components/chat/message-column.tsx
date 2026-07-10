@@ -151,6 +151,16 @@ export interface MessageColumnProps {
    * inline (tarea 5.5, vista 09 §Layout: la burbuja MUTA a textarea). Solo
    * se invoca para ESE mensaje puntual -- ver `MessageEdit`. */
   renderMessageEdit?: (message: ChatMessageItem) => ReactNode;
+  /**
+   * Tarjeta de error accionable del turno en curso (tareas 6.1/6.2, vista
+   * 10 §Propósito: "los errores aparecen dentro del flujo de mensajes, en
+   * el lugar de la respuesta fallida"). Cuando está presente, TOMA EL LUGAR
+   * del bloque `streaming` de más abajo -- un turno fallido no tiene texto
+   * parcial útil que mostrar (`GatewayOfflineCard`/`QuotaCard`, decididas
+   * por `chat-content.tsx` según `classifyTurnError`), así que ambos
+   * bloques son mutuamente excluyentes en la misma posición de la lista.
+   */
+  errorCard?: ReactNode;
 }
 
 /**
@@ -188,6 +198,11 @@ export interface MessageColumnProps {
  * Tarea 5.6: cada mensaje `assistant` con `compacted` muestra
  * `CompactionIndicator` justo ANTES de su respuesta -- el punto exacto de la
  * conversación donde el runtime resumió el contexto.
+ *
+ * Tareas 6.1/6.2: cuando el caller provee `errorCard` (turno en curso
+ * terminado en `GATEWAY_OFFLINE`/`QUOTA`), reemplaza al bloque `streaming`
+ * en la MISMA posición (última fila de la lista) -- ver el docstring de la
+ * prop.
  */
 export function MessageColumn({
   messages,
@@ -202,8 +217,9 @@ export function MessageColumn({
   editingMessageId,
   renderEditAction,
   renderMessageEdit,
+  errorCard,
 }: MessageColumnProps) {
-  const isEmpty = messages.length === 0 && !streaming;
+  const isEmpty = messages.length === 0 && !streaming && !errorCard;
   // Tarea 5.2: sin `role` explícito, nivel mínimo de detalle -- ver el
   // docstring de la prop `role` de `MessageColumnProps`.
   const effectiveRole: Role = role ?? "funcional";
@@ -282,7 +298,9 @@ export function MessageColumn({
                 </li>
               );
             })}
-            {streaming ? (
+            {errorCard ? (
+              <li>{errorCard}</li>
+            ) : streaming ? (
               <li>
                 {streaming.status === "streaming" && streaming.text.length === 0 ? (
                   <ActivityRow labels={labels.activity} detail={streaming.activityDetail} />

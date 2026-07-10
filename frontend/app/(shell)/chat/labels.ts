@@ -115,5 +115,27 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
       reprocessWarningOther: t("branch.reprocessWarningOther", { n: "{n}" }),
     },
     compactionIndicator: t("compaction.label"),
+    gatewayOffline: {
+      title: t("gatewayOffline.title"),
+      technicalWhy: t("gatewayOffline.technicalWhy"),
+      funcionalWhy: t("gatewayOffline.funcionalWhy"),
+      supportCodePrefix: t("errorCard.supportCodePrefix"),
+      retryNow: t("gatewayOffline.retryNow"),
+      // Plantilla ICU-lite (mismo patrón que `versionAriaLabel`/
+      // `reprocessWarningOne` arriba): `{n}` son los segundos restantes,
+      // un dato de runtime del cliente -- `GatewayOfflineCard` resuelve el
+      // `.replace("{n}", …)` con el valor real del countdown.
+      retryingIn: t("gatewayOffline.retryingIn", { n: "{n}" }),
+    },
+    quota: {
+      title: t("quota.title"),
+      technicalWhy: t("quota.technicalWhy"),
+      funcionalWhy: t("quota.funcionalWhy"),
+      supportCodePrefix: t("errorCard.supportCodePrefix"),
+      requestRelease: t("quota.requestRelease"),
+      requestSent: t("quota.requestSent"),
+      requestSentNote: t("quota.requestSentNote"),
+    },
+    quotaComposerDisabledReason: t("quota.composerDisabledReason"),
   };
 }

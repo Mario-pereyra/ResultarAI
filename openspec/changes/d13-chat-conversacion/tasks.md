@@ -44,9 +44,9 @@
 
 ## 6. UI — tarjetas de error accionables (vista 10)
 
-- [ ] 6.1 Tarjeta `GATEWAY_OFFLINE`: countdown de reintento con backoff (5→15→60 s), botón "Reintentar ahora", el mensaje original del usuario nunca se pierde y no se duplica al reintentar. Verificación: prueba de componente con countdown llegando a cero y disparando un reintento único. `[modelo: sonnet]`
-- [ ] 6.2 Tarjeta `QUOTA` (estado UI únicamente): composer deshabilitado con motivo inline, botón "Solicitar liberación" presente sin flujo de backend propio de este change. Verificación: prueba de componente que confirma el composer deshabilitado y el botón visible. `[modelo: sonnet]`
-- [ ] 6.3 Redacción por rol de ambas tarjetas: código mono visible arriba para Técnico/Admin, "código para soporte: X" en segundo plano y texto sin jerga para Funcional (textos ya definidos en `design/VISTAS/02-chat.md` vista 10). Verificación: prueba de componente por rol confirmando ambas redacciones. `[modelo: haiku]`
+- [x] 6.1 Tarjeta `GATEWAY_OFFLINE`: countdown de reintento con backoff (5→15→60 s), botón "Reintentar ahora", el mensaje original del usuario nunca se pierde y no se duplica al reintentar. Verificación: prueba de componente con countdown llegando a cero y disparando un reintento único. `[modelo: sonnet]`
+- [x] 6.2 Tarjeta `QUOTA` (estado UI únicamente): composer deshabilitado con motivo inline, botón "Solicitar liberación" presente sin flujo de backend propio de este change. Verificación: prueba de componente que confirma el composer deshabilitado y el botón visible. `[modelo: sonnet]`
+- [x] 6.3 Redacción por rol de ambas tarjetas: código mono visible arriba para Técnico/Admin, "código para soporte: X" en segundo plano y texto sin jerga para Funcional (textos ya definidos en `design/VISTAS/02-chat.md` vista 10). Verificación: prueba de componente por rol confirmando ambas redacciones. `[modelo: haiku]`
 
 ## 7. UI — historial de sesiones (vista 12)
 
