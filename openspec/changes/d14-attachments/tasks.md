@@ -23,9 +23,9 @@
 
 ## 4. Sanitización y anti prompt-injection
 
-- [ ] 4.1 Sanitización pre-inserción: strip de comentarios HTML/XML, texto oculto, zero-width y control; normalización NFC; contenido oculto marcado `[oculta]`. Verificación: escenario "columna oculta se extrae marcada" (ANEXO §4.3). `[modelo: opus]`
-- [ ] 4.2 Spotlighting: envoltura `<adjunto id=aleatorio>` + declaración dato-no-instrucción en el system prompt estático; `id` aleatorio anti-escape. Verificación: el `id` cambia por adjunto y un cierre de etiqueta embebido no escapa del delimitador (ANEXO §4.3). `[modelo: opus]`
-- [ ] 4.3 Heurística de instrucción embebida y de marcador de escalación: advierte + flag en `scan_result`/traza sin bloquear; un adjunto no dispara la escalación. Verificación: escenarios "instrucción embebida advertida" y "un adjunto no dispara el marcador de escalación" (ANEXO §4.3). `[modelo: opus]`
+- [x] 4.1 Sanitización pre-inserción: strip de comentarios HTML/XML, texto oculto, zero-width y control; normalización NFC; contenido oculto marcado `[oculta]`. Verificación: escenario "columna oculta se extrae marcada" (ANEXO §4.3). `[modelo: opus]`
+- [x] 4.2 Spotlighting: envoltura `<adjunto id=aleatorio>` + declaración dato-no-instrucción en el system prompt estático; `id` aleatorio anti-escape. Verificación: el `id` cambia por adjunto y un cierre de etiqueta embebido no escapa del delimitador (ANEXO §4.3). `[modelo: opus]`
+- [x] 4.3 Heurística de instrucción embebida y de marcador de escalación: advierte + flag en `scan_result`/traza sin bloquear; un adjunto no dispara la escalación. Verificación: escenarios "instrucción embebida advertida" y "un adjunto no dispara el marcador de escalación" (ANEXO §4.3). `[modelo: opus]`
 
 ## 5. Escaneo de niveles de datos N2/N3
 

@@ -17,9 +17,27 @@ frontend (tarea 8.2) muestre un chip `error` con causa, nunca un fallo silencios
 excepcion de extraccion NUNCA se propaga como 500: se traduce a estado `error` y la
 plataforma sigue operativa.
 
-Fuera de alcance de esta tarea (tareas posteriores): persistir el `full_text`/`Extraction`
-con dedup por sha256 (7.1), sanitizar y escanear N2/N3 (4.x/5.x), contar tokens y truncar
-para el `inserted_text` (6.x). Aca `ready` significa "extraido con exito"; el
+Tras una extraccion exitosa (tareas 4.1/4.3, pasos [5] y [6]-parcial del ANEXO §8) el
+pipeline ademas:
+
+- **Sanitiza** el `full_text` (`sanitize.py`): comentarios HTML/XML, caracteres
+  invisibles (zero-width/control) y normalizacion NFC. El `ExtractionResult` del
+  `ExtractionOutcome` lleva el texto YA sanitizado — cuando la tarea 7.1 persista
+  `Extraction.full_text` y las 5.x/6.x escaneen N2/N3 y corten el `inserted_text`,
+  operan sobre texto limpio. El marcador `[oculta]` de los extractores se conserva (se
+  marca, no se silencia). El conteo de artefactos removidos queda en
+  `scan_result["sanitization"]` (telemetria, nunca bloquea).
+- **Escanea instruccion embebida** (`heuristics.py`): los flags (patrones de instruccion
+  dirigida a la IA + marcador de escalacion) se persisten en
+  `scan_result["injection_flags"]` SIN bloquear — el adjunto queda `ready` igual (la
+  advertencia visible es del frontend, tarea 8.2; la traza los recoge de `scan_result`).
+  Invariante: el marcador de escalacion DENTRO de un adjunto es dato — jamas dispara una
+  escalacion de modelo (la escalacion solo existe en la SALIDA del modelo, camino d13).
+
+Fuera de alcance (tareas posteriores): persistir el `full_text`/`Extraction` con dedup
+por sha256 (7.1), escanear N2/N3 (5.x), contar tokens y truncar para el `inserted_text`
+(6.x), envolver con el spotlight al componer el mensaje (6.3; `spotlight.py` ya listo).
+Aca `ready` significa "extraido, sanitizado y escaneado por heuristica"; el
 `ExtractionResult` se devuelve en el `ExtractionOutcome` para esas etapas.
 
 El extractor concreto se **inyecta** (`Callable`/`ExtractionPort.extract`): este modulo no
@@ -38,6 +56,8 @@ from resultarai.adapters.persistence_postgres.models import Attachment, get_utc_
 from resultarai.app.attachments.config import AttachmentsConfig
 from resultarai.app.attachments.errors import AttachmentExtractionError
 from resultarai.app.attachments.filetypes import extension_of, is_ooxml
+from resultarai.app.attachments.heuristics import InjectionFlag, scan_for_injection
+from resultarai.app.attachments.sanitize import SanitizationResult, sanitize_extracted_text
 from resultarai.app.attachments.worker import Extractor, run_in_isolated_worker
 from resultarai.app.attachments.zip_guard import inspect_ooxml_for_zip_bomb
 from resultarai.core.ports.extraction import ExtractionInput, ExtractionResult
@@ -103,9 +123,12 @@ def extract_attachment(
 ) -> ExtractionOutcome:
     """Lleva `attachment` de `uploaded` a `ready`/`error` corriendo la extraccion aislada.
 
-    No hace `db.commit()` (la transaccion es de quien inyecta `db`, igual que el resto de
-    casos de uso). No propaga la excepcion de extraccion: la traduce a estado `error` con
-    la causa en `scan_result` y la devuelve en el `ExtractionOutcome`.
+    En el camino de exito, sanitiza el `full_text` (tarea 4.1) y corre la heuristica de
+    instruccion embebida (tarea 4.3) sobre el texto ya limpio; los hallazgos van a
+    `scan_result` sin bloquear (ver docstring del modulo). No hace `db.commit()` (la
+    transaccion es de quien inyecta `db`, igual que el resto de casos de uso). No propaga
+    la excepcion de extraccion: la traduce a estado `error` con la causa en `scan_result`
+    y la devuelve en el `ExtractionOutcome`.
     """
     attachment.status = STATUS_EXTRACTING
     db.flush()
@@ -118,10 +141,17 @@ def extract_attachment(
         db.flush()
         return ExtractionOutcome(attachment=attachment, result=None, error=exc)
 
+    sanitization = sanitize_extracted_text(result.full_text)
+    sanitized_result = result.model_copy(update={"full_text": sanitization.text})
+    injection_flags = scan_for_injection(sanitization.text)
+
     attachment.status = STATUS_READY
+    scan_result = _record_analysis(attachment.scan_result, sanitization, injection_flags)
+    if scan_result is not None:
+        attachment.scan_result = scan_result
     db.flush()
     _ = now or get_utc_now()  # reservado para timestamps de extraccion (tareas 6.x/7.1)
-    return ExtractionOutcome(attachment=attachment, result=result, error=None)
+    return ExtractionOutcome(attachment=attachment, result=sanitized_result, error=None)
 
 
 def _ooxml_bytes(source: ExtractionInput) -> bytes | None:
@@ -148,4 +178,27 @@ def _record_extraction_error(
     """Fija la causa del `error` en `scan_result` preservando lo que ya hubiera."""
     merged: dict[str, object] = dict(scan_result or {})
     merged["extraction_error"] = {"error_code": error.error_code, "params": error.params}
+    return merged
+
+
+def _record_analysis(
+    scan_result: dict[str, object] | None,
+    sanitization: SanitizationResult,
+    injection_flags: list[InjectionFlag],
+) -> dict[str, object] | None:
+    """Registra sanitizacion y flags de inyeccion en `scan_result`, preservando lo previo.
+
+    Devuelve `None` si no hay nada que registrar (texto limpio, sin artefactos): asi un
+    adjunto sano conserva `scan_result` intacto (tipicamente `NULL`) y la telemetria de
+    Admin distingue "limpio" de "escaneado con hallazgos" de un vistazo.
+    """
+    updates: dict[str, object] = {}
+    if sanitization.removed_anything:
+        updates["sanitization"] = sanitization.artifacts_dict()
+    if injection_flags:
+        updates["injection_flags"] = [flag.to_dict() for flag in injection_flags]
+    if not updates:
+        return None
+    merged: dict[str, object] = dict(scan_result or {})
+    merged.update(updates)
     return merged

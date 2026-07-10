@@ -7,9 +7,12 @@ asi el hijo solo importa el port de `core`, no toda la suite.
 
 Cada fake implementa la forma de `ExtractionPort.extract` (`ExtractionInput -> ExtractionResult`):
 
-- `fake_extract_ok`      exito determinista -> `ready`.
-- `fake_extract_slow`    duerme mucho mas que cualquier timeout de test -> el parent lo mata.
-- `fake_extract_oom`     intenta allocar muy por encima del `RLIMIT_AS` -> `MemoryError`.
+- `fake_extract_ok`           exito determinista -> `ready`.
+- `fake_extract_slow`         duerme mucho mas que cualquier timeout de test -> el parent lo mata.
+- `fake_extract_oom`          intenta allocar muy por encima del `RLIMIT_AS` -> `MemoryError`.
+- `fake_extract_passthrough`  devuelve `source.content` decodificado tal cual, marcando
+                              contenido oculto: los tests de sanitizacion/heuristica (4.1/4.3)
+                              inyectan el texto "sucio" que quieran a traves del worker real.
 """
 
 from __future__ import annotations
@@ -49,3 +52,18 @@ def fake_extract_oom(source: ExtractionInput) -> ExtractionResult:
 def fake_extract_raises(source: ExtractionInput) -> ExtractionResult:
     """Lanza una excepcion del parser (binario corrupto): fuerza `extractor_exception`."""
     raise ValueError("binario corrupto")
+
+
+def fake_extract_passthrough(source: ExtractionInput) -> ExtractionResult:
+    """Extrae `source.content` como UTF-8 tal cual (como un extractor de texto real).
+
+    `has_marked_hidden_content=True` emula un extractor que marco `[oculta]` contenido
+    oculto estructural; el texto en si lo decide cada test (via `content`).
+    """
+    assert source.content is not None, "el passthrough requiere content en memoria"
+    return ExtractionResult(
+        kind=source.kind,
+        full_text=source.content.decode("utf-8"),
+        extractor_version="fake-passthrough@1.0",
+        has_marked_hidden_content=True,
+    )
