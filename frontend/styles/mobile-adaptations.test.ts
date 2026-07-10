@@ -70,6 +70,7 @@ describe('chat.css — objetivo táctil ≥44px en móvil (tarea 8.1, escenario 
     ["flechas del selector de ramas", ".branch-sel__arrow"],
     ['botón "Editar" del mensaje', ".edit-btn"],
     ["acciones de feedback 👍/👎", ".msg-feedback__btn"],
+    ['botón "⋯" del menú de sesión (chat-top, header)', ".chat-top__menu-trigger"],
   ])("%s (%s) define min-width y min-height con var(--touch-target-min) dentro de @media (max-width: 767px)", (_name, selector) => {
     const escaped = selector.replace(/[.]/g, "\\$&");
     const rule = new RegExp(`${escaped}\\s*\\{[^}]*\\}`);
@@ -99,6 +100,27 @@ describe('chat.css — composer fijo con área segura en móvil (tarea 8.1, vist
     const rule = MOBILE_CHAT_CSS.match(/\.msg-column\s*\{[^}]*\}/)?.[0];
     expect(rule).toBeTruthy();
     expect(rule).toMatch(/padding-bottom:[^;]*env\(safe-area-inset-bottom\)/);
+  });
+});
+
+describe('chat.css — header del chat ("chat-top") colapsa a menú de sesión en móvil (vista 05 §0.1/vista 06 §Móvil, "el taxímetro sale del header y vive en el menú de sesión")', () => {
+  it(".chat-top__menu-trigger (botón ⋯) está oculto por defecto, fuera del breakpoint móvil", () => {
+    expect(CHAT_CSS).toMatch(/\.chat-top__menu-trigger\s*\{\s*display:\s*none;\s*\}/);
+  });
+
+  it(".chat-top__menu-panel (el taxímetro) es contenido inline por defecto (desktop) y se oculta en móvil hasta `.is-open`", () => {
+    const desktopRule = CHAT_CSS.match(/\.chat-top__menu-panel\s*\{[^}]*\}/)?.[0];
+    expect(desktopRule, "no se encontró la regla de base (fuera de @media) de .chat-top__menu-panel").toBeTruthy();
+    expect(desktopRule).toMatch(/display:\s*flex/);
+
+    const mobileChat = extractMediaBlocks(CHAT_CSS, "(max-width: 767px)");
+    const mobileRule = mobileChat.match(/\.chat-top__menu-panel\s*\{[^}]*\}/)?.[0];
+    expect(mobileRule, "no se encontró la regla móvil de .chat-top__menu-panel").toBeTruthy();
+    expect(mobileRule).toMatch(/display:\s*none/);
+
+    const mobileOpenRule = mobileChat.match(/\.chat-top__menu-panel\.is-open\s*\{[^}]*\}/)?.[0];
+    expect(mobileOpenRule, "no se encontró la regla móvil de .chat-top__menu-panel.is-open").toBeTruthy();
+    expect(mobileOpenRule).toMatch(/display:\s*flex/);
   });
 });
 

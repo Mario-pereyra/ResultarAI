@@ -25,6 +25,16 @@ export const DEFAULT_CHAT_AGENT_DISPLAY_NAME = "Chat por Defecto";
 export function buildChatLabels(t: Translator): ChatContentLabels {
   return {
     agentId: DEFAULT_CHAT_AGENT_ID,
+    // Header del chat (`ChatHeader`): valor inicial/de reserva de
+    // `agentName` mientras `GET /api/agents/{id}` no resolvió todavía (o
+    // falló) -- mismo literal que ya usa el placeholder del composer más
+    // abajo, reexportado como campo propio para que `chat-content.tsx` no
+    // tenga que importar `./labels.ts` (evita el import circular con el
+    // tipo `ChatContentLabels` que este módulo ya importa desde ahí).
+    defaultAgentName: DEFAULT_CHAT_AGENT_DISPLAY_NAME,
+    header: {
+      sessionMenuLabel: t("header.sessionMenuLabel"),
+    },
     emptyGreeting: t("empty.greeting"),
     stoppedCaption: t("message.stopped"),
     streamingDoneAnnouncement: t("streaming.doneAnnouncement"),

@@ -31,6 +31,10 @@ vi.mock("next/navigation", () => ({
 
 const LABELS: ChatContentLabels = {
   agentId: "default_chat",
+  defaultAgentName: "Chat por Defecto",
+  header: {
+    sessionMenuLabel: "Menú de la sesión",
+  },
   emptyGreeting: "¿En qué te puedo ayudar hoy?",
   stoppedCaption: "Detenida por vos",
   streamingDoneAnnouncement: "Respuesta completa",

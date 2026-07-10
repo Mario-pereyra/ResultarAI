@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation";
 import type { ActivityIndicatorLabels } from "@/components/chat/activity-indicator";
 import type { AlternateModelTagLabels } from "@/components/chat/alternate-model-tag";
+import { ChatHeader, type ChatHeaderLabels } from "@/components/chat/chat-header";
 import { Composer, type ComposerHandle, type ComposerLabels } from "@/components/chat/composer";
 import { EscalationCard, type EscalationCardLabels } from "@/components/chat/escalation-card";
 import type { FeedbackActionsLabels } from "@/components/chat/feedback-actions";
@@ -14,7 +15,7 @@ import {
 import { MessageColumn, type ChatMessageItem } from "@/components/chat/message-column";
 import { EditMessageButton, MessageEdit, type MessageEditLabels } from "@/components/chat/message-edit";
 import { QuotaCard, type QuotaCardLabels } from "@/components/chat/quota-card";
-import { SessionTaximeter, type SessionTaximeterLabels } from "@/components/chat/session-taximeter";
+import type { SessionTaximeterLabels } from "@/components/chat/session-taximeter";
 import { StarterSuggestions } from "@/components/chat/starter-suggestions";
 import type { ToolCallLineLabels } from "@/components/chat/tool-call-line";
 import type { TurnTelemetryLabels } from "@/components/chat/turn-telemetry-row";
@@ -48,6 +49,14 @@ export interface ChatContentLabels {
    * `openspec/BACKLOG-DESCUBRIMIENTOS.md`) -- por ahora siempre
    * `"default_chat"`. */
   agentId: string;
+  /** Nombre de reserva del header (`ChatHeader`) mientras `GET /api/agents/{id}`
+   * no resolvió todavía o falló -- ver `agentName`/`loadAgent` más abajo y
+   * el docstring de `defaultAgentName` en `./labels.ts`. */
+  defaultAgentName: string;
+  /** Header del chat ("chat-top", vista 05 §0.1/vista 06 §2 y §Móvil) -- ver
+   * `ChatHeader` para el detalle de qué campos cierra y cuáles quedan
+   * fuera. */
+  header: ChatHeaderLabels;
   emptyGreeting: string;
   stoppedCaption: string;
   streamingDoneAnnouncement: string;
@@ -293,6 +302,12 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   // `GET /api/agents/{id}` -- ver `MessageColumn`, que solo las muestra en
   // el estado vacío (sin mensajes ni turno en curso).
   const [starterPrompts, setStarterPrompts] = useState<string[]>([]);
+  // Header del chat (`ChatHeader`): `agent.display_name` resuelto del mismo
+  // `GET /api/agents/{id}` que ya resuelve sugerencias/escalación (efecto
+  // `loadAgent` más abajo) -- arranca en el literal de reserva de
+  // `labels.defaultAgentName` (mismo que usaba el placeholder del composer)
+  // hasta que la lectura resuelva.
+  const [agentName, setAgentName] = useState(labels.defaultAgentName);
   // Tarea 5.3 (GATE ABSOLUTO): `agent.escalation_enabled` del mismo
   // `GET /api/agents/{id}`. Arranca en `false` (fail-closed): hasta que el
   // agente resuelva --o si la lectura falla-- la tarjeta de escalación NO se
@@ -471,10 +486,16 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         }
         if (!res.ok) return;
         const data = (await res.json()) as {
+          name: string;
           starter_prompts: string[];
           escalation_enabled: boolean;
         };
         if (!cancelled) {
+          // Header del chat: `agent.display_name` real (tarea 3.5 ya trae
+          // `name` en la respuesta; hasta ahora nadie lo leía -- ver el
+          // docstring de `ChatHeader` para el resto de los campos del
+          // header que este endpoint todavía no expone).
+          setAgentName(data.name);
           setStarterPrompts(data.starter_prompts);
           // Tarea 5.3 (GATE ABSOLUTO): solo con el agente confirmando
           // `escalation_enabled: true` la tarjeta podrá montarse. Si la lectura
@@ -840,7 +861,6 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     ...costSourceMessages.map((message) => message.telemetry),
     liveTelemetry,
   ]);
-  const showTaximeterBar = user.role === "tecnico" || user.role === "admin";
 
   // Tarea 5.3: la tarjeta de escalación se renderiza tras la respuesta del
   // ÚLTIMO turno que emitió el marcador (una a la vez, coherente con "la
@@ -964,21 +984,19 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
 
   return (
     <div className="chat-shell">
-      {/* El chequeo de rol de acá arriba es solo para no dejar un
-          `.chat-taximeter-bar` vacío en el DOM para Funcional -- la
-          visibilidad REAL (incluido el desglose) la decide
-          `SessionTaximeter` mismo (ver su docstring). */}
-      {showTaximeterBar ? (
-        <div className="chat-taximeter-bar">
-          <SessionTaximeter
-            role={user.role}
-            costUsd={taximeterTotals.costUsd}
-            totalTokens={taximeterTotals.totalTokens}
-            degraded={taximeterTotals.degraded}
-            labels={labels.taximeter}
-          />
-        </div>
-      ) : null}
+      {/* Header del chat ("chat-top") -- reemplaza el slot mínimo
+          `.chat-taximeter-bar` (ver `ChatHeader` para el detalle completo
+          de qué campos de la vista 05/06 cierra). El gateo por rol del
+          taxímetro/menú de sesión vive DENTRO de `ChatHeader`. */}
+      <ChatHeader
+        agentName={agentName}
+        role={user.role}
+        costUsd={taximeterTotals.costUsd}
+        totalTokens={taximeterTotals.totalTokens}
+        degraded={taximeterTotals.degraded}
+        taximeterLabels={labels.taximeter}
+        labels={labels.header}
+      />
       <MessageColumn
         className="chat-shell__messages"
         messages={messages}

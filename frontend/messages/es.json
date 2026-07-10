@@ -389,6 +389,9 @@
     }
   },
   "Chat": {
+    "header": {
+      "sessionMenuLabel": "Menú de la sesión"
+    },
     "empty": {
       "greeting": "¿En qué te puedo ayudar hoy?"
     },

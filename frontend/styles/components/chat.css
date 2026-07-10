@@ -516,14 +516,116 @@
   text-underline-offset: 2px;
 }
 
-/* ── Taxímetro de sesión (tarea 4.2, `.taximeter`, vista 06 §2) ─────────
-   Portado desde design/mockups/tokens.css §5.19. */
-.chat-taximeter-bar {
+/* ── Header del chat ("chat-top", vista 05 §0.1 "Anatomía común" / vista 06
+   §2 y §Móvil) ───────────────────────────────────────────────────────────
+   Cierra el hueco documentado en openspec/BACKLOG-DESCUBRIMIENTOS.md
+   (2026-07-10, tareas 4.2/4.3/4.4): reemplaza el slot mínimo
+   `.chat-taximeter-bar` que solo alojaba el taxímetro -- ver
+   `components/chat/chat-header.tsx` para el detalle completo. */
+.chat-top {
   display: flex;
-  justify-content: flex-end;
-  padding: var(--sp-3) var(--sp-4) 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
 }
 
+.chat-top__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.chat-top__avatar {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  background: var(--bg-raised);
+  font-size: var(--fs-lead);
+}
+
+.chat-top__name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Menú de sesión (⋯, solo Técnico/Admin): disparador oculto en desktop --
+   el panel (el taxímetro) se ve inline ahí, ver `.chat-top__menu-panel`
+   más abajo -- y visible en móvil (vista 06 §Móvil: "el taxímetro sale del
+   header y vive en el menú de sesión"). */
+.chat-top__menu {
+  position: relative;
+  flex: none;
+}
+
+.chat-top__menu-trigger {
+  display: none;
+}
+
+/* Contenido del menú de sesión (el taxímetro, única instancia -- ver el
+   docstring de `ChatHeader` para por qué no se duplica). Por defecto
+   (desktop) es simplemente la cola inline del header; en móvil se oculta
+   hasta que el disparador agrega `.is-open`. */
+.chat-top__menu-panel {
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 767px) {
+  .chat-top__menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--ink-dim);
+    cursor: pointer;
+  }
+  .chat-top__menu-trigger:hover {
+    color: var(--ink);
+    border-color: var(--ink-faint);
+  }
+  .chat-top__menu-trigger:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+  .chat-top__menu-trigger[aria-expanded="true"] {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .chat-top__menu-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + var(--sp-2));
+    right: 0;
+    z-index: var(--z-dropdown);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: var(--sp-3);
+    box-shadow: var(--shadow-2);
+  }
+  .chat-top__menu-panel.is-open {
+    display: flex;
+  }
+}
+
+/* ── Taxímetro de sesión (tarea 4.2, `.taximeter`, vista 06 §2) ─────────
+   Portado desde design/mockups/tokens.css §5.19. */
 .taximeter {
   display: inline-flex;
   align-items: center;
