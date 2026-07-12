@@ -35,9 +35,10 @@ que importar al otro.
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DbSession
 
@@ -62,10 +63,37 @@ from resultarai.app.attachments import (
 # sobreescribirlo, y mypy --strict exige `import X as X` para contar un nombre
 # importado como parte de la API pública re-exportada de un módulo sin `__all__`.
 from resultarai.app.attachments.dependency import get_attachments_config as get_attachments_config
+from resultarai.app.attachments.pipeline import run_attachment_extraction_by_id
 from resultarai.app.identity import get_current_user, get_db
 from resultarai.core.registries import Registries
 
 router = APIRouter(prefix="/api", tags=["attachments"])
+
+# Firma del runner que el endpoint de subida encola en `BackgroundTasks` (decision de
+# disparo documentada en `pipeline.py`): recibe el id del adjunto ya persistido y no
+# devuelve nada (el resultado queda en `attachments`/`extractions`, nunca en la respuesta
+# HTTP, que ya viajo). Inyectable para que los tests sustituyan la extraccion real (p. ej.
+# por una version sincrona o un fake que cuenta invocaciones) sin tocar el endpoint.
+ExtractionRunner = Callable[[uuid.UUID], None]
+
+
+def get_extraction_runner(
+    config: Annotated[AttachmentsConfig, Depends(get_attachments_config)],
+) -> ExtractionRunner:
+    """Proveedor real del runner de extraccion: encola `run_attachment_extraction_by_id`.
+
+    Cierra la extraccion sobre la MISMA `config` resuelta para la subida (misma
+    `storage_dir`/limites de instancia), via `Depends` normal -- no hace falta un
+    override de produccion aparte: cuando un test sobreescribe `get_attachments_config`
+    (p. ej. `storage_dir` temporal), este proveedor lo hereda automaticamente. Los tests
+    que quieren sustituir la extraccion en si (no solo su config) sobreescriben
+    `get_extraction_runner` directamente.
+    """
+
+    def _run(attachment_id: uuid.UUID) -> None:
+        run_attachment_extraction_by_id(attachment_id, config)
+
+    return _run
 
 
 class AttachmentResponse(BaseModel):
@@ -95,9 +123,11 @@ def _read_upload(file: UploadFile) -> bytes:
 def upload_attachment_endpoint(
     file: Annotated[UploadFile, File(...)],
     session_id: Annotated[str, Form(...)],
+    background_tasks: BackgroundTasks,
     db: Annotated[DbSession, Depends(get_db)],
     current_user: Annotated[User, Depends(get_current_user)],
     config: Annotated[AttachmentsConfig, Depends(get_attachments_config)],
+    extraction_runner: Annotated[ExtractionRunner, Depends(get_extraction_runner)],
 ) -> AttachmentResponse:
     """Sube un adjunto al borrador de `session_id` y lo deja en estado `uploaded`.
 
@@ -107,6 +137,21 @@ def upload_attachment_endpoint(
     tipo, macros, ejecutable, PDF con contrasena, sexto adjunto) responden 422 con el
     contrato tipado descrito en el docstring del modulo -- sin escribir el binario a
     disco: el archivo rechazado no queda disponible para extraccion (tarea 2.3).
+
+    Tras el 201, encola la extraccion real (`pipeline.py`, tarea 7.1: dedup por sha256 o
+    parseo aislado) en `BackgroundTasks`, DESPUES de que este handler retorna -- nunca
+    bloquea la respuesta con el parseo.
+
+    **Por que se comitea aca, a mano, contra la convencion del resto del codigo (`db` no
+    hace `commit()`, es responsabilidad de `get_db`):** `run_attachment_extraction_by_id`
+    corre en su PROPIA sesion/conexion (`get_db_session` de `pipeline.py`), distinta de
+    esta. Con el scope **default** de una dependencia `yield` (`scope="request"`, FastAPI
+    >= 0.121: ver "Early exit and scope" de la docs de FastAPI), el `commit()` de `get_db`
+    corre DESPUES de enviar la respuesta -- y las `BackgroundTasks` tambien corren como
+    parte de enviar la respuesta (`Response.background`), ANTES de ese `commit()` final,
+    no despues. Sin este commit explicito, la sesion aislada del runner jamas veria el
+    adjunto (otra conexion, otra transaccion) y `run_attachment_extraction_by_id` lo
+    encontraria `None`.
     """
     session = db.get(SessionModel, session_id)
     if session is None or session.owner_user_id != current_user.id:
@@ -126,6 +171,12 @@ def upload_attachment_endpoint(
             status_code=422,
             detail={"error_code": exc.error_code, "params": exc.params},
         ) from exc
+
+    # Commit explicito (ver docstring): deja el adjunto DURABLE y visible para otra
+    # conexion antes de encolar la extraccion, que corre en su propia sesion aislada.
+    db.commit()
+
+    background_tasks.add_task(extraction_runner, attachment.id)
 
     return AttachmentResponse(
         id=str(attachment.id),

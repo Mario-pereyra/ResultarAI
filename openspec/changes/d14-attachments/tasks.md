@@ -41,7 +41,7 @@
 
 ## 7. Ciclo de vida y persistencia
 
-- [ ] 7.1 Dedup por sha256 y almacenamiento una sola vez (reutilizar `full_text`) sobre el schema de `b04`. Verificación: escenario "resubida del mismo archivo reutiliza la extracción" sin re-parsear (ANEXO §2 P2, §5). `[modelo: sonnet]`
+- [x] 7.1 Dedup por sha256 y almacenamiento una sola vez (reutilizar `full_text`) sobre el schema de `b04`. Verificación: escenario "resubida del mismo archivo reutiliza la extracción" sin re-parsear (ANEXO §2 P2, §5). `[modelo: sonnet]`
 - [ ] 7.2 Retención configurable (default 90 días) del binario/`full_text` conservando `inserted_text`, y descarga auditada solo para dueño y Admin, sin URLs públicas. Verificación: escenarios "usuario ajeno intenta descargar" y "descarga por el dueño queda auditada" (ANEXO §5). `[modelo: sonnet]`
 
 ## 8. Frontend del composer (vista 07-composer)

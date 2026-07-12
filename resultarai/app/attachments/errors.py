@@ -212,17 +212,15 @@ class ExtractionFailedError(AttachmentExtractionError):
 
 
 class AttachmentExtractionMissingError(Exception):
-    """El adjunto esta `ready`/`blocked` pero no tiene `Extraction` persistida (tarea 6.x).
+    """El adjunto no tiene `Extraction` persistida todavia (`extraction_id IS NULL`).
 
-    Invariante que DEBERIA ser imposible una vez que `b04-persistencia-postgres` /
-    tarea `7.1` (dedup + persistencia de `full_text`) wireen la extraccion al flujo de
-    subida real: hoy (2026-07-10) el endpoint de subida (`app/api/attachments.py`) solo
-    llega a `create_attachment` (estado `uploaded`) y NADIE invoca todavia
-    `extract_attachment`/persiste `Extraction` desde HTTP -- ver el docstring de
-    `app/use_cases/chat/_attachments.py` para el detalle de este hueco documentado. Se
-    lanza en vez de fallar en silencio (P7) cuando la composicion del mensaje (tarea 6.3)
-    o "pedir otra parte" (tarea 6.2) necesitan `full_text` y `Attachment.extraction` es
-    `None`.
+    Desde la tarea `7.1` (`app/attachments/pipeline.py`) el endpoint de subida encola la
+    extraccion real en `BackgroundTasks` DESPUES del 201, asi que esto ya no es un hueco
+    de wiring sino una ventana de carrera legitima: el adjunto sigue `uploaded`/
+    `extracting` porque la extraccion todavia no termino (ver el docstring de
+    `app/use_cases/chat/_attachments.py` para el detalle). Se lanza en vez de fallar en
+    silencio (P7) cuando la composicion del mensaje (tarea 6.3) o "pedir otra parte"
+    (tarea 6.2) necesitan `full_text` y `Attachment.extraction` es `None`.
     """
 
     error_code = "attachment_extraction_missing"

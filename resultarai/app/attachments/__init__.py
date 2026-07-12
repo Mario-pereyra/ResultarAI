@@ -10,7 +10,8 @@ por relevancia UNA VEZ al insertar (`truncation.py`) y consulta de insercion/tok
 los endpoints de estado y vista previa (`insertion.py`). La composicion server-side del
 mensaje con los adjuntos AL FINAL vive en `app/use_cases/chat/_attachments.py` (orquesta
 sesion/mensaje, fuera de este paquete que es agnostico de chat). La persistencia con
-dedup por sha256 (tarea 7.1) llega en una tarea posterior del mismo change.
+dedup por sha256 y el disparo real de la extraccion tras la subida (tarea 7.1) viven en
+`pipeline.py`, cableado desde `app/api/attachments.py` via `BackgroundTasks`.
 """
 
 from __future__ import annotations

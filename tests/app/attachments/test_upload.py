@@ -34,7 +34,7 @@ from resultarai.adapters.persistence_postgres.connection import SessionLocal, ge
 from resultarai.adapters.persistence_postgres.models import Attachment, get_utc_now
 from resultarai.adapters.persistence_postgres.models import Session as SessionModel
 from resultarai.app.api import create_app
-from resultarai.app.api.attachments import get_attachments_config
+from resultarai.app.api.attachments import get_attachments_config, get_extraction_runner
 from resultarai.app.attachments import AttachmentsConfig, FileCategory
 from resultarai.app.identity import (
     SessionConfig,
@@ -64,6 +64,20 @@ def attachments_config(tmp_path: Path) -> AttachmentsConfig:
     return AttachmentsConfig(storage_dir=tmp_path / "attachments", tenant="test-tenant")
 
 
+def _noop_extraction_runner(attachment_id: uuid.UUID) -> None:
+    """Runner sin efecto: este archivo prueba SOLO subida/validacion (tareas 2.1-2.3).
+
+    Sin este override, el runner de PRODUCCION (default de `get_extraction_runner`)
+    correria de verdad tras cada 201 -- `BackgroundTasks` de FastAPI, ejecutado por
+    `TestClient` antes de devolver la respuesta -- y estos tests dejarian de ser sobre
+    subida para pasar a depender del pipeline de extraccion real (worker aislado,
+    extractores reales), con el costo y la fragilidad que eso implica. El wiring real
+    (tarea 7.1) se prueba end-to-end, deliberadamente SIN este override, en
+    `tests/app/attachments/test_pipeline.py`.
+    """
+    return None
+
+
 @pytest.fixture
 def client(attachments_config: AttachmentsConfig) -> Iterator[TestClient]:
     """TestClient con overrides de DB, config de sesion y config de adjuntos."""
@@ -83,6 +97,7 @@ def client(attachments_config: AttachmentsConfig) -> Iterator[TestClient]:
     app.dependency_overrides[get_db] = _override_db
     app.dependency_overrides[get_session_config] = lambda: _CONFIG
     app.dependency_overrides[get_attachments_config] = lambda: attachments_config
+    app.dependency_overrides[get_extraction_runner] = lambda: _noop_extraction_runner
 
     with TestClient(app) as test_client:
         yield test_client

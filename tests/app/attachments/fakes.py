@@ -13,6 +13,10 @@ Cada fake implementa la forma de `ExtractionPort.extract` (`ExtractionInput -> E
 - `fake_extract_passthrough`  devuelve `source.content` decodificado tal cual, marcando
                               contenido oculto: los tests de sanitizacion/heuristica (4.1/4.3)
                               inyectan el texto "sucio" que quieran a traves del worker real.
+- `fake_extract_with_secret`  extraccion determinista con un secreto N3 (`sk-...`)
+                              embebido: usada por `tests/app/attachments/test_pipeline.py`
+                              (tarea 7.1) para forzar `blocked` a traves del worker real
+                              sin depender de contenido en memoria.
 """
 
 from __future__ import annotations
@@ -66,4 +70,23 @@ def fake_extract_passthrough(source: ExtractionInput) -> ExtractionResult:
         full_text=source.content.decode("utf-8"),
         extractor_version="fake-passthrough@1.0",
         has_marked_hidden_content=True,
+    )
+
+
+# Secreto deterministico (patron `sk-...` de `data_scan._SECRET_PATTERNS`) para forzar un
+# hallazgo N3 sin depender de `source.content`/`source.source_path` (funciona igual via
+# `process_attachment`, que siempre arma `ExtractionInput` con `source_path`).
+SECRET_TEXT = "API_KEY=sk-abcdEFGH1234ijklMNOP5678qrst"
+
+
+def fake_extract_with_secret(source: ExtractionInput) -> ExtractionResult:
+    """Extraccion determinista cuyo `full_text` contiene un secreto N3 (`sk-...`).
+
+    Ignora `source.content`/`source.source_path`: no necesita que el binario exista en
+    disco, solo que `ExtractionInput` sea valido (tests de dedup de `pipeline.py`).
+    """
+    return ExtractionResult(
+        kind=source.kind,
+        full_text=SECRET_TEXT,
+        extractor_version="fake-secret@1.0",
     )

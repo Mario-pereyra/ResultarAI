@@ -30,19 +30,22 @@ traer un texto de usuario DISTINTO -- se reutiliza esa `inserted_text` byte-iden
 volver a evaluar relevancia: eso es precisamente lo que garantiza que las ramas compartan
 prefijo cacheable (ANEXO §7 punto 4, "ramas comparten extraccion").
 
-**Hueco documentado (bloqueante para produccion, no para estas tareas):** para que
-`compose_message_with_attachments` funcione necesita `Attachment.extraction` poblado
-(`extraction_id` fijado + fila en `extractions`). La tarea `7.1` (dedup + persistencia de
-`full_text`, `tasks.md` de este change) todavia NO esta implementada: el endpoint de
-subida (`app/api/attachments.py::upload_attachment_endpoint`) hoy solo llega a
-`create_attachment` (estado `uploaded`) y ningun camino de produccion invoca
-`extract_attachment`/persiste `Extraction` todavia (`extract_attachment` solo se ejercita
-en tests unitarios, `tests/app/attachments/test_extraction.py`). Hasta que `7.1` cablee
-eso, un adjunto real subido por HTTP nunca llega a `attachment.extraction != None` y esta
-composicion levantaria `AttachmentExtractionMissingError` para CUALQUIER adjunto real.
-Los tests de estas tareas (6.1-6.3) construyen `Attachment`+`Extraction` directamente en
-la base (mismo patron que `tests/app/attachments/test_confirm_test_data.py`), simulando
-lo que `7.1` dejara wireado.
+**Extraccion asincrona (resuelto por la tarea 7.1, `app/attachments/pipeline.py`):** para
+que `compose_message_with_attachments` funcione necesita `Attachment.extraction` poblado
+(`extraction_id` fijado + fila en `extractions`). El endpoint de subida
+(`app/api/attachments.py::upload_attachment_endpoint`) encola la extraccion real
+(`run_attachment_extraction_by_id`) en `BackgroundTasks` DESPUES del 201 -- nunca sincrono
+dentro del request (docstring de `pipeline.py`) -- asi que `attachment.extraction` se
+puebla poco despues de la subida, no en el mismo request. Queda una ventana de carrera
+genuina (no un hueco de wiring): si el usuario envia el mensaje ANTES de que la
+background task termine (adjunto aun `uploaded`/`extracting`), esta composicion
+encontraria `attachment.extraction is None` y levantaria `AttachmentExtractionMissingError`
+igual que antes de `7.1`. El frontend mitiga esa ventana con el polling de estado
+(`GET /attachments/{id}`, tarea 8.1) que deshabilita el envio hasta `ready`/`blocked`; a
+nivel de este modulo, la excepcion sigue siendo la salvaguarda tipada (P7) para cualquier
+adjunto que aun no tenga extraccion disponible. Los tests de las tareas 6.1-6.3 construyen
+`Attachment`+`Extraction` directamente en la base (mismo patron que
+`tests/app/attachments/test_confirm_test_data.py`), sin depender del pipeline real.
 """
 
 from __future__ import annotations

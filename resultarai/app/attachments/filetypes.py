@@ -21,6 +21,8 @@ from __future__ import annotations
 import os
 from enum import Enum
 
+from resultarai.core.ports.extraction import AttachmentKind
+
 _MIB = 1024 * 1024
 
 
@@ -159,6 +161,31 @@ def category_of(extension: str) -> FileCategory:
     custom de instancia), cae a `TEXT` (limite conservador, sin firma binaria).
     """
     return _EXTENSION_CATEGORY.get(extension, FileCategory.TEXT)
+
+
+# `Attachment.detected_type` (el `FileCategory.value` persistido en `b04`) -> familia de
+# extractor del port (`core/ports/extraction.py`). Fuente UNICA del mapa tipo->extractor:
+# lo comparten la composicion del mensaje (`app/use_cases/chat/_attachments.py`, para
+# elegir estrategia de truncado) y el pipeline de extraccion real (`pipeline.py`, tarea
+# 7.1, para elegir el adapter `extraction_*`).
+_ATTACHMENT_KIND_BY_CATEGORY: dict[str, AttachmentKind] = {
+    FileCategory.EXCEL.value: AttachmentKind.SPREADSHEET,
+    FileCategory.CSV.value: AttachmentKind.SPREADSHEET,
+    FileCategory.PDF.value: AttachmentKind.PDF,
+    FileCategory.DOCX.value: AttachmentKind.DOCX,
+    FileCategory.TEXT.value: AttachmentKind.TEXT,
+    FileCategory.CODE.value: AttachmentKind.CODE,
+    FileCategory.LOG.value: AttachmentKind.LOG,
+}
+
+
+def attachment_kind_of(detected_type: str | None) -> AttachmentKind:
+    """Traduce `Attachment.detected_type` persistido a la familia de extractor del port.
+
+    Cae a `TEXT` para un valor desconocido o ausente (misma politica conservadora que
+    `category_of` para allowlists custom de instancia).
+    """
+    return _ATTACHMENT_KIND_BY_CATEGORY.get(detected_type or "", AttachmentKind.TEXT)
 
 
 def signature_ok(extension: str, content: bytes) -> bool:

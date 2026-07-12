@@ -42,12 +42,14 @@ pipeline ademas:
   auditada (`confirmation.py`) o el retiro del adjunto. **N3 gana sobre N2**: si hay ambos,
   el estado es `blocked` y no se pide confirmacion (no es enviable de todos modos).
 
-Fuera de alcance (tareas posteriores): persistir el `full_text`/`Extraction` con dedup
-por sha256 (7.1), contar tokens y truncar para el `inserted_text` (6.x), envolver con el
-spotlight al componer el mensaje (6.3; `spotlight.py` ya listo). Aca `ready` significa
-"extraido, sanitizado, escaneado y enviable"; `blocked` significa "extraido pero con
-secreto N3". El `ExtractionResult` se devuelve en el `ExtractionOutcome` para esas etapas
-(el texto existe en ambos casos: `blocked` es una extraccion exitosa pero no enviable).
+Fuera de alcance (otras piezas del change): persistir el `full_text`/`Extraction` con
+dedup por sha256 y el disparo en produccion viven en `pipeline.py` (tarea 7.1, que invoca
+`extract_attachment` y reutiliza `finalize_extracted_attachment` para el camino dedup, sin
+worker); contar tokens y truncar para el `inserted_text` (6.x) y envolver con el spotlight
+(6.3; `spotlight.py`) son de la composicion. Aca `ready` significa "extraido, sanitizado,
+escaneado y enviable"; `blocked` significa "extraido pero con secreto N3". El
+`ExtractionResult` se devuelve en el `ExtractionOutcome` para esas etapas (el texto existe
+en ambos casos: `blocked` es una extraccion exitosa pero no enviable).
 
 El extractor concreto se **inyecta** (`Callable`/`ExtractionPort.extract`): este modulo no
 importa ningun adapter de `resultarai/adapters/extraction_*`.
@@ -153,19 +155,45 @@ def extract_attachment(
     try:
         result = run_extraction(extract_fn, source, config)
     except AttachmentExtractionError as exc:
-        attachment.status = STATUS_ERROR
-        attachment.scan_result = _record_extraction_error(attachment.scan_result, exc)
-        db.flush()
+        mark_extraction_error(db, attachment, exc)
         return ExtractionOutcome(attachment=attachment, result=None, error=exc)
 
     sanitization = sanitize_extracted_text(result.full_text)
     sanitized_result = result.model_copy(update={"full_text": sanitization.text})
-    injection_flags = scan_for_injection(sanitization.text)
-    secret_findings = scan_for_secrets(sanitization.text, config.extra_secret_patterns)
-    pii_findings = scan_for_pii(sanitization.text)
+    finalize_extracted_attachment(
+        db, attachment, sanitization.text, config, sanitization=sanitization
+    )
+    _ = now or get_utc_now()  # reservado para timestamps de extraccion (tareas 6.x/7.1)
+    return ExtractionOutcome(attachment=attachment, result=sanitized_result, error=None)
 
-    # N3 gana sobre N2: un secreto bloquea el adjunto (no enviable); sin secreto queda
-    # `ready` (la PII de N2 no bloquea, solo exige confirmacion).
+
+def finalize_extracted_attachment(
+    db: DbSession,
+    attachment: Attachment,
+    full_text: str,
+    config: AttachmentsConfig,
+    *,
+    sanitization: SanitizationResult | None = None,
+) -> None:
+    """Escanea `full_text` (YA sanitizado) y fija el estado final + `scan_result`.
+
+    Es la mitad "analisis y decision" del pipeline (pasos [5]-[6] del ANEXO §8), separada
+    de la extraccion aislada para que el camino **dedup** de la tarea 7.1 (`pipeline.py`)
+    la reutilice sobre el `full_text` ya persistido en `extractions` sin re-parsear el
+    binario: los escaneos (heuristica de inyeccion + N3/N2) SI se re-corren en cada
+    adjunto — los patrones configurados por instancia pueden haber cambiado desde la
+    extraccion original y el requirement solo prohibe re-PARSEAR (decision documentada de
+    la tarea 7.1). `sanitization` viene poblado solo desde `extract_attachment` (donde la
+    sanitizacion acaba de correr y sus artefactos removidos son telemetria nueva); en el
+    camino dedup el texto persistido ya esta limpio y no hay nada que reportar.
+
+    N3 gana sobre N2: un secreto bloquea el adjunto (no enviable); sin secreto queda
+    `ready` (la PII de N2 no bloquea, solo exige confirmacion). No hace `db.commit()`.
+    """
+    injection_flags = scan_for_injection(full_text)
+    secret_findings = scan_for_secrets(full_text, config.extra_secret_patterns)
+    pii_findings = scan_for_pii(full_text)
+
     blocked = bool(secret_findings)
     attachment.status = STATUS_BLOCKED if blocked else STATUS_READY
     scan_result = _record_analysis(
@@ -179,8 +207,23 @@ def extract_attachment(
     if scan_result is not None:
         attachment.scan_result = scan_result
     db.flush()
-    _ = now or get_utc_now()  # reservado para timestamps de extraccion (tareas 6.x/7.1)
-    return ExtractionOutcome(attachment=attachment, result=sanitized_result, error=None)
+
+
+def mark_extraction_error(
+    db: DbSession,
+    attachment: Attachment,
+    error: AttachmentExtractionError,
+) -> None:
+    """Deja `attachment` en estado `error` con la causa tipada en `scan_result`.
+
+    Compartido entre `extract_attachment` (timeout/crash/zip-bomb del worker) y el
+    runner de produccion (`pipeline.py`, p. ej. binario ausente en disco o fallo
+    inesperado del pipeline): el frontend (tarea 8.2) siempre encuentra la causa
+    especifica en `scan_result["extraction_error"]`, nunca un fallo silencioso (P7).
+    """
+    attachment.status = STATUS_ERROR
+    attachment.scan_result = _record_extraction_error(attachment.scan_result, error)
+    db.flush()
 
 
 def _ooxml_bytes(source: ExtractionInput) -> bytes | None:
@@ -212,7 +255,7 @@ def _record_extraction_error(
 
 def _record_analysis(
     scan_result: dict[str, object] | None,
-    sanitization: SanitizationResult,
+    sanitization: SanitizationResult | None,
     injection_flags: list[InjectionFlag],
     secret_findings: list[SecretFinding],
     pii_findings: list[PiiFinding],
@@ -224,10 +267,11 @@ def _record_analysis(
     Devuelve `None` si no hay nada que registrar (texto limpio, sin artefactos): asi un
     adjunto sano conserva `scan_result` intacto (tipicamente `NULL`) y la telemetria de
     Admin distingue "limpio" de "escaneado con hallazgos" de un vistazo. La forma completa
-    de `scan_result` esta documentada en `data_scan.py`.
+    de `scan_result` esta documentada en `data_scan.py`. `sanitization` es `None` en el
+    camino dedup (el texto persistido ya esta limpio; no hay artefactos nuevos).
     """
     updates: dict[str, object] = {}
-    if sanitization.removed_anything:
+    if sanitization is not None and sanitization.removed_anything:
         updates["sanitization"] = sanitization.artifacts_dict()
     if injection_flags:
         updates["injection_flags"] = [flag.to_dict() for flag in injection_flags]

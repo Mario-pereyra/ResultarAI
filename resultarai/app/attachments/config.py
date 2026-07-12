@@ -34,6 +34,9 @@ Variables reconocidas:
   de secretos (ANEXO §4.4: la LISTA de patrones extra es configurable por instancia; los
   de fabrica van en codigo, ``data_scan.py``). **Una regex por linea** (no por comas: las
   regex suelen contener comas). Sus coincidencias se guardan totalmente redactadas.
+- ``RESULTARAI_ATTACHMENTS_RETENTION_DAYS``  retencion del binario original y de su
+  `full_text` (ANEXO §5, tarea 7.2); default 90 dias. La `inserted_text` NO tiene
+  retencion: vive lo que viva la conversacion (ver ``retention.py``).
 - ``RESULTARAI_TENANT``  tenant al que se atribuyen los adjuntos (default ``default``;
   la derivacion multi-tenant real es Etapa P).
 """
@@ -68,6 +71,9 @@ _DEFAULT_EXTRACTION_MEMORY_LIMIT_BYTES = 512 * _MIB
 _DEFAULT_TOKEN_BUDGET_PER_FILE = 12_000
 _DEFAULT_TOKEN_BUDGET_PER_MESSAGE = 24_000
 
+# Retencion del binario original y su `full_text` (ANEXO §5, tarea 7.2): default 90 dias.
+_DEFAULT_RETENTION_DAYS = 90
+
 
 @dataclass
 class AttachmentsConfig:
@@ -89,6 +95,8 @@ class AttachmentsConfig:
     # Presupuesto de tokens (ANEXO §3.1, tarea 6.1): por archivo y por mensaje (suma).
     token_budget_per_file: int = _DEFAULT_TOKEN_BUDGET_PER_FILE
     token_budget_per_message: int = _DEFAULT_TOKEN_BUDGET_PER_MESSAGE
+    # Retencion del binario y su `full_text` (ANEXO §5, tarea 7.2), en dias.
+    retention_days: int = _DEFAULT_RETENTION_DAYS
 
     def size_limit_for(self, category: FileCategory) -> int:
         """Limite de tamano (bytes) para una categoria; cae al default si falta."""
@@ -153,6 +161,7 @@ class AttachmentsConfig:
         token_budget_per_message = _int_env(
             "RESULTARAI_ATTACHMENTS_TOKEN_BUDGET_PER_MESSAGE", _DEFAULT_TOKEN_BUDGET_PER_MESSAGE
         )
+        retention_days = _int_env("RESULTARAI_ATTACHMENTS_RETENTION_DAYS", _DEFAULT_RETENTION_DAYS)
 
         return cls(
             storage_dir=storage_dir,
@@ -167,6 +176,7 @@ class AttachmentsConfig:
             extra_secret_patterns=extra_secret_patterns,
             token_budget_per_file=token_budget_per_file,
             token_budget_per_message=token_budget_per_message,
+            retention_days=retention_days,
         )
 
 
