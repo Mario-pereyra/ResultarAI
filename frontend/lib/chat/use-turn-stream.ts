@@ -39,6 +39,13 @@ export interface SendTurnOptions {
   /** Edita el mensaje con este id en vez de enviar un turno nuevo (decisión
    * 4 de design.md: mismo endpoint, distinguido por este campo). */
   editsMessageId?: string;
+  /** `attachment_id` de adjuntos `sendable` del borrador (d14-attachments,
+   * tarea 8.1/6.3) -- espejo de `SendMessageRequest.attachment_ids`
+   * (`resultarai/app/api/chat.py`): ADITIVO y opcional, `undefined`/vacío deja
+   * el comportamiento IDÉNTICO al de antes de d14. El adapter del composer
+   * (`lib/chat/attachment-adapter.ts::attachmentIdsForSend`) es quien resuelve
+   * esta lista -- este hook solo la transporta tal cual en el body del POST. */
+  attachmentIds?: string[];
 }
 
 export interface UseTurnStreamOptions {
@@ -294,8 +301,13 @@ export function useTurnStream(options: UseTurnStreamOptions = {}): UseTurnStream
       setError(null);
       setStatus("streaming");
 
-      const body: { text: string; edits_message_id?: string } = { text: turnText };
+      const body: { text: string; edits_message_id?: string; attachment_ids?: string[] } = {
+        text: turnText,
+      };
       if (sendOptions.editsMessageId) body.edits_message_id = sendOptions.editsMessageId;
+      if (sendOptions.attachmentIds && sendOptions.attachmentIds.length > 0) {
+        body.attachment_ids = sendOptions.attachmentIds;
+      }
 
       await runTurn(
         `/api/sessions/${sessionId}/messages/stream`,

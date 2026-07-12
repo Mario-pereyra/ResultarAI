@@ -58,6 +58,13 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
       stop: t("composer.stop"),
       hint: t("composer.hint"),
       textareaLabel: t("composer.textareaLabel"),
+      attach: t("composer.attach"),
+      attachmentsListLabel: t("composer.attachmentsListLabel"),
+      // Plantilla ICU-lite (mismo patrón que `versionAriaLabel`/
+      // `reprocessWarningOne` de más abajo): `{file}` es el nombre del
+      // archivo, un dato de runtime -- `composer.tsx::interpolateFileName`
+      // hace el `.replace` con el valor real.
+      removeAttachment: t("composer.removeAttachment", { file: "{file}" }),
     },
     loading: t("session.loading"),
     loadError: t("session.loadError"),
@@ -155,5 +162,36 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
     // agente de la sesión ya no es invocable (`GET /api/agents/{id}` -> 404) --
     // la sesión se puede LEER pero no continuar, ver `chat-content.tsx`.
     agentDisabledComposerReason: t("agentDisabled.composerReason"),
+    // Tarea 8.1 (d14-attachments): textos §10 que `useAttachmentAdapter`
+    // mapea desde los `error_code` tipados de la subida/escaneo -- ver
+    // `lib/chat/attachment-adapter.ts` para el subconjunto de
+    // `Chat.attachments.errors`/`Chat.attachments.fileTypes` que realmente
+    // consume (el resto -- OCR, vista previa truncada, cuota de mensaje --
+    // son texto de 8.2/8.3, no de este adapter).
+    attachments: {
+      errors: {
+        unsupportedType: t("attachments.errors.unsupportedType", { extension: "{extension}" }),
+        falsifiedType: t("attachments.errors.falsifiedType", { extension: "{extension}" }),
+        withMacros: t("attachments.errors.withMacros", { extension: "{extension}" }),
+        tooLarge: t("attachments.errors.tooLarge", { limitMb: "{limitMb}", fileType: "{fileType}" }),
+        pdfProtected: t("attachments.errors.pdfProtected"),
+        imageNotSupported: t("attachments.errors.imageNotSupported"),
+        wordLegacy: t("attachments.errors.wordLegacy"),
+        tooManyAttachments: t("attachments.errors.tooManyAttachments", { limit: "{limit}" }),
+        credentialsDetected: t("attachments.errors.credentialsDetected", { detail: "{detail}" }),
+        piiDetected: t("attachments.errors.piiDetected", { detail: "{detail}" }),
+        embeddedInstruction: t("attachments.errors.embeddedInstruction", { detail: "{detail}" }),
+        genericError: t("attachments.errors.genericError"),
+      },
+      fileTypes: {
+        excel: t("attachments.fileTypes.excel"),
+        csv: t("attachments.fileTypes.csv"),
+        pdf: t("attachments.fileTypes.pdf"),
+        docx: t("attachments.fileTypes.docx"),
+        text: t("attachments.fileTypes.text"),
+        code: t("attachments.fileTypes.code"),
+        log: t("attachments.fileTypes.log"),
+      },
+    },
   };
 }

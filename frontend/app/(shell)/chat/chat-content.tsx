@@ -24,6 +24,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { csrfHeaders } from "@/lib/csrf";
 import { classifyTurnError } from "@/lib/chat/classify-turn-error";
 import {
+  DEFAULT_MAX_ATTACHMENTS_PER_MESSAGE,
+  useAttachmentAdapter,
+  type AttachmentAdapterLabels,
+} from "@/lib/chat/attachment-adapter";
+import {
   countMessagesAfter,
   resolveVisiblePath,
   versionNav,
@@ -103,6 +108,10 @@ export interface ChatContentLabels {
    * desactivado: se puede leer pero no continuar, composer deshabilitado
    * con motivo") -- ver `Composer.disabledReason`. */
   agentDisabledComposerReason: string;
+  /** Textos §10 que `useAttachmentAdapter` necesita para mapear errores
+   * tipados de la subida/escaneo (d14-attachments, tarea 8.1) -- ver
+   * `lib/chat/attachment-adapter.ts`. */
+  attachments: AttachmentAdapterLabels;
 }
 
 export interface ChatContentProps {
@@ -385,6 +394,14 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   // -- el eco de ese mensaje ya está en `messages` desde el envío original,
   // así que reintentar NUNCA vuelve a pushearlo (sin duplicar, tarea 6.1).
   const pendingRetryTextRef = useRef<string | null>(null);
+  // Mismos `attachment_id` que acompañaban el intento que falló (tarea 8.1) --
+  // capturado junto con `pendingRetryTextRef` en `handleSubmit`, así
+  // `retryPendingTurn` reenvía CON los mismos adjuntos. Un GATEWAY_OFFLINE
+  // ocurre antes de que el backend procese el turno (`classifyTurnError`),
+  // así que los adjuntos siguen `sendable`/pendientes de mensaje -- el
+  // reintento es, igual que con el texto, la primera vez que ese contenido
+  // llega al servidor.
+  const pendingRetryAttachmentIdsRef = useRef<string[]>([]);
 
   const loadSession = useCallback(
     async (id: string) => {
@@ -666,19 +683,36 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
     }
   }, [sessionId, labels.agentId]);
 
+  // Tarea 8.1 (d14-attachments): adjuntos del borrador del composer -- ver
+  // `lib/chat/attachment-adapter.ts` para la decisión de integración
+  // (módulo propio, MISMA interfaz conceptual add/send/remove que el
+  // `AttachmentAdapter` de assistant-ui). Reutiliza el MISMO `ensureSession`
+  // que `handleSubmit`: adjuntar antes del primer mensaje crea la sesión
+  // igual que enviarlo (`POST /api/attachments` exige `session_id` de una
+  // sesión ya existente).
+  const attachmentAdapter = useAttachmentAdapter({ ensureSession, labels: labels.attachments });
+
   async function handleSubmit(text: string) {
     setSendError(false);
     const id = await ensureSession();
     if (!id) return;
 
     setComposerText("");
+    // Tarea 8.1: `send()` del adapter conceptual -- los `attachment_id`
+    // `sendable` del borrador viajan en `attachment_ids` (`SendMessageRequest`);
+    // el servidor compone `inserted_text` (decisión 9 de design.md). Se
+    // resuelve ANTES de `clear()` (que vacía la lista observable del
+    // composer) para no perder la referencia.
+    const attachmentIds = attachmentAdapter.attachmentIdsForSend();
+    attachmentAdapter.clear();
     // Tarea 6.1: un envío NUEVO es un problema distinto -- su propio backoff
     // arranca desde cero, y este es el texto que un eventual reintento debe
     // reenviar (`retryPendingTurn`, más abajo).
     setGatewayRetryAttempt(0);
     pendingRetryTextRef.current = text;
+    pendingRetryAttachmentIdsRef.current = attachmentIds;
     setMessages((prev) => [...prev, { id: nextLocalMessageId(), role: "user", content: text }]);
-    await turnStream.sendTurn(id, text);
+    await turnStream.sendTurn(id, text, { attachmentIds });
   }
 
   function handleStop() {
@@ -699,7 +733,9 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   function retryPendingTurn() {
     const text = pendingRetryTextRef.current;
     if (!sessionId || !text) return;
-    void turnStream.sendTurn(sessionId, text);
+    void turnStream.sendTurn(sessionId, text, {
+      attachmentIds: pendingRetryAttachmentIdsRef.current,
+    });
   }
 
   // Tarea 3.5: click en una sugerencia SOLO precarga el composer y le da
@@ -1072,6 +1108,16 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         onChange={setComposerText}
         onSubmit={handleSubmit}
         onStop={handleStop}
+        // Tarea 8.1: integración mínima del adapter -- adjuntar dispara
+        // `add()` por archivo elegido, "Quitar" dispara `remove(id)`; el
+        // chip visual por estado (8.2) y el panel de vista previa (8.3)
+        // quedan para esas tareas, ver el docstring de `ComposerProps`.
+        attachments={attachmentAdapter.attachments}
+        onAttachFiles={(files) => files.forEach((file) => void attachmentAdapter.add(file))}
+        onRemoveAttachment={attachmentAdapter.remove}
+        attachDisabled={
+          attachmentAdapter.attachments.length >= DEFAULT_MAX_ATTACHMENTS_PER_MESSAGE
+        }
       />
     </div>
   );

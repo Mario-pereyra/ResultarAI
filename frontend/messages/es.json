@@ -407,7 +407,10 @@
       "textareaLabel": "Mensaje",
       "send": "Enviar",
       "stop": "Detener",
-      "hint": "Enter envía · Shift+Enter salto de línea"
+      "hint": "Enter envía · Shift+Enter salto de línea",
+      "attach": "Adjuntar archivo",
+      "attachmentsListLabel": "Archivos adjuntos",
+      "removeAttachment": "Quitar adjunto {file}"
     },
     "activity": {
       "consulting": "Consultando…"
@@ -511,6 +514,15 @@
       "composerReason": "Este agente ya no está disponible. Podés leer la conversación, pero no continuarla."
     },
     "attachments": {
+      "fileTypes": {
+        "excel": "Excel",
+        "csv": "CSV/TSV",
+        "pdf": "PDF",
+        "docx": "Word",
+        "text": "texto o Markdown",
+        "code": "código",
+        "log": "logs"
+      },
       "states": {
         "uploading": "Subiendo… {percent}%",
         "processing": "Procesando contenido…",

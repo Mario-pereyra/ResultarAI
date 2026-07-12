@@ -88,6 +88,9 @@ const LABELS: ChatContentLabels = {
     send: "Enviar",
     stop: "Detener",
     hint: "Enter envía · Shift+Enter salto de línea",
+    attach: "Adjuntar archivo",
+    attachmentsListLabel: "Archivos adjuntos",
+    removeAttachment: "Quitar adjunto {file}",
   },
   loading: "Cargando conversación…",
   loadError: "No pudimos cargar esta conversación.",
@@ -169,6 +172,35 @@ const LABELS: ChatContentLabels = {
     "Alcanzaste tu cuota mensual. Solicitá una liberación para seguir escribiendo.",
   agentDisabledComposerReason:
     "Este agente ya no está disponible. Podés leer la conversación, pero no continuarla.",
+  attachments: {
+    errors: {
+      unsupportedType: "No podemos procesar archivos {extension}. Extraé el archivo que necesitás y subilo directamente.",
+      falsifiedType: "El contenido del archivo no coincide con su extensión ({extension}). Por seguridad no se puede adjuntar.",
+      withMacros:
+        'Los archivos con macros ({extension}) no están permitidos. Guardalo desde Excel como "Libro de Excel (.xlsx)" y volvé a subirlo.',
+      tooLarge: "El archivo supera el límite de {limitMb} MB para {fileType}. Si solo necesitás algunas hojas, copialas a un archivo nuevo.",
+      pdfProtected: "Este PDF está protegido con contraseña y no se puede leer. Quitale la protección y volvé a subirlo.",
+      imageNotSupported:
+        "Este agente todavía no puede ver imágenes. Si es una captura de un error, pegá el texto del mensaje directamente en el chat; si es un reporte, exportalo a PDF o Excel.",
+      wordLegacy: "El formato .doc (Word 97-2003) no está soportado. Abrilo en Word y guardalo como .docx.",
+      tooManyAttachments: "Máximo {limit} archivos por mensaje. Quitá alguno o enviá en dos mensajes.",
+      credentialsDetected:
+        "Este archivo contiene lo que parece una contraseña o clave de acceso ({detail}). Por política no puede enviarse a la IA. Quitá las credenciales del archivo y volvé a subirlo.",
+      piiDetected: "Detectamos posibles datos personales en este archivo ({detail}). Recordá la política: solo datos de prueba hacia la IA.",
+      embeddedInstruction:
+        "Este documento contiene texto que parece dirigido a la IA ({detail}). El agente lo tratará solo como contenido del documento. Revisalo si no lo esperabas.",
+      genericError: "No pudimos procesar este archivo (puede estar dañado). Probá guardarlo de nuevo desde la aplicación original.",
+    },
+    fileTypes: {
+      excel: "Excel",
+      csv: "CSV/TSV",
+      pdf: "PDF",
+      docx: "Word",
+      text: "texto o Markdown",
+      code: "código",
+      log: "logs",
+    },
+  },
 };
 
 function sessionFor(role: SessionContextValue["user"]["role"]): SessionContextValue {

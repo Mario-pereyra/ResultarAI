@@ -4,10 +4,12 @@ import {
   forwardRef,
   useImperativeHandle,
   useRef,
+  type ChangeEvent,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
 import { Button } from "@/components/ui/button";
+import type { AttachmentItem } from "@/lib/chat/attachment-adapter";
 
 export interface ComposerLabels {
   placeholder: string;
@@ -15,6 +17,14 @@ export interface ComposerLabels {
   send: string;
   stop: string;
   hint: string;
+  /** Botón "Adjuntar archivo" (d14-attachments, tarea 8.1) -- ver
+   * `design/mockups/07-composer-attachments.html`, mismo texto literal. */
+  attach: string;
+  /** `aria-label` de la lista de adjuntos (`role="list"`, mismo mockup). */
+  attachmentsListLabel: string;
+  /** Plantilla `Quitar adjunto {file}` -- `{file}` se interpola con
+   * `item.originalName` (`interpolateFileName` más abajo). */
+  removeAttachment: string;
 }
 
 export interface ComposerHandle {
@@ -49,6 +59,31 @@ export interface ComposerProps {
   onSubmit: (text: string) => void;
   /** Click en "Detener" durante el streaming. */
   onStop: () => void;
+  /** Adjuntos del borrador actual (d14-attachments, tarea 8.1) --
+   * `useAttachmentAdapter().attachments` de `chat-content.tsx`. Renderizado
+   * MÍNIMO a propósito: nombre + (si existe) el texto §10 ya resuelto de
+   * `item.message` para `error`/`blocked`/`warning`. Los chips visuales por
+   * estado (spinner, tokens/%, "Ver lo que verá el agente") son la tarea 8.2,
+   * fuera de alcance acá -- ver el docstring de `AttachmentItem`. */
+  attachments: AttachmentItem[];
+  /** Click en "Adjuntar archivo" + selección en el `<input type="file">`
+   * oculto -- una llamada a `add()` del adapter por archivo elegido. */
+  onAttachFiles: (files: File[]) => void;
+  /** Click en "Quitar" de un adjunto -- `remove(id)` del adapter. */
+  onRemoveAttachment: (id: string) => void;
+  /** `true` cuando ya se alcanzó el máximo de adjuntos por mensaje (ANEXO §9,
+   * default 5) -- deshabilita el botón "Adjuntar archivo" de forma
+   * PROACTIVA; el adapter igual rechaza con el texto §10 "Demasiados
+   * adjuntos" si de todos modos llega una subida de más (defensa en
+   * profundidad, mismo criterio que el resto del pipeline). Default `false`. */
+  attachDisabled?: boolean;
+}
+
+/** `Chat.composer.removeAttachment` es la plantilla `Quitar adjunto {file}`
+ * (mismo patrón `.replace` que el resto de labels con placeholders de
+ * runtime, ver `message-edit.tsx`/`gateway-offline-card.tsx`). */
+function interpolateFileName(template: string, file: string): string {
+  return template.split("{file}").join(file);
 }
 
 /**
@@ -65,18 +100,50 @@ export interface ComposerProps {
  * reutiliza tal cual del design system.
  */
 export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
-  { labels, disabled = false, disabledReason, streaming = false, value, onChange, onSubmit, onStop },
+  {
+    labels,
+    disabled = false,
+    disabledReason,
+    streaming = false,
+    value,
+    onChange,
+    onSubmit,
+    onStop,
+    attachments,
+    onAttachFiles,
+    onRemoveAttachment,
+    attachDisabled = false,
+  },
   ref,
 ) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useImperativeHandle(ref, () => ({
     focus: () => textareaRef.current?.focus(),
   }));
 
+  function handleFileInputChange(event: ChangeEvent<HTMLInputElement>) {
+    const files = event.target.files;
+    if (files && files.length > 0) onAttachFiles(Array.from(files));
+    // Limpia el valor del input -- sin esto, re-seleccionar EL MISMO archivo
+    // (mismo nombre) no dispara `onChange` una segunda vez.
+    event.target.value = "";
+  }
+
+  // ANEXO §6/§10 ("nunca... silencioso", spec `attachments-ui`): mientras
+  // algún adjunto no sea `sendable` (subiendo/procesando/bloqueado/con error/
+  // PII sin confirmar -- ver `is_sendable` en
+  // `resultarai/app/attachments/data_scan.py`, que es la MISMA condición que
+  // ya calcula el backend en `GET /api/attachments/{id}`), el envío queda
+  // deshabilitado -- nunca se manda el mensaje "de todos modos" excluyendo en
+  // silencio el adjunto todavía no listo. Quitar el adjunto problemático
+  // (`onRemoveAttachment`) libera el envío sin él.
+  const hasUnsendableAttachment = attachments.some((item) => !item.sendable);
+
   function submit() {
     const trimmed = value.trim();
-    if (!trimmed || disabled || streaming) return;
+    if (!trimmed || disabled || streaming || hasUnsendableAttachment) return;
     onSubmit(trimmed);
   }
 
@@ -98,15 +165,45 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     // ya se encarga (evita disparar el envío dos veces).
   }
 
-  const sendDisabled = !streaming && (disabled || value.trim().length === 0);
+  const sendDisabled =
+    !streaming && (disabled || value.trim().length === 0 || hasUnsendableAttachment);
   // Tarea 6.2: el motivo de bloqueo SOLO reemplaza el hint mientras el
   // composer está efectivamente deshabilitado -- si `disabled` se libera
   // (p. ej. se resuelve el bloqueo) el hint normal vuelve solo, sin que el
   // caller tenga que limpiar `disabledReason` en sincronía.
   const showBlockedReason = disabled && Boolean(disabledReason);
 
+  const attachButtonDisabled = disabled || streaming || attachDisabled;
+
   return (
     <form className="chat-composer" onSubmit={handleFormSubmit}>
+      {attachments.length > 0 ? (
+        // Lista MÍNIMA a propósito (d14-attachments, tarea 8.1): nombre +
+        // el texto §10 ya resuelto (`item.message`) cuando lo hay, más
+        // "Quitar". El chip visual por estado (spinner, tokens/%, "Ver lo
+        // que verá el agente") es la tarea 8.2 -- ver el docstring de
+        // `ComposerProps.attachments`. `data-attachment-status` deja el
+        // estado observable para tests/estilos futuros sin inventar texto
+        // nuevo fuera del catálogo.
+        <ul className="chat-composer__attachments" role="list" aria-label={labels.attachmentsListLabel}>
+          {attachments.map((item) => (
+            <li key={item.id} role="listitem" data-attachment-status={item.status}>
+              <span className="chat-composer__attachment-name">{item.originalName}</span>
+              {item.message ? (
+                <span className="chat-composer__attachment-message">{item.message}</span>
+              ) : null}
+              <button
+                type="button"
+                className="chat-composer__attachment-remove"
+                aria-label={interpolateFileName(labels.removeAttachment, item.originalName)}
+                onClick={() => onRemoveAttachment(item.id)}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <textarea
         ref={textareaRef}
         className="textarea chat-composer__textarea"
@@ -118,6 +215,27 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
         disabled={disabled || streaming}
         rows={1}
       />
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        className="chat-composer__file-input"
+        onChange={handleFileInputChange}
+        // Sin `accept` a propósito -- ver el docstring de
+        // `lib/chat/attachment-adapter.ts`: el allowlist real es config de
+        // instancia server-side (ANEXO §9), duplicarlo acá lo haría
+        // divergir en silencio.
+        hidden
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        disabled={attachButtonDisabled}
+        onClick={() => fileInputRef.current?.click()}
+      >
+        {labels.attach}
+      </Button>
       <Button
         type={streaming ? "button" : "submit"}
         variant={streaming ? "secondary" : "primary"}

@@ -46,7 +46,7 @@
 
 ## 8. Frontend del composer (vista 07-composer)
 
-- [ ] 8.1 `AttachmentAdapter` (sobre `CompositeAttachmentAdapter`): `add()` valida/sube, polling del estado de extracción, `send()` devuelve `attachment_id`; errores tipados mapeados a mensajes §10. Verificación: subir→procesar→listo funciona end-to-end contra el endpoint (ANEXO §6). `[modelo: sonnet]`
+- [x] 8.1 `AttachmentAdapter` (sobre `CompositeAttachmentAdapter`): `add()` valida/sube, polling del estado de extracción, `send()` devuelve `attachment_id`; errores tipados mapeados a mensajes §10. Verificación: subir→procesar→listo funciona end-to-end contra el endpoint (ANEXO §6). `[modelo: sonnet]`
 - [ ] 8.2 Chips de estado subiendo→procesando→listo/advertencia/bloqueado/error con causa específica; nunca silencioso. Verificación: escenarios "error de extracción muestra causa" y "adjunto bloqueado se ve como no enviable" (ANEXO §6, §10). `[modelo: sonnet]`
 - [ ] 8.3 Panel "Ver lo que verá el agente" (extracción exacta + marcadores de truncado + tokens/%; pie permanente) con capa por rol (Funcional=% de espacio; Técnico/Admin=tokens). Verificación: escenarios "vista previa de un adjunto truncado" y "mismo adjunto, métricas por rol" (ANEXO §3.4). `[modelo: sonnet]`
 - [x] 8.4 Portar los textos de UI del §10 en voseo (chips y errores/avisos) a los recursos i18n del frontend. Verificación: escenario "imagen rechazada con alternativa accionable" y presencia literal de los textos §10. `[modelo: haiku]`
