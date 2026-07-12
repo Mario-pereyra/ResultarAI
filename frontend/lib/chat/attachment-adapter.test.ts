@@ -9,7 +9,8 @@ import {
 /**
  * Tests del `AttachmentAdapter` del composer (d14-attachments, tarea 8.1).
  * Cubre lo pedido por la verificación de la tarea: subir → polling → listo,
- * error de subida tipado (texto §10 exacto) y que `send()`
+ * error de subida tipado (texto §10 exacto, incluido el escenario "Imagen
+ * rechazada con alternativa accionable" de `attachments-ui`) y que `send()`
  * (`attachmentIdsForSend`) devuelve el `attachment_id`. Suma además la
  * validación client-side de "demasiados adjuntos", `remove()` cortando el
  * polling, y el mapeo de los estados terminales `blocked` (N3)/`ready` con
@@ -255,6 +256,29 @@ describe("useAttachmentAdapter — error de subida tipado (texto §10)", () => {
       'Los archivos con macros (.xlsm) no están permitidos. Guardalo desde Excel como "Libro de Excel (.xlsx)" y volvé a subirlo.',
     );
     // Solo el POST -- ningún GET de polling para un adjunto que nunca se persistió.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('escenario "Imagen rechazada con alternativa accionable": 422 image_not_supported resuelve al texto §10 "Imagen (V1)", sin arrancar polling', async () => {
+    const ensureSession = vi.fn().mockResolvedValue("session-1");
+    const fetchMock = vi.fn(async () =>
+      jsonResponse(422, { detail: { error_code: "image_not_supported", params: { extension: ".png" } } }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() =>
+      useAttachmentAdapter({ ensureSession, labels: LABELS, pollIntervalMs: 0 }),
+    );
+
+    await act(async () => {
+      await result.current.add(makeFile("captura.png"));
+    });
+
+    expect(result.current.attachments[0].status).toBe("error");
+    expect(result.current.attachments[0].message).toBe(
+      "Este agente todavía no puede ver imágenes. Si es una captura de un error, pegá el texto del mensaje directamente en el chat; si es un reporte, exportalo a PDF o Excel.",
+    );
+    // La subida se rechaza sin aceptarla: solo el POST, ningún GET de polling.
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
