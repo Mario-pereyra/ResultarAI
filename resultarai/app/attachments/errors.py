@@ -29,6 +29,13 @@ frontend (tarea 8.2) los muestra como causa especifica del chip en estado ``erro
 - ``extraction_timeout``  -> el worker aislado supero el timeout (ANEXO §4.1 punto 5).
 - ``extraction_failed``   -> el worker murio (crash/OOM) o el extractor fallo; el frontend
                              muestra "Error generico de extraccion" §10.
+
+Error de DESCARGA (familia aparte, tarea 7.2, ANEXO §5): no es un rechazo de subida ni un
+fallo de extraccion, sino el binario ya purgado por retencion al momento de descargar.
+
+- ``attachment_binary_purged`` -> `GET /attachments/{id}/download` responde 409: el
+                                   binario (y posiblemente el `full_text` compartido) ya
+                                   fueron eliminados por `retention.py`.
 """
 
 from __future__ import annotations
@@ -209,6 +216,23 @@ class ExtractionFailedError(AttachmentExtractionError):
 
     def __init__(self, *, cause: str, **params: Any) -> None:
         super().__init__(f"la extraccion fallo: {cause}", {"cause": cause, **params})
+
+
+class AttachmentBinaryPurgedError(Exception):
+    """El binario del adjunto ya fue purgado por retencion (ANEXO §5, tarea 7.2).
+
+    `retention.py` borra el binario de disco (y, si corresponde, la fila de `extractions`
+    compartida) una vez vencido `retention_days`; `download.py` levanta este error tipado
+    cuando el endpoint de descarga (`GET /attachments/{id}/download`) encuentra
+    `storage_path IS NULL`. Nunca un 500: el router lo traduce a un 409 con `error_code`
+    estable, mismo criterio que `extraction_not_ready` en la vista previa (8.3).
+    """
+
+    error_code = "attachment_binary_purged"
+
+    def __init__(self, *, attachment_id: str) -> None:
+        super().__init__(f"el binario del adjunto {attachment_id!r} ya fue purgado por retencion")
+        self.attachment_id = attachment_id
 
 
 class AttachmentExtractionMissingError(Exception):

@@ -1,7 +1,7 @@
 """Contexto de adjuntos: subida, validacion de seguridad OWASP y persistencia (d14).
 
-Alcance actual (tareas 2.1-2.5, 3.5, 4.1-4.3, 5.1-5.3, 6.1-6.3): endpoint de subida
-multipart, limites por tipo y por mensaje configurables, validacion de tipo real
+Alcance actual (tareas 2.1-2.5, 3.5, 4.1-4.3, 5.1-5.3, 6.1-6.3, 7.1-7.2): endpoint de
+subida multipart, limites por tipo y por mensaje configurables, validacion de tipo real
 (allowlist + magic bytes), rechazo de formatos activos/peligrosos y de imagenes en V1,
 proteccion zip-bomb OOXML, worker de parseo aislado con timeout + memoria acotada,
 sanitizacion, heuristica anti prompt-injection, escaneo de niveles de datos N2/N3
@@ -11,7 +11,9 @@ los endpoints de estado y vista previa (`insertion.py`). La composicion server-s
 mensaje con los adjuntos AL FINAL vive en `app/use_cases/chat/_attachments.py` (orquesta
 sesion/mensaje, fuera de este paquete que es agnostico de chat). La persistencia con
 dedup por sha256 y el disparo real de la extraccion tras la subida (tarea 7.1) viven en
-`pipeline.py`, cableado desde `app/api/attachments.py` via `BackgroundTasks`.
+`pipeline.py`, cableado desde `app/api/attachments.py` via `BackgroundTasks`. La retencion
+configurable del binario/`full_text` (`retention.py`) y la descarga auditada solo para
+dueno/Admin (`download.py`) son la tarea 7.2.
 """
 
 from __future__ import annotations
@@ -29,7 +31,9 @@ from resultarai.app.attachments.data_scan import (
     scan_for_secrets,
 )
 from resultarai.app.attachments.dependency import get_attachments_config
+from resultarai.app.attachments.download import AttachmentDownload, download_attachment
 from resultarai.app.attachments.errors import (
+    AttachmentBinaryPurgedError,
     AttachmentExtractionError,
     AttachmentExtractionMissingError,
     AttachmentRejectedError,
@@ -59,6 +63,7 @@ from resultarai.app.attachments.insertion import (
     find_first_insertion,
     resolve_token_counter_model,
 )
+from resultarai.app.attachments.retention import PurgeResult, purge_expired_attachments
 from resultarai.app.attachments.spotlight import wrap_extraction
 from resultarai.app.attachments.truncation import (
     TruncationResult,
@@ -71,6 +76,8 @@ from resultarai.app.attachments.worker import run_in_isolated_worker
 from resultarai.app.attachments.zip_guard import inspect_ooxml_for_zip_bomb
 
 __all__ = [
+    "AttachmentBinaryPurgedError",
+    "AttachmentDownload",
     "AttachmentExtractionError",
     "AttachmentExtractionMissingError",
     "AttachmentRejectedError",
@@ -88,6 +95,7 @@ __all__ = [
     "NoPendingConfirmationError",
     "PdfPasswordError",
     "PiiFinding",
+    "PurgeResult",
     "SecretFinding",
     "TokenUsageInfo",
     "TooManyAttachmentsError",
@@ -99,12 +107,14 @@ __all__ = [
     "confirm_test_data",
     "create_attachment",
     "describe_token_usage",
+    "download_attachment",
     "extract_attachment",
     "find_first_insertion",
     "find_section_body",
     "get_attachments_config",
     "inspect_ooxml_for_zip_bomb",
     "is_sendable",
+    "purge_expired_attachments",
     "resolve_token_counter_model",
     "run_extraction",
     "run_in_isolated_worker",

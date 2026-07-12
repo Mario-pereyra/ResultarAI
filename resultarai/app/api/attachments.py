@@ -1,6 +1,7 @@
-"""FastAPI router para adjuntos: subida (`POST /api/attachments`, d14 tareas 2.1-2.3) y
+"""FastAPI router para adjuntos: subida (`POST /api/attachments`, d14 tareas 2.1-2.3),
 consulta/vista previa (`GET /api/attachments/{id}`, `GET /api/attachments/{id}/preview`,
-tarea 6.3 -- soporte de 8.1/8.3).
+tarea 6.3 -- soporte de 8.1/8.3) y descarga auditada del binario
+(`GET /api/attachments/{id}/download`, tarea 7.2, ANEXO §5).
 
 Ruta bajo `/api` para ser coherente con el resto de la API (`chat.py`). La subida usa
 `multipart/form-data`: el binario en `file` y el borrador destino en `session_id`.
@@ -39,6 +40,7 @@ from collections.abc import Callable
 from typing import Annotated, Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DbSession
 
@@ -46,6 +48,7 @@ from resultarai.adapters.persistence_postgres.models import Attachment, User
 from resultarai.adapters.persistence_postgres.models import Session as SessionModel
 from resultarai.app.api.chat import get_registries
 from resultarai.app.attachments import (
+    AttachmentBinaryPurgedError,
     AttachmentRejectedError,
     AttachmentsConfig,
     NoPendingConfirmationError,
@@ -53,6 +56,7 @@ from resultarai.app.attachments import (
     confirm_test_data,
     create_attachment,
     describe_token_usage,
+    download_attachment,
     find_first_insertion,
     is_sendable,
 )
@@ -99,8 +103,9 @@ def get_extraction_runner(
 class AttachmentResponse(BaseModel):
     """Adjunto recien subido, en estado inicial `uploaded` (pendiente de extraccion).
 
-    No expone `storage_path` (el UUID del binario en disco): la descarga es un endpoint
-    autenticado y auditado aparte (tarea 7.2), nunca una URL directa (ANEXO §5).
+    No expone `storage_path` (el UUID del binario en disco): la descarga es el endpoint
+    autenticado y auditado `GET /attachments/{id}/download` (tarea 7.2, mas abajo en este
+    modulo), nunca una URL directa (ANEXO §5).
     """
 
     id: str
@@ -381,4 +386,46 @@ def preview_attachment_endpoint(
         token_count=usage.token_count,
         included_percent=usage.included_percent,
         truncated=usage.truncated,
+    )
+
+
+@router.get("/attachments/{attachment_id}/download")
+def download_attachment_endpoint(
+    attachment_id: uuid.UUID,
+    db: Annotated[DbSession, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    config: Annotated[AttachmentsConfig, Depends(get_attachments_config)],
+) -> FileResponse:
+    """Descarga el binario original de un adjunto (tarea 7.2, ANEXO §5).
+
+    Autorizacion: SOLO el **dueno** o un usuario con rol **Admin**; cualquier otro (o un
+    `attachment_id` inexistente) responde 404 sin filtrar existencia -- mismo criterio que
+    el resto de los endpoints de adjuntos, extendido para no revelarle a un Admin
+    tampoco si el id existe cuando ademas no es Admin (imposible: Admin siempre pasa).
+    Nunca una URL firmada/publica: este es el UNICO camino de descarga, autenticado por
+    cookie de sesion + CSRF (`csrf_guard`, global). Cada descarga autorizada queda
+    registrada en el audit log append-only (`download.py` -> `identity_audit_events`),
+    ANTES de servir el binario.
+
+    409 `attachment_binary_purged` si la retencion (`retention.py`, tarea 7.2) ya elimino
+    el binario de disco -- error tipado, nunca un 500.
+    """
+    attachment = db.get(Attachment, attachment_id)
+    is_owner = attachment is not None and attachment.uploaded_by == str(current_user.id)
+    is_admin = current_user.role == "admin"
+    if attachment is None or not (is_owner or is_admin):
+        raise HTTPException(status_code=404, detail="Adjunto no encontrado.")
+
+    try:
+        download = download_attachment(db, attachment, current_user, config)
+    except AttachmentBinaryPurgedError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail={"error_code": "attachment_binary_purged", "params": {}},
+        ) from exc
+
+    return FileResponse(
+        path=download.path,
+        filename=download.filename,
+        media_type=download.media_type,
     )
