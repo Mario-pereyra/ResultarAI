@@ -37,6 +37,9 @@ export interface ComposerLabels {
   /** "Cancelar" de la advertencia N2 (tarea 8.2,
    * `Chat.attachments.warnings.piiCancel`). */
   attachmentPiiCancel: string;
+  /** "Ver lo que verá el agente" (tarea 8.3, `Chat.attachments.preview.action`)
+   * -- ver `AttachmentChipLabels.previewAction`. */
+  attachmentPreviewAction: string;
 }
 
 export interface ComposerHandle {
@@ -213,6 +216,7 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
                 removeAttachment: labels.removeAttachment,
                 piiConfirmation: labels.attachmentPiiConfirmation,
                 piiCancel: labels.attachmentPiiCancel,
+                previewAction: labels.attachmentPreviewAction,
               }}
               onRemove={onRemoveAttachment}
               onConfirmTestData={onConfirmAttachmentTestData}

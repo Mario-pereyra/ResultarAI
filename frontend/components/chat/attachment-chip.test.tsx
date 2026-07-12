@@ -5,12 +5,15 @@ import type { AttachmentItem } from "@/lib/chat/attachment-adapter";
 import { AttachmentChip, type AttachmentChipLabels } from "./attachment-chip";
 
 /**
- * Tests unitarios del chip de adjunto (d14-attachments, tarea 8.2) --
+ * Tests unitarios del chip de adjunto (d14-attachments, tareas 8.2/8.3) --
  * `composer.test.tsx` cubre la integración vía `Composer`; acá se aísla el
  * componente para cubrir puntualmente lo que ese nivel de integración no
  * ejercita cómodamente: el `role` ARIA por urgencia (`alert` vs `status`,
- * ANEXO §6 "nunca... silencioso") y el punto de integración opcional de la
- * tarea 8.3 (`onOpenPreview`).
+ * ANEXO §6 "nunca... silencioso") y las DOS formas de disparar el panel "Ver
+ * lo que verá el agente" (tarea 8.3, Requirement "Vista previa 'Ver lo que
+ * verá el agente'"): el texto de estado truncado (que invita por sí mismo,
+ * "tocá para ver...") y el botón propio `previewAction` para el resto de los
+ * `listo` (cuyo texto no invita a nada -- ver el docstring de `AttachmentChip`).
  */
 
 const LABELS: AttachmentChipLabels = {
@@ -27,6 +30,7 @@ const LABELS: AttachmentChipLabels = {
   removeAttachment: "Quitar adjunto {file}",
   piiConfirmation: "Confirmo que son datos de prueba",
   piiCancel: "Cancelar",
+  previewAction: "Ver lo que verá el agente",
 };
 
 function makeItem(overrides: Partial<AttachmentItem> = {}): AttachmentItem {
@@ -121,7 +125,7 @@ describe("AttachmentChip — punto de integración de 8.3 (Ver lo que verá el a
     expect(onOpenPreview).toHaveBeenCalledWith(item.id);
   });
 
-  it("listo sin truncar: onOpenPreview no agrega ningún botón (el disparador es solo del truncado)", () => {
+  it("listo sin truncar: el texto de estado NO es un botón (no invita a nada por sí mismo)", () => {
     const item = makeItem({ status: "ready", truncated: false, tokenCount: 100 });
     render(
       <ul>
@@ -137,6 +141,59 @@ describe("AttachmentChip — punto de integración de 8.3 (Ver lo que verá el a
     );
 
     expect(screen.getByText("Listo · 100 tokens")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Listo · 100 tokens" })).toBeNull();
+  });
+
+  it("listo sin truncar, con onOpenPreview: agrega el botón propio «Ver lo que verá el agente» que dispara el callback con el id", async () => {
+    const user = userEvent.setup();
+    const onOpenPreview = vi.fn();
+    const item = makeItem({ status: "ready", truncated: false, tokenCount: 100 });
+    render(
+      <ul>
+        <AttachmentChip
+          item={item}
+          role="tecnico"
+          labels={LABELS}
+          onRemove={vi.fn()}
+          onConfirmTestData={vi.fn()}
+          onOpenPreview={onOpenPreview}
+        />
+      </ul>,
+    );
+
+    const trigger = screen.getByRole("button", { name: "Ver lo que verá el agente" });
+    await user.click(trigger);
+    expect(onOpenPreview).toHaveBeenCalledWith(item.id);
+  });
+
+  it("listo sin truncar, sin onOpenPreview: no agrega el botón «Ver lo que verá el agente»", () => {
+    const item = makeItem({ status: "ready", truncated: false, tokenCount: 100 });
+    render(
+      <ul>
+        <AttachmentChip item={item} role="tecnico" labels={LABELS} onRemove={vi.fn()} onConfirmTestData={vi.fn()} />
+      </ul>,
+    );
+
+    expect(screen.queryByRole("button", { name: "Ver lo que verá el agente" })).toBeNull();
+  });
+
+  it("listo truncado: no duplica el disparador -- el texto de estado ya lo ofrece, sin botón «Ver lo que verá el agente» aparte", () => {
+    const item = makeItem({ status: "ready", truncated: true, includedPercent: 62 });
+    render(
+      <ul>
+        <AttachmentChip
+          item={item}
+          role="admin"
+          labels={LABELS}
+          onRemove={vi.fn()}
+          onConfirmTestData={vi.fn()}
+          onOpenPreview={vi.fn()}
+        />
+      </ul>,
+    );
+
+    expect(screen.getByRole("button", { name: /incluye el 62%/ })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Ver lo que verá el agente" })).toBeNull();
   });
 });
 

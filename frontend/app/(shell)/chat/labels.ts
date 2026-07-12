@@ -80,6 +80,7 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
       },
       attachmentPiiConfirmation: t("attachments.warnings.piiConfirmation"),
       attachmentPiiCancel: t("attachments.warnings.piiCancel"),
+      attachmentPreviewAction: t("attachments.preview.action"),
     },
     loading: t("session.loading"),
     loadError: t("session.loadError"),
@@ -239,6 +240,23 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
           other: t("attachments.piiEntityLabels.nitOther"),
         },
       },
+    },
+    // Tarea 8.3: panel "Ver lo que verá el agente" (`AttachmentPreviewPanel`).
+    // `metricTechAdmin`/`metricFunctional` reutilizan LAS MISMAS plantillas
+    // que `composer.attachmentStates.readyTechAdmin`/`readyFunctional` de
+    // arriba (mismo texto literal del ANEXO §10) -- ver el docstring de
+    // `AttachmentPreviewPanelLabels` para el porqué. `truncatedNotice`
+    // reutiliza `attachments.errors.truncatedPreview` (portado en la tarea
+    // 8.4, sin consumidor hasta esta tarea).
+    attachmentPreview: {
+      title: t("attachments.preview.title"),
+      closeLabel: t("attachments.preview.closeLabel"),
+      footer: t("attachments.preview.footer"),
+      loading: t("attachments.preview.loading"),
+      error: t("attachments.preview.error"),
+      metricTechAdmin: t("attachments.states.readyTechAdmin", { tokens: "{tokens}" }),
+      metricFunctional: t("attachments.states.readyFunctional", { percent: "{percent}" }),
+      truncatedNotice: t("attachments.errors.truncatedPreview", { percent: "{percent}" }),
     },
   };
 }

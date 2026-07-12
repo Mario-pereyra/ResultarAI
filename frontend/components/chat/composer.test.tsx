@@ -42,6 +42,7 @@ const LABELS = {
   },
   attachmentPiiConfirmation: "Confirmo que son datos de prueba",
   attachmentPiiCancel: "Cancelar",
+  attachmentPreviewAction: "Ver lo que verá el agente",
 };
 
 function makeAttachment(overrides: Partial<AttachmentItem> = {}): AttachmentItem {
@@ -308,6 +309,43 @@ describe("Composer — chip de estado (d14-attachments, tarea 8.2)", () => {
     expect(
       screen.getByText("Listo · incluye el 62% del archivo — tocá para ver qué verá el agente"),
     ).toBeTruthy();
+  });
+
+  it('escenario "Vista previa de un adjunto truncado" (integración vía Composer, tarea 8.3): el texto truncado dispara onOpenAttachmentPreview(id)', async () => {
+    const user = userEvent.setup();
+    const onOpenAttachmentPreview = vi.fn();
+    const truncated = makeAttachment({
+      status: "ready",
+      sendable: true,
+      truncated: true,
+      includedPercent: 62,
+    });
+    render(
+      <ControlledComposer
+        attachments={[truncated]}
+        role="admin"
+        onOpenAttachmentPreview={onOpenAttachmentPreview}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /incluye el 62%/ }));
+    expect(onOpenAttachmentPreview).toHaveBeenCalledWith(truncated.id);
+  });
+
+  it("listo sin truncar (integración vía Composer, tarea 8.3): el botón propio «Ver lo que verá el agente» dispara onOpenAttachmentPreview(id)", async () => {
+    const user = userEvent.setup();
+    const onOpenAttachmentPreview = vi.fn();
+    const ready = makeAttachment({ status: "ready", sendable: true, tokenCount: 8200 });
+    render(
+      <ControlledComposer
+        attachments={[ready]}
+        role="tecnico"
+        onOpenAttachmentPreview={onOpenAttachmentPreview}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Ver lo que verá el agente" }));
+    expect(onOpenAttachmentPreview).toHaveBeenCalledWith(ready.id);
   });
 
   it("advertencia N2: checkbox auditado visible, checkearlo llama a onConfirmAttachmentTestData(id)", async () => {

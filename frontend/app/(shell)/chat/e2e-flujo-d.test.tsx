@@ -110,6 +110,7 @@ const LABELS: ChatContentLabels = {
     },
     attachmentPiiConfirmation: "Confirmo que son datos de prueba",
     attachmentPiiCancel: "Cancelar",
+    attachmentPreviewAction: "Ver lo que verá el agente",
   },
   loading: "Cargando conversación…",
   loadError: "No pudimos cargar esta conversación.",
@@ -227,6 +228,17 @@ const LABELS: ChatContentLabels = {
       BO_CI: { one: "número de carnet", other: "números de carnet" },
       BO_NIT: { one: "NIT", other: "NIT" },
     },
+  },
+  attachmentPreview: {
+    title: "Esto es exactamente lo que recibirá el agente",
+    closeLabel: "Cerrar vista previa",
+    footer: "Contenido extraído automáticamente — puede diferir del documento original.",
+    loading: "Cargando vista previa…",
+    error: "No pudimos cargar la vista previa de este adjunto. Probá de nuevo.",
+    metricTechAdmin: "Listo · {tokens} tokens",
+    metricFunctional: "Listo · usa {percent}% del espacio del mensaje",
+    truncatedNotice:
+      "Por el límite de espacio, el agente verá el {percent}% del archivo (se priorizaron las secciones relacionadas con tu consulta). Las partes omitidas están marcadas — podés pedirlas explícitamente en el chat.",
   },
 };
 

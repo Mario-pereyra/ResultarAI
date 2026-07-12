@@ -27,9 +27,16 @@ import type { Role } from "@/lib/session-context";
  *   espacio del mensaje, Técnico/Admin ve tokens (`formatTokenCountBO`,
  *   `lib/format-bo.ts`). Si además está truncado, un tercer texto
  *   (`readyTruncated`, universal para cualquier rol) invita a abrir "Ver lo
- *   que verá el agente" -- la tarea 8.3 implementa ESE panel; acá solo se
- *   deja el punto de integración (`onOpenPreview`, opcional): sin ese
- *   callback el texto queda como texto plano, nunca un botón roto.
+ *   que verá el agente" -- ESE texto se vuelve el disparador (tarea 8.3,
+ *   `AttachmentPreviewPanel`, `onOpenPreview`, opcional: sin ese callback el
+ *   texto queda como texto plano, nunca un botón roto). El Requirement
+ *   "Vista previa 'Ver lo que verá el agente'" pide la acción en CUALQUIER
+ *   chip `listo` (no solo el truncado, ANEXO §3.4: "el chip del adjunto en
+ *   estado 'listo' muestra... un enlace 'Ver lo que verá el agente'") --
+ *   para el resto de los `listo` (sin truncar, cuyo texto de estado NO
+ *   invita a nada por sí mismo) se agrega un botón propio con
+ *   `labels.previewAction` (ver más abajo), evitando duplicar el disparador
+ *   cuando el texto de estado truncado ya lo ofrece.
  * - `warning`: N2 (PII sin confirmar) o heurística de instrucción embebida
  *   (`item.message` ya trae la causa exacta, resuelta por el adapter). Con
  *   PII pendiente (`requiresTestDataConfirmation`) se agrega el checkbox
@@ -82,6 +89,13 @@ export interface AttachmentChipLabels {
    * mismo destino que el × general (`onRemove`), redacción específica del
    * flujo de advertencia (ANEXO §10/mockup sección D). */
   piiCancel: string;
+  /** "Ver lo que verá el agente" (`Chat.attachments.preview.action`, tarea
+   * 8.3) -- acción SIEMPRE visible en cualquier chip `listo` sin truncar (ver
+   * el docstring de `AttachmentChip` más abajo: "listo" truncado ya invita a
+   * abrir el panel desde su propio texto de estado, este botón cubre el
+   * resto de los casos "listo" que el Requirement "Vista previa 'Ver lo que
+   * verá el agente'" también exige). */
+  previewAction: string;
 }
 
 export interface AttachmentChipProps {
@@ -168,6 +182,13 @@ export function AttachmentChip({
   const isUrgent = URGENT_STATUSES.has(item.status);
   const showPiiConfirmation = item.status === "warning" && item.requiresTestDataConfirmation;
   const isTruncatedReady = item.status === "ready" && Boolean(item.truncated);
+  // Requirement "Vista previa 'Ver lo que verá el agente'" (ANEXO §3.4): la
+  // acción va en CUALQUIER chip listo. El truncado ya la ofrece desde su
+  // propio texto de estado (`isTruncatedReady` arriba); acá se cubre el
+  // resto ("listo" sin truncar, cuyo texto -- "Listo · N tokens"/"Listo · usa
+  // N%..." -- no invita a nada por sí mismo) con un botón propio, sin
+  // duplicar el disparador cuando el de arriba ya existe.
+  const showPreviewAction = item.status === "ready" && !isTruncatedReady && Boolean(onOpenPreview);
 
   return (
     <li
@@ -191,6 +212,15 @@ export function AttachmentChip({
             text
           )}
         </span>
+        {showPreviewAction && onOpenPreview ? (
+          <button
+            type="button"
+            className="attachment-chip__preview-action"
+            onClick={() => onOpenPreview(item.id)}
+          >
+            {labels.previewAction}
+          </button>
+        ) : null}
         {item.message ? <p className="attachment-chip__message">{item.message}</p> : null}
         {showPiiConfirmation ? (
           <div className="attachment-chip__confirm">

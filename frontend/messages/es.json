@@ -573,7 +573,10 @@
       "preview": {
         "action": "Ver lo que verá el agente",
         "title": "Esto es exactamente lo que recibirá el agente",
-        "footer": "Contenido extraído automáticamente — puede diferir del documento original."
+        "footer": "Contenido extraído automáticamente — puede diferir del documento original.",
+        "closeLabel": "Cerrar vista previa",
+        "loading": "Cargando vista previa…",
+        "error": "No pudimos cargar la vista previa de este adjunto. Probá de nuevo."
       }
     }
   },

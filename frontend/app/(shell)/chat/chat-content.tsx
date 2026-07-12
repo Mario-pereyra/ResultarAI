@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { useRouter } from "next/navigation";
 import type { ActivityIndicatorLabels } from "@/components/chat/activity-indicator";
 import type { AlternateModelTagLabels } from "@/components/chat/alternate-model-tag";
+import {
+  AttachmentPreviewPanel,
+  type AttachmentPreviewPanelLabels,
+} from "@/components/chat/attachment-preview-panel";
 import { ChatHeader, type ChatHeaderLabels } from "@/components/chat/chat-header";
 import { Composer, type ComposerHandle, type ComposerLabels } from "@/components/chat/composer";
 import { EscalationCard, type EscalationCardLabels } from "@/components/chat/escalation-card";
@@ -112,6 +116,9 @@ export interface ChatContentLabels {
    * tipados de la subida/escaneo (d14-attachments, tarea 8.1) -- ver
    * `lib/chat/attachment-adapter.ts`. */
   attachments: AttachmentAdapterLabels;
+  /** Panel "Ver lo que verá el agente" (tarea 8.3) -- ver
+   * `AttachmentPreviewPanel`. */
+  attachmentPreview: AttachmentPreviewPanelLabels;
 }
 
 export interface ChatContentProps {
@@ -692,6 +699,17 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
   // sesión ya existente).
   const attachmentAdapter = useAttachmentAdapter({ ensureSession, labels: labels.attachments });
 
+  // Tarea 8.3: panel "Ver lo que verá el agente" -- guarda el id LOCAL (el
+  // mismo que entrega `AttachmentChip.onOpenPreview`, no el `attachmentId`
+  // real del backend) para poder resolver el `AttachmentItem` completo desde
+  // `attachmentAdapter.attachments` en cada render (así el panel se cierra
+  // solo si el adjunto se quita mientras está abierto: `previewItem` da
+  // `null` y `AttachmentPreviewPanel` interpreta eso como "cerrado", ver su
+  // docstring). `null` es el estado inicial (panel cerrado).
+  const [previewAttachmentLocalId, setPreviewAttachmentLocalId] = useState<string | null>(null);
+  const previewAttachmentItem =
+    attachmentAdapter.attachments.find((item) => item.id === previewAttachmentLocalId) ?? null;
+
   async function handleSubmit(text: string) {
     setSendError(false);
     const id = await ensureSession();
@@ -1118,13 +1136,21 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         onRemoveAttachment={attachmentAdapter.remove}
         // Tarea 8.2: checkbox "Confirmo que son datos de prueba" del chip en
         // `warning` -- ver el docstring de `confirmTestData` en
-        // `lib/chat/attachment-adapter.ts`. `onOpenAttachmentPreview` queda
-        // sin pasar a propósito: el panel "Ver lo que verá el agente" es la
-        // tarea 8.3, todavía no implementada.
+        // `lib/chat/attachment-adapter.ts`.
         onConfirmAttachmentTestData={attachmentAdapter.confirmTestData}
+        // Tarea 8.3: abre el panel "Ver lo que verá el agente" -- guarda el
+        // id LOCAL, `previewAttachmentItem` lo resuelve a un `AttachmentItem`
+        // completo más arriba.
+        onOpenAttachmentPreview={setPreviewAttachmentLocalId}
         attachDisabled={
           attachmentAdapter.attachments.length >= DEFAULT_MAX_ATTACHMENTS_PER_MESSAGE
         }
+      />
+      <AttachmentPreviewPanel
+        item={previewAttachmentItem}
+        onClose={() => setPreviewAttachmentLocalId(null)}
+        role={user.role}
+        labels={labels.attachmentPreview}
       />
     </div>
   );
