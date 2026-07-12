@@ -1,11 +1,13 @@
 /* Portado de design/mockups/tokens.css §5.5 "Formularios" (líneas 438-495):
    .field, .field-label, .field-hint, .field-error, .input/.select/.textarea
    y sus estados/modificadores. `.checkbox`/`.check-row` (líneas 497-514,
-   mismo §5.5 en la fuente) quedan FUERA de este archivo a propósito: no
-   forman parte del inventario de componentes de esta tarea (4.2 —
-   Field/Input/Textarea/Select) ni de ningún otro archivo de d10 sección 4;
-   se portan cuando algún change futuro necesite un componente Checkbox
-   propio.
+   mismo §5.5 en la fuente) se portaron recién en d14-attachments, tarea 8.2:
+   el chip de adjunto con advertencia N2 (`components/chat/attachment-chip.tsx`)
+   es el primer consumidor real del checkbox "Confirmo que son datos de
+   prueba" -- hasta entonces no existía ningún componente Checkbox propio
+   que los necesitara (ver `app/(shell)/administracion/admin-content.tsx`,
+   que ya referenciaba estas clases sin que existiera su CSS -- gap
+   preexistente que este portado también resuelve).
 
    DESVIACIÓN DOCUMENTADA respecto al portado verbatim (regla de la
    auditoría de colores, tarea 4.9): la regla `.select` original embebe el
@@ -93,4 +95,37 @@
   transform: translateY(-50%);
   color: var(--ink-faint);
   pointer-events: none;
+}
+
+/* .checkbox/.check-row: portado verbatim de design/mockups/tokens.css §5.5
+   líneas 497-514 (ver nota de cabecera) -- sin desvíos, ningún color
+   embebido en un data-URI acá. */
+.checkbox {
+  appearance: auto;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent-fill);
+  cursor: pointer;
+}
+html[data-theme="light"][data-brand="totvs"] .checkbox {
+  accent-color: var(--accent);
+}
+.checkbox:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  font-size: var(--fs-body);
+  cursor: pointer;
+}
+.check-row .checkbox {
+  margin-top: 3px;
 }

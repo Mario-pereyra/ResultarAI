@@ -62,9 +62,24 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
       attachmentsListLabel: t("composer.attachmentsListLabel"),
       // Plantilla ICU-lite (mismo patrón que `versionAriaLabel`/
       // `reprocessWarningOne` de más abajo): `{file}` es el nombre del
-      // archivo, un dato de runtime -- `composer.tsx::interpolateFileName`
-      // hace el `.replace` con el valor real.
+      // archivo, un dato de runtime -- `AttachmentChip` hace el `.split`/
+      // `.join` con el valor real.
       removeAttachment: t("composer.removeAttachment", { file: "{file}" }),
+      // Tarea 8.2 (chip de estado): plantillas ICU-lite con `{percent}`/
+      // `{tokens}` sin resolver -- `AttachmentChip` interpola el valor de
+      // runtime (`tokenCount`/`includedPercent`, rol) contra ESTE texto.
+      attachmentStates: {
+        uploading: t("attachments.states.uploading", { percent: "{percent}" }),
+        processing: t("attachments.states.processing"),
+        readyTechAdmin: t("attachments.states.readyTechAdmin", { tokens: "{tokens}" }),
+        readyFunctional: t("attachments.states.readyFunctional", { percent: "{percent}" }),
+        readyTruncated: t("attachments.states.readyTruncated", { percent: "{percent}" }),
+        warning: t("attachments.states.warning"),
+        blocked: t("attachments.states.blocked"),
+        error: t("attachments.states.error"),
+      },
+      attachmentPiiConfirmation: t("attachments.warnings.piiConfirmation"),
+      attachmentPiiCancel: t("attachments.warnings.piiCancel"),
     },
     loading: t("session.loading"),
     loadError: t("session.loadError"),
@@ -191,6 +206,38 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
         text: t("attachments.fileTypes.text"),
         code: t("attachments.fileTypes.code"),
         log: t("attachments.fileTypes.log"),
+      },
+      // Tarea 8.2: etiquetas amigables por `entity_type` de Presidio para el
+      // `{detail}` de `errors.piiDetected` -- ver el docstring de
+      // `piiEntityLabels` en `lib/chat/attachment-adapter.ts`. Los `BO_PHONE`/
+      // `PHONE_NUMBER` comparten redacción (ambos son "número de teléfono"
+      // para el usuario, la distinción ES/BO-vs-genérico es solo del
+      // reconocedor, no de la UI).
+      piiEntityLabels: {
+        EMAIL_ADDRESS: {
+          one: t("attachments.piiEntityLabels.emailOne"),
+          other: t("attachments.piiEntityLabels.emailOther"),
+        },
+        PHONE_NUMBER: {
+          one: t("attachments.piiEntityLabels.phoneOne"),
+          other: t("attachments.piiEntityLabels.phoneOther"),
+        },
+        BO_PHONE: {
+          one: t("attachments.piiEntityLabels.phoneOne"),
+          other: t("attachments.piiEntityLabels.phoneOther"),
+        },
+        PERSON: {
+          one: t("attachments.piiEntityLabels.personOne"),
+          other: t("attachments.piiEntityLabels.personOther"),
+        },
+        BO_CI: {
+          one: t("attachments.piiEntityLabels.ciOne"),
+          other: t("attachments.piiEntityLabels.ciOther"),
+        },
+        BO_NIT: {
+          one: t("attachments.piiEntityLabels.nitOne"),
+          other: t("attachments.piiEntityLabels.nitOther"),
+        },
       },
     },
   };

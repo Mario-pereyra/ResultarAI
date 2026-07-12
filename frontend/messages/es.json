@@ -558,6 +558,18 @@
         "piiCancel": "Cancelar",
         "quotaRequestRelease": "Solicitar liberación"
       },
+      "piiEntityLabels": {
+        "emailOne": "email",
+        "emailOther": "emails",
+        "phoneOne": "número de teléfono",
+        "phoneOther": "números de teléfono",
+        "personOne": "nombre de persona",
+        "personOther": "nombres de persona",
+        "ciOne": "número de carnet",
+        "ciOther": "números de carnet",
+        "nitOne": "NIT",
+        "nitOther": "NIT"
+      },
       "preview": {
         "action": "Ver lo que verá el agente",
         "title": "Esto es exactamente lo que recibirá el agente",

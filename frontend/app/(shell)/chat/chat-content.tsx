@@ -1113,8 +1113,15 @@ export function ChatContent({ initialSessionId, labels }: ChatContentProps) {
         // chip visual por estado (8.2) y el panel de vista previa (8.3)
         // quedan para esas tareas, ver el docstring de `ComposerProps`.
         attachments={attachmentAdapter.attachments}
+        role={user.role}
         onAttachFiles={(files) => files.forEach((file) => void attachmentAdapter.add(file))}
         onRemoveAttachment={attachmentAdapter.remove}
+        // Tarea 8.2: checkbox "Confirmo que son datos de prueba" del chip en
+        // `warning` -- ver el docstring de `confirmTestData` en
+        // `lib/chat/attachment-adapter.ts`. `onOpenAttachmentPreview` queda
+        // sin pasar a propósito: el panel "Ver lo que verá el agente" es la
+        // tarea 8.3, todavía no implementada.
+        onConfirmAttachmentTestData={attachmentAdapter.confirmTestData}
         attachDisabled={
           attachmentAdapter.attachments.length >= DEFAULT_MAX_ATTACHMENTS_PER_MESSAGE
         }

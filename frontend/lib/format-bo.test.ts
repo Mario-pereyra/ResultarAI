@@ -7,6 +7,7 @@ import {
   formatLatencySecondsBO,
   formatLlmCostBO,
   formatPercentBO,
+  formatTokenCountBO,
   formatTokensBO,
 } from "./format-bo";
 
@@ -55,5 +56,10 @@ describe("format-bo — formatos es-BO de design/DESIGN-SYSTEM.md §9.8 (tarea 6
 
   it("latencia de turno: segundos con 1 decimal, coma decimal (vista 06)", () => {
     expect(formatLatencySecondsBO(3200)).toBe("3,2 s");
+  });
+
+  it('chip de adjunto "listo" Técnico/Admin (tarea 8.2, d14-attachments): entero agrupado sin abreviar', () => {
+    expect(formatTokenCountBO(8200)).toBe("8.200");
+    expect(formatTokenCountBO(820)).toBe("820");
   });
 });

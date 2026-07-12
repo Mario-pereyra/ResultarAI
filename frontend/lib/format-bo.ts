@@ -105,6 +105,21 @@ export function formatTokensBO(count: number): string {
 }
 
 /**
+ * Entero agrupado, SIN abreviar ni unidad (ej. `8.200`) — chip de adjunto
+ * "listo" para Técnico/Admin (d14-attachments, tarea 8.2,
+ * `Chat.attachments.states.readyTechAdmin`: `"Listo · {tokens} tokens"`).
+ * A diferencia de `formatTokensBO` (compacto + "tok", fila "Tokens" del
+ * taxímetro de turno, DESIGN-SYSTEM.md §9.8), el texto §10 del chip escribe
+ * la palabra completa "tokens" como sufijo literal de la plantilla — un
+ * número también abreviado ("8,2k tokens") leería inconsistente mezclando
+ * abreviación con unidad completa, así que acá se usa el separador de miles
+ * de es-BO sin abreviar (ANEXO-ATTACHMENTS.md §10: "Listo · 8.200 tokens").
+ */
+export function formatTokenCountBO(count: number): string {
+  return new Intl.NumberFormat(INSTANCE_LOCALE).format(count);
+}
+
+/**
  * Segundos con 1 decimal, coma decimal — latencia de turno de la vista 06
  * (ej. `3,2 s`, a partir de `telemetry.latency_ms` en milisegundos).
  */

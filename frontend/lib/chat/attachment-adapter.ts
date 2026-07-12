@@ -61,9 +61,21 @@ import { csrfHeaders } from "@/lib/csrf";
  * resuelto. Lo que este módulo NO resuelve a texto (queda para 8.2/8.3, fuera
  * de esta tarea): la redacción de los estados NO terminales que dependen de
  * datos en vivo/rol (`Subiendo… {percent}%`, `Listo · {tokens} tokens` vs.
- * `Listo · usa {percent}%…`) -- el chip (8.2) es quien decide esa
- * presentación con `tokenCount`/`includedPercent`/`truncated`/rol, que este
- * hook expone tal cual vienen de `GET /api/attachments/{id}`.
+ * `Listo · usa {percent}%…`) -- el chip (8.2, `components/chat/attachment-chip.tsx`)
+ * es quien decide esa presentación con `tokenCount`/`includedPercent`/
+ * `truncated`/rol, que este hook expone tal cual vienen de
+ * `GET /api/attachments/{id}`.
+ *
+ * ## Agregado de la tarea 8.2 (chip de estado)
+ *
+ * `confirmTestData()` es la ÚNICA pieza de red nueva de 8.2 en este módulo
+ * (todo lo demás -- estados/textos/rol -- es puramente presentacional en el
+ * chip, ver su docstring): completa el ciclo N2 que 8.1 dejó expuesto solo
+ * como lectura (`requiresTestDataConfirmation`) sin forma de resolverlo.
+ * También se resuelven acá los códigos crudos de `entity_type` de Presidio
+ * del `{detail}` de `errors.piiDetected` a etiquetas amigables
+ * (`piiEntityLabels`, ver `summarizePii`) -- mejora dentro de alcance de
+ * 8.2 documentada en `tasks.md`.
  */
 
 // ---------------------------------------------------------------------------
@@ -172,6 +184,11 @@ export interface AttachmentItem {
   /** Texto §10 YA resuelto para `error`/`blocked`/`warning` -- `null` en
    * `uploading`/`processing`/`ready` limpio (nada que decir todavía). */
   message: string | null;
+  /** `true` mientras `confirmTestData()` tiene un `POST
+   * /api/attachments/{id}/confirm-test-data` en vuelo (tarea 8.2) -- el chip
+   * lo usa para deshabilitar el checkbox "Confirmo que son datos de prueba"
+   * y evitar un doble envío mientras se audita la confirmación. */
+  confirming: boolean;
 }
 
 /** Textos §10 que este módulo necesita para mapear errores tipados --
@@ -210,9 +227,25 @@ export interface AttachmentFileTypeLabels {
   log: string;
 }
 
+/** Etiqueta amigable singular/plural de un `entity_type` de Presidio (mismo
+ * patrón `...One`/`...Other` que `Chat.branch.reprocessWarningOne/Other` --
+ * ver `labels.ts`, que arma este objeto desde `Chat.attachments.piiEntityLabels`). */
+export interface PiiEntityLabel {
+  one: string;
+  other: string;
+}
+
 export interface AttachmentAdapterLabels {
   errors: AttachmentAdapterErrorLabels;
   fileTypes: AttachmentFileTypeLabels;
+  /** Etiquetas amigables por `entity_type` (`EMAIL_ADDRESS`/`PHONE_NUMBER`/
+   * `PERSON`/`BO_CI`/`BO_NIT`/`BO_PHONE`, ver `_PII_ENTITIES` en
+   * `resultarai/app/attachments/data_scan.py`) para el `{detail}` de
+   * `errors.piiDetected` -- mejora dentro de alcance de la tarea 8.2: los
+   * códigos crudos de Presidio nunca llegan al usuario tal cual (ver
+   * `summarizePii` más abajo). Un `entity_type` sin entrada cae al código
+   * crudo (defensa en profundidad ante un reconocedor nuevo sin mapear). */
+  piiEntityLabels: Record<string, PiiEntityLabel>;
 }
 
 export const DEFAULT_MAX_ATTACHMENTS_PER_MESSAGE = 5;
@@ -251,6 +284,11 @@ export interface UseAttachmentAdapterResult {
    * solo junta los adjuntos que siguen en la lista; el archivo ya subido queda
    * huérfano en el borrador hasta que la retención (tarea 7.2) lo limpie. */
   remove: (id: string) => void;
+  /** Confirma la advertencia N2 de un adjunto (tarea 8.2) -- ver el
+   * docstring de `confirmTestData` más abajo para el detalle del contrato
+   * HTTP y por qué re-consulta `GET /api/attachments/{id}` en vez de aplicar
+   * directo la respuesta del POST. */
+  confirmTestData: (id: string) => Promise<void>;
   /** `send()` del adapter conceptual: los `attachment_id` `sendable` listos
    * para viajar en `attachment_ids` del turno (`SendMessageRequest`). */
   attachmentIdsForSend: () => string[];
@@ -341,12 +379,32 @@ function summarizeN3(findings: N3FindingPayload[]): string {
   return `"${first.redacted}" en la línea ${first.line}`;
 }
 
-/** `{detail}` de "N2 (PII)" -- agrega cantidad+tipo de cada hallazgo, ANEXO
- * §10 (`"2 emails, 1 número de carnet…"`). Los `entity_type` viajan tal cual
- * los produce el escáner (`data_scan.py`) -- una tabla de nombres amigables
- * por entidad es refinamiento de presentación para 8.2, no bloqueante acá. */
-function summarizePii(findings: PiiFindingPayload[]): string {
-  return findings.map((finding) => `${finding.count} ${finding.entity_type}`).join(", ");
+/** Singular/plural del `entity_type` de un hallazgo N2 -- cae al código
+ * crudo (`EMAIL_ADDRESS`, ...) si `piiEntityLabels` no lo cubre todavía. */
+function pluralizePiiEntity(
+  entityType: string,
+  count: number,
+  piiEntityLabels: Record<string, PiiEntityLabel>,
+): string {
+  const label = piiEntityLabels[entityType];
+  if (!label) return entityType;
+  return count === 1 ? label.one : label.other;
+}
+
+/** `{detail}` de "N2 (PII)" -- agrega cantidad+tipo AMIGABLE de cada
+ * hallazgo, ANEXO §10 (`"2 emails, 1 número de carnet…"`) -- tarea 8.2:
+ * los `entity_type` crudos que produce el escáner (`data_scan.py`) nunca
+ * llegan al usuario, se resuelven vía `piiEntityLabels` (ver su docstring). */
+function summarizePii(
+  findings: PiiFindingPayload[],
+  piiEntityLabels: Record<string, PiiEntityLabel>,
+): string {
+  return findings
+    .map(
+      (finding) =>
+        `${finding.count} ${pluralizePiiEntity(finding.entity_type, finding.count, piiEntityLabels)}`,
+    )
+    .join(", ");
 }
 
 function resolveBlockedMessage(
@@ -367,7 +425,9 @@ function resolveReadyWarningMessage(
 ): string | null {
   if (requiresConfirmation) {
     const findings = (scanSummary?.pii_findings as PiiFindingPayload[] | undefined) ?? [];
-    return interpolate(labels.errors.piiDetected, { detail: summarizePii(findings) });
+    return interpolate(labels.errors.piiDetected, {
+      detail: summarizePii(findings, labels.piiEntityLabels),
+    });
   }
   const injectionFlags = (scanSummary?.injection_flags as InjectionFlagPayload[] | undefined) ?? [];
   const first = injectionFlags[0];
@@ -557,6 +617,7 @@ export function useAttachmentAdapter(
             includedPercent: null,
             truncated: null,
             message: interpolate(labels.errors.tooManyAttachments, { limit: maxAttachments }),
+            confirming: false,
           },
         ]);
         return;
@@ -576,6 +637,7 @@ export function useAttachmentAdapter(
           includedPercent: null,
           truncated: null,
           message: null,
+          confirming: false,
         },
       ]);
 
@@ -645,6 +707,69 @@ export function useAttachmentAdapter(
     [clearTimer],
   );
 
+  /**
+   * Confirma la advertencia N2 de `id` (`AttachmentItem.id`, el LOCAL --
+   * mismo argumento que `remove`) -- tarea 8.2: el chip lo llama desde el
+   * checkbox "Confirmo que son datos de prueba" (ANEXO §4.4/§10).
+   *
+   * POSTea `/api/attachments/{attachmentId}/confirm-test-data`
+   * (`confirm_test_data_endpoint`, audita la confirmación server-side y baja
+   * el bloqueo N2) y luego vuelve a pedir `GET /api/attachments/{id}` en vez
+   * de aplicar directo la respuesta del POST: `TestDataConfirmationResponse`
+   * no trae `scan_summary`, así que no alcanza para saber si el adjunto
+   * sigue en `warning` por OTRO motivo (heurística de instrucción embebida,
+   * ver `deriveChipStatus`) -- reutiliza el MISMO mapeo que el polling
+   * (`applyStatusPayload`) para no duplicar esa lógica.
+   *
+   * Un fallo (409 "sin confirmación pendiente" por doble click/doble
+   * pestaña, o de red) deja la advertencia N2 intacta -- nunca silencioso,
+   * el usuario sigue viendo la causa por la que no puede enviar -- y solo
+   * libera `confirming` para que el checkbox admita reintentar.
+   */
+  const confirmTestData = useCallback(
+    async (id: string) => {
+      const item = attachmentsRef.current.find((entry) => entry.id === id);
+      if (!item || !item.attachmentId) return;
+      const attachmentId = item.attachmentId;
+
+      updateItem(id, { confirming: true });
+
+      let response: Response;
+      try {
+        response = await fetch(`/api/attachments/${attachmentId}/confirm-test-data`, {
+          method: "POST",
+          headers: { ...csrfHeaders() },
+        });
+      } catch {
+        if (!removedRef.current.has(id)) updateItem(id, { confirming: false });
+        return;
+      }
+      if (removedRef.current.has(id)) return;
+      if (!response.ok) {
+        updateItem(id, { confirming: false });
+        return;
+      }
+
+      let statusResponse: Response;
+      try {
+        statusResponse = await fetch(`/api/attachments/${attachmentId}`);
+      } catch {
+        if (!removedRef.current.has(id)) updateItem(id, { confirming: false });
+        return;
+      }
+      if (removedRef.current.has(id)) return;
+      if (!statusResponse.ok) {
+        updateItem(id, { confirming: false });
+        return;
+      }
+      const payload = (await statusResponse.json()) as AttachmentStatusPayload;
+      if (removedRef.current.has(id)) return;
+      applyStatusPayload(id, payload);
+      updateItem(id, { confirming: false });
+    },
+    [updateItem, applyStatusPayload],
+  );
+
   const attachmentIdsForSend = useCallback((): string[] => {
     return attachmentsRef.current
       .filter((item): item is AttachmentItem & { attachmentId: string } =>
@@ -661,5 +786,5 @@ export function useAttachmentAdapter(
     setAttachments([]);
   }, [clearTimer]);
 
-  return { attachments, add, remove, attachmentIdsForSend, clear };
+  return { attachments, add, remove, confirmTestData, attachmentIdsForSend, clear };
 }

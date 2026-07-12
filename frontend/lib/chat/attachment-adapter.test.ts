@@ -58,6 +58,16 @@ const LABELS: AttachmentAdapterLabels = {
     code: "código",
     log: "logs",
   },
+  // Valores reales de `Chat.attachments.piiEntityLabels` (tarea 8.2): etiquetas
+  // amigables por `entity_type` de Presidio (`_PII_ENTITIES`, `data_scan.py`).
+  piiEntityLabels: {
+    EMAIL_ADDRESS: { one: "email", other: "emails" },
+    PHONE_NUMBER: { one: "número de teléfono", other: "números de teléfono" },
+    BO_PHONE: { one: "número de teléfono", other: "números de teléfono" },
+    PERSON: { one: "nombre de persona", other: "nombres de persona" },
+    BO_CI: { one: "número de carnet", other: "números de carnet" },
+    BO_NIT: { one: "NIT", other: "NIT" },
+  },
 };
 
 function jsonResponse(status: number, body: unknown): Response {
@@ -373,9 +383,242 @@ describe("useAttachmentAdapter — estados terminales con advertencia (N2, ANEXO
     await waitFor(() => expect(result.current.attachments[0].status).toBe("warning"));
 
     expect(result.current.attachments[0].sendable).toBe(false);
+    // Tarea 8.2: el `entity_type` crudo de Presidio (`EMAIL_ADDRESS`) se
+    // resuelve a su etiqueta amigable en plural (`labels.piiEntityLabels`,
+    // ver el docstring de `summarizePii`) -- nunca el código crudo.
     expect(result.current.attachments[0].message).toBe(
-      "Detectamos posibles datos personales en este archivo (2 EMAIL_ADDRESS). Recordá la política: solo datos de prueba hacia la IA.",
+      "Detectamos posibles datos personales en este archivo (2 emails). Recordá la política: solo datos de prueba hacia la IA.",
     );
     expect(result.current.attachmentIdsForSend()).toEqual([]);
+  });
+
+  it("singular/plural por hallazgo + múltiples hallazgos unidos con coma (ANEXO §10: «2 emails, 1 número de carnet»)", async () => {
+    const ensureSession = vi.fn().mockResolvedValue("session-1");
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = urlOf(input);
+      if (init?.method === "POST" && url === "/api/attachments") return jsonResponse(201, createdPayload());
+      if (url === "/api/attachments/att-1") {
+        return jsonResponse(
+          200,
+          statusPayload({
+            status: "ready",
+            sendable: false,
+            requires_test_data_confirmation: true,
+            scan_summary: {
+              pii_findings: [
+                { entity_type: "EMAIL_ADDRESS", count: 2, lines: [14] },
+                { entity_type: "BO_CI", count: 1, lines: [22] },
+              ],
+            },
+          }),
+        );
+      }
+      throw new Error(`fetch inesperado: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() =>
+      useAttachmentAdapter({ ensureSession, labels: LABELS, pollIntervalMs: 0 }),
+    );
+
+    await act(async () => {
+      await result.current.add(makeFile("planilla.xlsx"));
+    });
+    await waitFor(() => expect(result.current.attachments[0].status).toBe("warning"));
+
+    expect(result.current.attachments[0].message).toBe(
+      "Detectamos posibles datos personales en este archivo (2 emails, 1 número de carnet). Recordá la política: solo datos de prueba hacia la IA.",
+    );
+  });
+
+  it("entity_type sin mapear cae al código crudo (defensa en profundidad ante un reconocedor nuevo)", async () => {
+    const ensureSession = vi.fn().mockResolvedValue("session-1");
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = urlOf(input);
+      if (init?.method === "POST" && url === "/api/attachments") return jsonResponse(201, createdPayload());
+      if (url === "/api/attachments/att-1") {
+        return jsonResponse(
+          200,
+          statusPayload({
+            status: "ready",
+            sendable: false,
+            requires_test_data_confirmation: true,
+            scan_summary: {
+              pii_findings: [{ entity_type: "CREDIT_CARD", count: 1, lines: [3] }],
+            },
+          }),
+        );
+      }
+      throw new Error(`fetch inesperado: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() =>
+      useAttachmentAdapter({ ensureSession, labels: LABELS, pollIntervalMs: 0 }),
+    );
+
+    await act(async () => {
+      await result.current.add(makeFile("planilla.xlsx"));
+    });
+    await waitFor(() => expect(result.current.attachments[0].status).toBe("warning"));
+
+    expect(result.current.attachments[0].message).toContain("1 CREDIT_CARD");
+  });
+});
+
+describe("useAttachmentAdapter — confirmTestData() (N2, tarea 8.2)", () => {
+  it("POST confirm-test-data + re-fetch de estado: pasa a ready sendable, sin advertencia", async () => {
+    const ensureSession = vi.fn().mockResolvedValue("session-1");
+    let statusCalls = 0;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = urlOf(input);
+      if (init?.method === "POST" && url === "/api/attachments") return jsonResponse(201, createdPayload());
+      if (init?.method === "POST" && url === "/api/attachments/att-1/confirm-test-data") {
+        return jsonResponse(200, {
+          id: "att-1",
+          status: "ready",
+          requires_test_data_confirmation: false,
+          sendable: true,
+        });
+      }
+      if (url === "/api/attachments/att-1") {
+        statusCalls += 1;
+        if (statusCalls === 1) {
+          return jsonResponse(
+            200,
+            statusPayload({
+              status: "ready",
+              sendable: false,
+              requires_test_data_confirmation: true,
+              scan_summary: { pii_findings: [{ entity_type: "EMAIL_ADDRESS", count: 1, lines: [5] }] },
+            }),
+          );
+        }
+        // Re-fetch tras confirmar: ya sin PII pendiente ni heurística de
+        // inyección -- `deriveChipStatus` lo resuelve a `ready` limpio.
+        return jsonResponse(200, statusPayload({ status: "ready", sendable: true }));
+      }
+      throw new Error(`fetch inesperado: ${init?.method ?? "GET"} ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() =>
+      useAttachmentAdapter({ ensureSession, labels: LABELS, pollIntervalMs: 0 }),
+    );
+
+    await act(async () => {
+      await result.current.add(makeFile("planilla.xlsx"));
+    });
+    await waitFor(() => expect(result.current.attachments[0].status).toBe("warning"));
+    expect(result.current.attachments[0].sendable).toBe(false);
+
+    const localId = result.current.attachments[0].id;
+    await act(async () => {
+      await result.current.confirmTestData(localId);
+    });
+
+    expect(result.current.attachments[0].status).toBe("ready");
+    expect(result.current.attachments[0].sendable).toBe(true);
+    expect(result.current.attachments[0].message).toBeNull();
+    expect(result.current.attachments[0].confirming).toBe(false);
+    expect(result.current.attachmentIdsForSend()).toEqual(["att-1"]);
+  });
+
+  it("fallo del POST (409 sin confirmación pendiente): deja la advertencia intacta, nunca silencioso", async () => {
+    const ensureSession = vi.fn().mockResolvedValue("session-1");
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = urlOf(input);
+      if (init?.method === "POST" && url === "/api/attachments") return jsonResponse(201, createdPayload());
+      if (init?.method === "POST" && url === "/api/attachments/att-1/confirm-test-data") {
+        return jsonResponse(409, { detail: { error_code: "no_pending_confirmation", params: {} } });
+      }
+      if (url === "/api/attachments/att-1") {
+        return jsonResponse(
+          200,
+          statusPayload({
+            status: "ready",
+            sendable: false,
+            requires_test_data_confirmation: true,
+            scan_summary: { pii_findings: [{ entity_type: "EMAIL_ADDRESS", count: 1, lines: [5] }] },
+          }),
+        );
+      }
+      throw new Error(`fetch inesperado: ${init?.method ?? "GET"} ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() =>
+      useAttachmentAdapter({ ensureSession, labels: LABELS, pollIntervalMs: 0 }),
+    );
+
+    await act(async () => {
+      await result.current.add(makeFile("planilla.xlsx"));
+    });
+    await waitFor(() => expect(result.current.attachments[0].status).toBe("warning"));
+
+    const localId = result.current.attachments[0].id;
+    await act(async () => {
+      await result.current.confirmTestData(localId);
+    });
+
+    expect(result.current.attachments[0].status).toBe("warning");
+    expect(result.current.attachments[0].sendable).toBe(false);
+    expect(result.current.attachments[0].confirming).toBe(false);
+    expect(result.current.attachments[0].message).toBe(
+      "Detectamos posibles datos personales en este archivo (1 email). Recordá la política: solo datos de prueba hacia la IA.",
+    );
+  });
+
+  it("remove() a mitad de confirmTestData(): no revive el adjunto ya quitado", async () => {
+    const ensureSession = vi.fn().mockResolvedValue("session-1");
+    let resolveConfirm: ((response: Response) => void) | undefined;
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = urlOf(input);
+      if (init?.method === "POST" && url === "/api/attachments") return jsonResponse(201, createdPayload());
+      if (init?.method === "POST" && url === "/api/attachments/att-1/confirm-test-data") {
+        return new Promise<Response>((resolve) => {
+          resolveConfirm = resolve;
+        });
+      }
+      if (url === "/api/attachments/att-1") {
+        return jsonResponse(
+          200,
+          statusPayload({
+            status: "ready",
+            sendable: false,
+            requires_test_data_confirmation: true,
+            scan_summary: { pii_findings: [{ entity_type: "EMAIL_ADDRESS", count: 1, lines: [5] }] },
+          }),
+        );
+      }
+      throw new Error(`fetch inesperado: ${init?.method ?? "GET"} ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() =>
+      useAttachmentAdapter({ ensureSession, labels: LABELS, pollIntervalMs: 0 }),
+    );
+
+    await act(async () => {
+      await result.current.add(makeFile("planilla.xlsx"));
+    });
+    await waitFor(() => expect(result.current.attachments[0].status).toBe("warning"));
+
+    const localId = result.current.attachments[0].id;
+    let confirmPromise: Promise<void> | undefined;
+    act(() => {
+      confirmPromise = result.current.confirmTestData(localId);
+    });
+    act(() => {
+      result.current.remove(localId);
+    });
+    expect(result.current.attachments).toHaveLength(0);
+
+    await act(async () => {
+      resolveConfirm?.(jsonResponse(200, { id: "att-1", status: "ready", requires_test_data_confirmation: false, sendable: true }));
+      await confirmPromise;
+    });
+
+    expect(result.current.attachments).toHaveLength(0);
   });
 });

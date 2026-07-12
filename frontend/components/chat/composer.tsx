@@ -9,7 +9,9 @@ import {
   type KeyboardEvent,
 } from "react";
 import { Button } from "@/components/ui/button";
+import { AttachmentChip, type AttachmentChipStateLabels } from "@/components/chat/attachment-chip";
 import type { AttachmentItem } from "@/lib/chat/attachment-adapter";
+import type { Role } from "@/lib/session-context";
 
 export interface ComposerLabels {
   placeholder: string;
@@ -23,8 +25,18 @@ export interface ComposerLabels {
   /** `aria-label` de la lista de adjuntos (`role="list"`, mismo mockup). */
   attachmentsListLabel: string;
   /** Plantilla `Quitar adjunto {file}` -- `{file}` se interpola con
-   * `item.originalName` (`interpolateFileName` más abajo). */
+   * `item.originalName` (`AttachmentChip`, que reutiliza este mismo texto). */
   removeAttachment: string;
+  /** Textos de los estados del chip (tarea 8.2) -- ver
+   * `AttachmentChip`/`Chat.attachments.states` (`messages/es.json`,
+   * portados en la tarea 8.4). */
+  attachmentStates: AttachmentChipStateLabels;
+  /** Checkbox auditado N2 "Confirmo que son datos de prueba" (tarea 8.2,
+   * `Chat.attachments.warnings.piiConfirmation`). */
+  attachmentPiiConfirmation: string;
+  /** "Cancelar" de la advertencia N2 (tarea 8.2,
+   * `Chat.attachments.warnings.piiCancel`). */
+  attachmentPiiCancel: string;
 }
 
 export interface ComposerHandle {
@@ -60,30 +72,36 @@ export interface ComposerProps {
   /** Click en "Detener" durante el streaming. */
   onStop: () => void;
   /** Adjuntos del borrador actual (d14-attachments, tarea 8.1) --
-   * `useAttachmentAdapter().attachments` de `chat-content.tsx`. Renderizado
-   * MÍNIMO a propósito: nombre + (si existe) el texto §10 ya resuelto de
-   * `item.message` para `error`/`blocked`/`warning`. Los chips visuales por
-   * estado (spinner, tokens/%, "Ver lo que verá el agente") son la tarea 8.2,
-   * fuera de alcance acá -- ver el docstring de `AttachmentItem`. */
+   * `useAttachmentAdapter().attachments` de `chat-content.tsx`. Cada uno se
+   * renderiza como un `AttachmentChip` (tarea 8.2): estados
+   * subiendo→procesando→listo/advertencia/bloqueado/error con causa
+   * específica, nunca silencioso -- ver el docstring de `AttachmentChip`. */
   attachments: AttachmentItem[];
+  /** Rol de la sesión de identidad -- decide la métrica de espacio del chip
+   * `listo` (tarea 8.2, Requirement "Transparencia de espacio por capa de
+   * rol"). Recibido como prop (no `useSession()` acá adentro), mismo
+   * criterio que el resto de `components/chat/*`. */
+  role: Role;
   /** Click en "Adjuntar archivo" + selección en el `<input type="file">`
    * oculto -- una llamada a `add()` del adapter por archivo elegido. */
   onAttachFiles: (files: File[]) => void;
-  /** Click en "Quitar" de un adjunto -- `remove(id)` del adapter. */
+  /** Click en "Quitar" (× general) o "Cancelar" (advertencia N2) de un
+   * adjunto -- `remove(id)` del adapter. */
   onRemoveAttachment: (id: string) => void;
+  /** Checkbox "Confirmo que son datos de prueba" del chip en `warning`
+   * (tarea 8.2) -- `confirmTestData(id)` del adapter (POST auditado, ver su
+   * docstring en `lib/chat/attachment-adapter.ts`). */
+  onConfirmAttachmentTestData: (id: string) => void;
+  /** Punto de integración de la tarea 8.3 ("Ver lo que verá el agente") --
+   * ver el docstring de `AttachmentChip.onOpenPreview`. `undefined` hasta
+   * que 8.3 implemente el panel. */
+  onOpenAttachmentPreview?: (id: string) => void;
   /** `true` cuando ya se alcanzó el máximo de adjuntos por mensaje (ANEXO §9,
    * default 5) -- deshabilita el botón "Adjuntar archivo" de forma
    * PROACTIVA; el adapter igual rechaza con el texto §10 "Demasiados
    * adjuntos" si de todos modos llega una subida de más (defensa en
    * profundidad, mismo criterio que el resto del pipeline). Default `false`. */
   attachDisabled?: boolean;
-}
-
-/** `Chat.composer.removeAttachment` es la plantilla `Quitar adjunto {file}`
- * (mismo patrón `.replace` que el resto de labels con placeholders de
- * runtime, ver `message-edit.tsx`/`gateway-offline-card.tsx`). */
-function interpolateFileName(template: string, file: string): string {
-  return template.split("{file}").join(file);
 }
 
 /**
@@ -110,8 +128,11 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
     onSubmit,
     onStop,
     attachments,
+    role,
     onAttachFiles,
     onRemoveAttachment,
+    onConfirmAttachmentTestData,
+    onOpenAttachmentPreview,
     attachDisabled = false,
   },
   ref,
@@ -178,29 +199,25 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
   return (
     <form className="chat-composer" onSubmit={handleFormSubmit}>
       {attachments.length > 0 ? (
-        // Lista MÍNIMA a propósito (d14-attachments, tarea 8.1): nombre +
-        // el texto §10 ya resuelto (`item.message`) cuando lo hay, más
-        // "Quitar". El chip visual por estado (spinner, tokens/%, "Ver lo
-        // que verá el agente") es la tarea 8.2 -- ver el docstring de
-        // `ComposerProps.attachments`. `data-attachment-status` deja el
-        // estado observable para tests/estilos futuros sin inventar texto
-        // nuevo fuera del catálogo.
+        // Chips reales (d14-attachments, tarea 8.2) -- ver el docstring de
+        // `AttachmentChip` para el detalle de cada estado/causa. Reemplaza la
+        // lista mínima de texto que dejó la tarea 8.1.
         <ul className="chat-composer__attachments" role="list" aria-label={labels.attachmentsListLabel}>
           {attachments.map((item) => (
-            <li key={item.id} role="listitem" data-attachment-status={item.status}>
-              <span className="chat-composer__attachment-name">{item.originalName}</span>
-              {item.message ? (
-                <span className="chat-composer__attachment-message">{item.message}</span>
-              ) : null}
-              <button
-                type="button"
-                className="chat-composer__attachment-remove"
-                aria-label={interpolateFileName(labels.removeAttachment, item.originalName)}
-                onClick={() => onRemoveAttachment(item.id)}
-              >
-                ×
-              </button>
-            </li>
+            <AttachmentChip
+              key={item.id}
+              item={item}
+              role={role}
+              labels={{
+                states: labels.attachmentStates,
+                removeAttachment: labels.removeAttachment,
+                piiConfirmation: labels.attachmentPiiConfirmation,
+                piiCancel: labels.attachmentPiiCancel,
+              }}
+              onRemove={onRemoveAttachment}
+              onConfirmTestData={onConfirmAttachmentTestData}
+              onOpenPreview={onOpenAttachmentPreview}
+            />
           ))}
         </ul>
       ) : null}
