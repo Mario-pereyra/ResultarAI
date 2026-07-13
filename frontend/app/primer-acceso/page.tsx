@@ -10,7 +10,10 @@ export default async function PrimerAccesoPage() {
 
   const labels = {
     title: t("title"),
-    step: t("step"),
+    // t.raw: la plantilla lleva {current}/{total} y quien interpola es el
+    // componente cliente (conoce el paso actual); t("step") sin valores
+    // renderiza la clave literal "PrimerAcceso.step".
+    step: t.raw("step"),
     step1Title: t("step1Title"),
     step1Sub: t("step1Sub"),
     currentPassword: t("currentPassword"),

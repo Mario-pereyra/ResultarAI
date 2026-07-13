@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { csrfHeaders } from "@/lib/csrf";
 
 export interface PrimerAccesoContentProps {
   role: string;
@@ -111,7 +112,10 @@ export function PrimerAccesoContent({ role, labels }: PrimerAccesoContentProps) 
   // Cargar datos de TOTP
   async function loadTotpEnrollment() {
     try {
-      const res = await fetch("/api/me/totp/enroll", { method: "POST" });
+      const res = await fetch("/api/me/totp/enroll", {
+        method: "POST",
+        headers: { ...csrfHeaders() },
+      });
       if (!res.ok) throw new Error();
       const data = await res.json();
       setTotpEnrollData({
@@ -179,7 +183,7 @@ export function PrimerAccesoContent({ role, labels }: PrimerAccesoContentProps) 
       try {
         const res = await fetch("/api/auth/password", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({
             current_password: currentPassword,
             new_password: newPassword,
@@ -211,7 +215,7 @@ export function PrimerAccesoContent({ role, labels }: PrimerAccesoContentProps) 
       try {
         const res = await fetch("/api/me/totp/enable", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ code: totpCode }),
         });
 
@@ -246,7 +250,7 @@ export function PrimerAccesoContent({ role, labels }: PrimerAccesoContentProps) 
       try {
         const res = await fetch("/api/me/agreement/accept", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({ version_id: agreementVersionId }),
         });
 
