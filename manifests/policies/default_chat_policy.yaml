@@ -1,0 +1,14 @@
+# Policy que autoriza el skill/agent default_chat para el Policy Gate (regla dura 4:
+# deny-by-default). Sin esta policy, el runtime de b06 denegaría cualquier turno del
+# agente default_chat porque ninguna regla `allow` cubre el skill.
+# Valida contra el schema Pydantic de resultarai/core/manifests/policy.py.
+
+id: default_chat_policy
+status: active
+version: 1.0.0
+
+applies_to:
+  skills: [default_chat]
+
+rules:
+  - effect: allow

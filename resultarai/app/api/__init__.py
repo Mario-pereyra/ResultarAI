@@ -16,9 +16,12 @@ from resultarai.adapters.tracing_langfuse.feedback import submit_feedback
 from resultarai.app.api.admin import router as admin_router
 from resultarai.app.api.attachments import router as attachments_router
 from resultarai.app.api.auth import router as auth_router
-from resultarai.app.api.chat import get_feedback_submitter, get_registries
+from resultarai.app.api.chat import get_feedback_submitter, get_registries, get_response_generator
 from resultarai.app.api.chat import router as chat_router
-from resultarai.app.api.chat_stream import get_turn_stream_registry
+from resultarai.app.api.chat_stream import (
+    get_streaming_response_generator,
+    get_turn_stream_registry,
+)
 from resultarai.app.api.chat_stream import router as chat_stream_router
 from resultarai.app.api.me import router as me_router
 from resultarai.app.api.notifications import router as notifications_router
@@ -125,6 +128,78 @@ def _feedback_submitter_override(*, trace_id: str, value: int, comment: str | No
     submit_feedback(trace_id=trace_id, value=value, comment=comment)
 
 
+def _response_generator_override() -> object:
+    """Override de producción de `get_response_generator`: compone el runtime de b06
+    (graph default_chat_graph) con el gateway de b05 (LiteLLMClient) y el Policy Gate
+    del core, usando los Registries cacheados de bootstrap().
+
+    Inyecta DATA_NOT_INSTRUCTION_DECLARATION y strip_escalation_marker desde la capa
+    app para respetar la jerarquía de imports (adapters no puede importar de app).
+    """
+    from resultarai.adapters.llm_litellm.client import LiteLLMClient
+    from resultarai.adapters.runtime_langgraph.production_generators import (
+        build_sync_graph_runner,
+    )
+    from resultarai.app.attachments.spotlight import DATA_NOT_INSTRUCTION_DECLARATION
+    from resultarai.app.use_cases.chat._marker import strip_escalation_marker
+
+    registries = _load_registries()
+    llm_client = LiteLLMClient(model_profiles=registries.model_profiles)
+    return build_sync_graph_runner(
+        llm_client,
+        registries,
+        data_declaration=DATA_NOT_INSTRUCTION_DECLARATION,
+        strip_marker=strip_escalation_marker,
+    )
+
+
+def _streaming_response_generator_override() -> object:
+    """Override de producción de `get_streaming_response_generator`: compone el runtime
+    de b06 (graph default_chat_graph) con el gateway de b05 (LiteLLMClient) y el Policy
+    Gate del core, usando los Registries cacheados de bootstrap().
+
+    Inyecta DATA_NOT_INSTRUCTION_DECLARATION y strip_escalation_marker desde la capa
+    app para respetar la jerarquía de imports (adapters no puede importar de app).
+
+    El adapter devuelve dicts crudos; esta función los envuelve en TurnFragment/
+    TurnCompletion para satisfacer el protocolo StreamingResponseGenerator.
+    """
+    from resultarai.adapters.llm_litellm.client import LiteLLMClient
+    from resultarai.adapters.runtime_langgraph.production_generators import (
+        build_streaming_graph_runner,
+    )
+    from resultarai.app.attachments.spotlight import DATA_NOT_INSTRUCTION_DECLARATION
+    from resultarai.app.use_cases.chat._marker import strip_escalation_marker
+    from resultarai.app.use_cases.chat.streaming import TurnCompletion, TurnFragment
+
+    registries = _load_registries()
+    llm_client = LiteLLMClient(model_profiles=registries.model_profiles)
+    raw_generator = build_streaming_graph_runner(
+        llm_client,
+        registries,
+        data_declaration=DATA_NOT_INSTRUCTION_DECLARATION,
+        strip_marker=strip_escalation_marker,
+    )
+
+    def _wrap(*, session: object, history: object) -> object:
+        for item in raw_generator(session=session, history=history):
+            if item["type"] == "fragment":
+                yield TurnFragment(text=item["text"])
+            elif item["type"] == "completion":
+                yield TurnCompletion(
+                    model_profile_id=item["model_profile_id"],
+                    is_alternate_model=item["is_alternate_model"],
+                    primary_model_profile_id=item.get("primary_model_profile_id"),
+                    fallback_reason=item.get("fallback_reason"),
+                    cache_hit_tokens=item.get("cache_hit_tokens"),
+                    cache_miss_tokens=item.get("cache_miss_tokens"),
+                    cost_usd=item.get("cost_usd"),
+                    needs_pro=item.get("needs_pro", False),
+                )
+
+    return _wrap
+
+
 def create_app() -> FastAPI:
     """Factory que construye e inicializa la aplicación FastAPI de la plataforma."""
     app = FastAPI(
@@ -146,6 +221,10 @@ def create_app() -> FastAPI:
     app.dependency_overrides[get_db] = get_db_override
     app.dependency_overrides[get_registries] = get_registries_override
     app.dependency_overrides[get_feedback_submitter] = _feedback_submitter_override
+    app.dependency_overrides[get_response_generator] = _response_generator_override
+    app.dependency_overrides[get_streaming_response_generator] = (
+        _streaming_response_generator_override
+    )
     # Una instancia de TurnStreamRegistry por app (no cacheada globalmente, a diferencia
     # de _load_registries): es estado mutable de proceso (buffers de turnos en curso),
     # no un catálogo estático de manifiestos, así que cada composición real -- o cada

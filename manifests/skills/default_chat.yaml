@@ -1,0 +1,41 @@
+id: default_chat
+name: Chat por Defecto
+status: active
+version: 1.0.0
+
+description: >
+  Skill base para el agente de chat por defecto. No expone tools propios ni
+  paquete de skills; existe para que el Policy Gate pueda autorizar turnos del
+  agente default_chat mediante una regla `allow` catch-all.
+
+skill_package:
+  spec: agent_skills
+  ref: default-chat
+  path: skills/packages/default-chat/SKILL.md
+  version: 1.0.0
+
+execution:
+  mode: read_only
+  graph: default_chat_graph
+  requires_human_approval: false
+
+visibility:
+  roles:
+    - admin
+    - tecnico
+    - funcional
+
+risk:
+  level: low
+
+tools:
+  - example_echo
+
+output_policy:
+  summarize_results: false
+  mask_sensitive_fields: false
+  max_rows: 20
+
+evals:
+  status: placeholder
+  template: default_chat_eval
