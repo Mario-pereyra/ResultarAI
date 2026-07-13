@@ -37,9 +37,11 @@ evals:
   status: placeholder
   template: default_chat_eval
 
+# deepseek_v4_flash primero: es el único proveedor con API key en esta instancia
+# de desarrollo (los perfiles OpenAI/Anthropic quedan como referencia de fábrica).
 fallback_cascade:
-  - openai_gpt_4o
-  - anthropic_claude_haiku
+  - deepseek_v4_flash
+  - deepseek_v4_pro
 escalation:
   enabled: true
   target_profile: deepseek_v4_pro
