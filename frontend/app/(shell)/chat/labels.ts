@@ -179,11 +179,12 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
     // la sesión se puede LEER pero no continuar, ver `chat-content.tsx`.
     agentDisabledComposerReason: t("agentDisabled.composerReason"),
     // Tarea 8.1 (d14-attachments): textos §10 que `useAttachmentAdapter`
-    // mapea desde los `error_code` tipados de la subida/escaneo -- ver
+    // mapea desde los `error_code`/causas tipadas de la subida/escaneo -- ver
     // `lib/chat/attachment-adapter.ts` para el subconjunto de
     // `Chat.attachments.errors`/`Chat.attachments.fileTypes` que realmente
-    // consume (el resto -- OCR, vista previa truncada, cuota de mensaje --
-    // son texto de 8.2/8.3, no de este adapter).
+    // consume (el resto -- vista previa truncada, cuota de mensaje -- son
+    // texto de 8.2/8.3, no de este adapter; "PDF escaneado" SÍ es de este
+    // adapter, aunque el OCR en sí siga diferido a V1.1).
     attachments: {
       errors: {
         unsupportedType: t("attachments.errors.unsupportedType", { extension: "{extension}" }),
@@ -191,6 +192,10 @@ export function buildChatLabels(t: Translator): ChatContentLabels {
         withMacros: t("attachments.errors.withMacros", { extension: "{extension}" }),
         tooLarge: t("attachments.errors.tooLarge", { limitMb: "{limitMb}", fileType: "{fileType}" }),
         pdfProtected: t("attachments.errors.pdfProtected"),
+        // Cobertura d14-attachments (ANEXO §2.2/§10): "PDF escaneado (oferta OCR)" --
+        // el OCR sigue diferido a V1.1, pero la advertencia (nunca bloquea) YA la
+        // produce el escaneo de estado terminal, ver `attachment-adapter.ts`.
+        pdfScanned: t("attachments.errors.pdfScanned"),
         imageNotSupported: t("attachments.errors.imageNotSupported"),
         wordLegacy: t("attachments.errors.wordLegacy"),
         tooManyAttachments: t("attachments.errors.tooManyAttachments", { limit: "{limit}" }),

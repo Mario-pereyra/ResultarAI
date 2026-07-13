@@ -48,6 +48,10 @@ con hallazgos" de un vistazo). Shape completo::
       # --- confirmacion auditada (confirmation.confirm_test_data, tarea 5.2) ---
       "test_data_confirmation": {"confirmed_by": str, "confirmed_at": str (ISO 8601),
                                  "findings_summary": {entity_type: count}}
+
+      # --- PDF escaneado (extraction.py._detect_scanned_pdf, ANEXO §2.2/§10; SOLO kind
+      #     PDF, re-derivado del full_text para sobrevivir al dedup, NUNCA bloquea) ---
+      "pdf_scanned": {"page_count": int, "avg_chars_per_page": float}
     }
 
 ## Donde corre el analyzer de Presidio y por que

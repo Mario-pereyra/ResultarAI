@@ -14,8 +14,10 @@ import {
  * (`attachmentIdsForSend`) devuelve el `attachment_id`. Suma además la
  * validación client-side de "demasiados adjuntos", `remove()` cortando el
  * polling, y el mapeo de los estados terminales `blocked` (N3)/`ready` con
- * advertencia (N2) -- mismo contrato que `GET /api/attachments/{id}`
- * documentado en `resultarai/app/api/attachments.py`.
+ * advertencia (N2 o "PDF escaneado ofrece OCR diferido", ANEXO §2.2/§10,
+ * cobertura d14-attachments -- `ready` + `scan_summary.pdf_scanned`, NUNCA
+ * bloquea) -- mismo contrato que `GET /api/attachments/{id}` documentado en
+ * `resultarai/app/api/attachments.py`.
  *
  * `pollIntervalMs: 0` en todos los tests (mismo patrón que
  * `reconnectDelayMs: 0` de `use-turn-stream.test.ts`): temporizadores reales
@@ -37,6 +39,8 @@ const LABELS: AttachmentAdapterLabels = {
       "El archivo supera el límite de {limitMb} MB para {fileType}. Si solo necesitás algunas hojas, copialas a un archivo nuevo.",
     pdfProtected:
       "Este PDF está protegido con contraseña y no se puede leer. Quitale la protección y volvé a subirlo.",
+    pdfScanned:
+      "Este PDF parece escaneado: no tiene texto seleccionable. ¿Querés que intentemos leerlo con reconocimiento óptico (OCR)? El resultado puede tener errores — vas a poder revisarlo antes de enviar.",
     imageNotSupported:
       "Este agente todavía no puede ver imágenes. Si es una captura de un error, pegá el texto del mensaje directamente en el chat; si es un reporte, exportalo a PDF o Excel.",
     wordLegacy: "El formato .doc (Word 97-2003) no está soportado. Abrilo en Word y guardalo como .docx.",
@@ -487,6 +491,68 @@ describe("useAttachmentAdapter — estados terminales con advertencia (N2, ANEXO
     await waitFor(() => expect(result.current.attachments[0].status).toBe("warning"));
 
     expect(result.current.attachments[0].message).toContain("1 CREDIT_CARD");
+  });
+});
+
+describe('useAttachmentAdapter — "PDF escaneado ofrece OCR diferido" (ANEXO §2.2/§10, cobertura d14-attachments)', () => {
+  it("ready + scan_summary.pdf_scanned queda en warning, SENDABLE (nunca bloquea), con el texto exacto del ANEXO", async () => {
+    const ensureSession = vi.fn().mockResolvedValue("session-1");
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = urlOf(input);
+      if (init?.method === "POST" && url === "/api/attachments") return jsonResponse(201, createdPayload());
+      if (url === "/api/attachments/att-1") {
+        return jsonResponse(
+          200,
+          statusPayload({
+            status: "ready",
+            sendable: true,
+            requires_test_data_confirmation: false,
+            scan_summary: { pdf_scanned: { page_count: 3, avg_chars_per_page: 4.2 } },
+          }),
+        );
+      }
+      throw new Error(`fetch inesperado: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() =>
+      useAttachmentAdapter({ ensureSession, labels: LABELS, pollIntervalMs: 0 }),
+    );
+
+    await act(async () => {
+      await result.current.add(makeFile("escaneado.pdf"));
+    });
+    await waitFor(() => expect(result.current.attachments[0].status).toBe("warning"));
+
+    // A diferencia de N2 (gatea el envío), un PDF escaneado NUNCA bloquea: el OCR sigue
+    // diferido a V1.1, pero el usuario puede enviarlo igual sabiendo la limitación.
+    expect(result.current.attachments[0].sendable).toBe(true);
+    expect(result.current.attachments[0].message).toBe(LABELS.errors.pdfScanned);
+    expect(result.current.attachmentIdsForSend()).toEqual(["att-1"]);
+  });
+
+  it("ready limpio (sin pdf_scanned/PII/inyección) queda en ready, sin mensaje", async () => {
+    const ensureSession = vi.fn().mockResolvedValue("session-1");
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = urlOf(input);
+      if (init?.method === "POST" && url === "/api/attachments") return jsonResponse(201, createdPayload());
+      if (url === "/api/attachments/att-1") {
+        return jsonResponse(200, statusPayload({ status: "ready", sendable: true }));
+      }
+      throw new Error(`fetch inesperado: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { result } = renderHook(() =>
+      useAttachmentAdapter({ ensureSession, labels: LABELS, pollIntervalMs: 0 }),
+    );
+
+    await act(async () => {
+      await result.current.add(makeFile("nativo.pdf"));
+    });
+    await waitFor(() => expect(result.current.attachments[0].status).toBe("ready"));
+
+    expect(result.current.attachments[0].message).toBeNull();
   });
 });
 

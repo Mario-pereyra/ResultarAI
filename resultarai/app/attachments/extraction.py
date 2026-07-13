@@ -41,6 +41,18 @@ pipeline ademas:
   y `requires_test_data_confirmation=True`: el envio queda bloqueado hasta la confirmacion
   auditada (`confirmation.py`) o el retiro del adjunto. **N3 gana sobre N2**: si hay ambos,
   el estado es `blocked` y no se pide confirmacion (no es enviable de todos modos).
+- **Marca PDF escaneado** (ANEXO §2.2, §10 "PDF escaneado (oferta OCR)", cobertura
+  d14-attachments): si `kind` es `AttachmentKind.PDF`, RE-deriva el promedio de caracteres
+  por pagina a partir de los marcadores `--- página N ---` que `PdfExtractor` ya escribe en
+  `full_text` (`_detect_scanned_pdf`), en vez de leer `ExtractionResult.pdf.is_scanned`
+  directo: `extractions` (b04) solo persiste `full_text`/`extractor_version` (schema
+  cerrado, sin migraciones para este change), asi que ese booleano se PERDERIA en el camino
+  dedup si no se pudiera reconstruir del texto ya persistido. Por debajo del umbral (~50
+  chars/pagina) se registra `scan_result["pdf_scanned"]`: el adjunto sigue `ready` y
+  enviable, **nunca bloquea** — mismo criterio no-bloqueante que `injection_flags`
+  (heuristics.py). El frontend (tarea 8.2) lo muestra como advertencia con el texto "PDF
+  escaneado" del ANEXO §10; el OCR en si queda **diferido a V1.1** (no se ejecuta, y no se
+  agrega ningun gate de confirmacion nuevo para una funcionalidad que todavia no existe).
 
 Fuera de alcance (otras piezas del change): persistir el `full_text`/`Extraction` con
 dedup por sha256 y el disparo en produccion viven en `pipeline.py` (tarea 7.1, que invoca
@@ -52,12 +64,17 @@ escaneado y enviable"; `blocked` significa "extraido pero con secreto N3". El
 en ambos casos: `blocked` es una extraccion exitosa pero no enviable).
 
 El extractor concreto se **inyecta** (`Callable`/`ExtractionPort.extract`): este modulo no
-importa ningun adapter de `resultarai/adapters/extraction_*`.
+importa ningun adapter de `resultarai/adapters/extraction_*`. Por eso el umbral y el
+formato de marcador de pagina de PDF (`_PDF_SCANNED_THRESHOLD_CHARS_PER_PAGE`/
+`_PDF_PAGE_MARKER_RE`, mas abajo) se DUPLICAN a proposito en vez de importarse de
+`extraction_pdf.extractor` — mismo criterio que `data_scan._STATUS_READY` ya duplica el
+literal de estado en vez de importar este modulo (la dependencia va en un solo sentido).
 """
 
 from __future__ import annotations
 
 import datetime
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -77,7 +94,7 @@ from resultarai.app.attachments.heuristics import InjectionFlag, scan_for_inject
 from resultarai.app.attachments.sanitize import SanitizationResult, sanitize_extracted_text
 from resultarai.app.attachments.worker import Extractor, run_in_isolated_worker
 from resultarai.app.attachments.zip_guard import inspect_ooxml_for_zip_bomb
-from resultarai.core.ports.extraction import ExtractionInput, ExtractionResult
+from resultarai.core.ports.extraction import AttachmentKind, ExtractionInput, ExtractionResult
 
 # Estados de `b04` (CheckConstraint de attachments); usados tal cual, sin redefinir schema.
 STATUS_UPLOADED = "uploaded"
@@ -85,6 +102,44 @@ STATUS_EXTRACTING = "extracting"
 STATUS_READY = "ready"
 STATUS_BLOCKED = "blocked"
 STATUS_ERROR = "error"
+
+# Deteccion de PDF escaneado (ANEXO §2.2, §10): mismo umbral y formato de marcador de
+# pagina que `resultarai/adapters/extraction_pdf/extractor.py`
+# (`DEFAULT_SCANNED_THRESHOLD_CHARS_PER_PAGE` / `_build_full_text`), DUPLICADOS aca a
+# proposito (ver el docstring del modulo: este archivo no importa adapters de
+# `extraction_*`).
+_PDF_SCANNED_THRESHOLD_CHARS_PER_PAGE = 50.0
+_PDF_PAGE_MARKER_RE = re.compile(r"--- página \d+ ---\n")
+
+
+def _detect_scanned_pdf(full_text: str) -> dict[str, float | int] | None:
+    """RE-deriva si un PDF es "escaneado" a partir de su `full_text` YA extraido/persistido.
+
+    Cuenta caracteres por bloque de pagina delimitado por los marcadores `--- página N ---`
+    que `PdfExtractor._build_full_text` ya escribe (ANEXO §2.2): parte el texto por esos
+    marcadores y promedia la longitud (stripeada) de cada bloque — el mismo calculo que hace
+    el extractor sobre las paginas sin stripear; la diferencia (unos pocos caracteres de
+    whitespace) es irrelevante para un umbral de decenas de caracteres por pagina.
+
+    Se recalcula en vez de leerse de `ExtractionResult.pdf.is_scanned` porque `extractions`
+    (b04) no persiste ese booleano: recalcularlo sobre TEXTO ya extraido (nunca sobre el
+    binario) es lo que permite que la señal sobreviva al camino dedup (tarea 7.1), mismo
+    criterio que ya usan la heuristica de inyeccion y el escaneo N2/N3 en ese camino (solo
+    el parseo del binario se salta, el analisis sobre texto se re-corre siempre).
+
+    Devuelve `None` si el texto no tiene marcadores de pagina (no es un PDF reconocible, o
+    esta vacio) o si el promedio esta en o por encima del umbral (no escaneado); si no, un
+    dict `{"page_count", "avg_chars_per_page"}` listo para `scan_result["pdf_scanned"]`.
+    """
+    blocks = _PDF_PAGE_MARKER_RE.split(full_text)
+    pages = blocks[1:] if len(blocks) > 1 else []
+    if not pages:
+        return None
+    total_chars = sum(len(page.strip()) for page in pages)
+    avg_chars_per_page = total_chars / len(pages)
+    if avg_chars_per_page >= _PDF_SCANNED_THRESHOLD_CHARS_PER_PAGE:
+        return None
+    return {"page_count": len(pages), "avg_chars_per_page": round(avg_chars_per_page, 1)}
 
 
 @dataclass
@@ -161,7 +216,7 @@ def extract_attachment(
     sanitization = sanitize_extracted_text(result.full_text)
     sanitized_result = result.model_copy(update={"full_text": sanitization.text})
     finalize_extracted_attachment(
-        db, attachment, sanitization.text, config, sanitization=sanitization
+        db, attachment, sanitization.text, config, kind=result.kind, sanitization=sanitization
     )
     _ = now or get_utc_now()  # reservado para timestamps de extraccion (tareas 6.x/7.1)
     return ExtractionOutcome(attachment=attachment, result=sanitized_result, error=None)
@@ -173,6 +228,7 @@ def finalize_extracted_attachment(
     full_text: str,
     config: AttachmentsConfig,
     *,
+    kind: AttachmentKind,
     sanitization: SanitizationResult | None = None,
 ) -> None:
     """Escanea `full_text` (YA sanitizado) y fija el estado final + `scan_result`.
@@ -180,19 +236,25 @@ def finalize_extracted_attachment(
     Es la mitad "analisis y decision" del pipeline (pasos [5]-[6] del ANEXO §8), separada
     de la extraccion aislada para que el camino **dedup** de la tarea 7.1 (`pipeline.py`)
     la reutilice sobre el `full_text` ya persistido en `extractions` sin re-parsear el
-    binario: los escaneos (heuristica de inyeccion + N3/N2) SI se re-corren en cada
-    adjunto — los patrones configurados por instancia pueden haber cambiado desde la
-    extraccion original y el requirement solo prohibe re-PARSEAR (decision documentada de
-    la tarea 7.1). `sanitization` viene poblado solo desde `extract_attachment` (donde la
-    sanitizacion acaba de correr y sus artefactos removidos son telemetria nueva); en el
-    camino dedup el texto persistido ya esta limpio y no hay nada que reportar.
+    binario: los escaneos (heuristica de inyeccion + N3/N2 + deteccion de PDF escaneado)
+    SI se re-corren en cada adjunto — los patrones configurados por instancia pueden haber
+    cambiado desde la extraccion original y el requirement solo prohibe re-PARSEAR
+    (decision documentada de la tarea 7.1). `sanitization` viene poblado solo desde
+    `extract_attachment` (donde la sanitizacion acaba de correr y sus artefactos removidos
+    son telemetria nueva); en el camino dedup el texto persistido ya esta limpio y no hay
+    nada que reportar. `kind` lo pasa el llamador (`result.kind` en la extraccion real,
+    `attachment_kind_of(attachment.detected_type)` en el dedup, ver `pipeline.py`): solo se
+    usa para decidir si corresponde re-derivar la señal de PDF escaneado
+    (`_detect_scanned_pdf`) — las demas familias de adjunto la ignoran.
 
     N3 gana sobre N2: un secreto bloquea el adjunto (no enviable); sin secreto queda
-    `ready` (la PII de N2 no bloquea, solo exige confirmacion). No hace `db.commit()`.
+    `ready` (la PII de N2 no bloquea, solo exige confirmacion; un PDF escaneado tampoco
+    bloquea, solo advierte — ver el docstring del modulo). No hace `db.commit()`.
     """
     injection_flags = scan_for_injection(full_text)
     secret_findings = scan_for_secrets(full_text, config.extra_secret_patterns)
     pii_findings = scan_for_pii(full_text)
+    pdf_scanned = _detect_scanned_pdf(full_text) if kind is AttachmentKind.PDF else None
 
     blocked = bool(secret_findings)
     attachment.status = STATUS_BLOCKED if blocked else STATUS_READY
@@ -202,6 +264,7 @@ def finalize_extracted_attachment(
         injection_flags,
         secret_findings,
         pii_findings,
+        pdf_scanned,
         blocked=blocked,
     )
     if scan_result is not None:
@@ -259,10 +322,12 @@ def _record_analysis(
     injection_flags: list[InjectionFlag],
     secret_findings: list[SecretFinding],
     pii_findings: list[PiiFinding],
+    pdf_scanned: dict[str, float | int] | None,
     *,
     blocked: bool,
 ) -> dict[str, object] | None:
-    """Registra sanitizacion, inyeccion y hallazgos N2/N3 en `scan_result`, preservando lo previo.
+    """Registra sanitizacion, inyeccion, hallazgos N2/N3 y PDF escaneado en `scan_result`,
+    preservando lo previo.
 
     Devuelve `None` si no hay nada que registrar (texto limpio, sin artefactos): asi un
     adjunto sano conserva `scan_result` intacto (tipicamente `NULL`) y la telemetria de
@@ -283,6 +348,11 @@ def _record_analysis(
         # bloqueado no es enviable de todos modos (N3 gana sobre N2, ANEXO §4.4).
         if not blocked:
             updates["requires_test_data_confirmation"] = True
+    if pdf_scanned is not None:
+        # PDF escaneado (ANEXO §2.2, §10): NUNCA bloquea (ni siquiera junto a N2/N3 —
+        # el bloqueo/confirmacion de esos dos ya cubre la enviabilidad); solo se registra
+        # como advertencia para que el frontend (tarea 8.2) muestre la causa en el chip.
+        updates["pdf_scanned"] = pdf_scanned
     if not updates:
         return None
     merged: dict[str, object] = dict(scan_result or {})

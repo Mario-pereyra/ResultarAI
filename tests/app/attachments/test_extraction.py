@@ -37,6 +37,7 @@ from resultarai.core.ports.extraction import AttachmentKind, ExtractionInput
 from tests.app.attachments.fakes import (
     fake_extract_ok,
     fake_extract_passthrough,
+    fake_extract_pdf_scanned,
     fake_extract_slow,
 )
 
@@ -302,6 +303,68 @@ def test_extract_attachment_embedded_instruction_warns_without_blocking(tmp_path
         assert "ignorá las instrucciones" in flags[0]["evidence"]
         # Ninguna huella de bloqueo/confirmacion: el UNICO registro es el flag informativo.
         assert set(stored.scan_result) == {"injection_flags"}
+
+
+def test_extract_attachment_scanned_pdf_marks_ready_with_offer_no_ocr(tmp_path: Path) -> None:
+    """Escenario "PDF escaneado ofrece OCR diferido" (ANEXO §2.2, §10, cobertura
+    d14-attachments): un PDF con promedio de caracteres por pagina por debajo del umbral
+    NO queda `ready` en silencio con contenido casi vacio -- termina `ready` (enviable, no
+    `blocked`/`error`: no es un hallazgo de seguridad, es una advertencia de calidad, mismo
+    criterio no-bloqueante que `injection_flags`) con la causa tipada en
+    `scan_result["pdf_scanned"]` para que el frontend (tarea 8.2) muestre "PDF escaneado".
+    El OCR en si NUNCA se ejecuta (diferido a V1.1): no hay estado intermedio de "leyendo
+    OCR" ni gate de confirmacion nuevo.
+    """
+    config = _config(tmp_path)
+
+    with get_db_session() as db:
+        attachment = _make_uploaded_attachment(db, name="escaneado.pdf", detected_type="pdf")
+        source = ExtractionInput(
+            kind=AttachmentKind.PDF, filename="escaneado.pdf", content=b"%PDF-1.4 binario fake"
+        )
+
+        outcome = extract_attachment(db, attachment, fake_extract_pdf_scanned, source, config)
+
+        assert outcome.attachment.status == "ready"  # nunca error/blocked por ser escaneado
+        assert outcome.error is None
+        assert is_sendable(outcome.attachment) is True  # advierte, no bloquea el envio
+        attachment_id = attachment.id
+
+    with get_db_session() as db:
+        stored = db.get(Attachment, attachment_id)
+        assert stored is not None
+        assert stored.status == "ready"
+        assert stored.scan_result is not None
+        assert stored.scan_result["pdf_scanned"] == {"page_count": 2, "avg_chars_per_page": 2.0}
+        # Ninguna huella de bloqueo/confirmacion/error: el UNICO registro es la advertencia.
+        assert set(stored.scan_result) == {"pdf_scanned"}
+
+
+def test_extract_attachment_native_pdf_is_not_flagged_as_scanned(tmp_path: Path) -> None:
+    """Contraste: un PDF con texto nativo abundante (avg chars/pagina >> umbral) NO se
+    marca `pdf_scanned` -- la deteccion no genera falsos positivos sobre contenido normal.
+    """
+    config = _config(tmp_path)
+    full_text = "\n\n".join(
+        f"--- página {n} ---\n" + ("Contenido de la pagina con texto de sobra. " * 5)
+        for n in range(1, 4)
+    )
+
+    with get_db_session() as db:
+        attachment = _make_uploaded_attachment(db, name="nativo.pdf", detected_type="pdf")
+        source = ExtractionInput(
+            kind=AttachmentKind.PDF, filename="nativo.pdf", content=full_text.encode("utf-8")
+        )
+
+        outcome = extract_attachment(db, attachment, fake_extract_passthrough, source, config)
+
+        assert outcome.attachment.status == "ready"
+        attachment_id = attachment.id
+
+    with get_db_session() as db:
+        stored = db.get(Attachment, attachment_id)
+        assert stored is not None
+        assert stored.scan_result is None  # limpio: sin advertencia de escaneado
 
 
 def test_extract_attachment_clean_text_leaves_scan_result_untouched(tmp_path: Path) -> None:

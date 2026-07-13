@@ -17,13 +17,25 @@ Cada fake implementa la forma de `ExtractionPort.extract` (`ExtractionInput -> E
                               embebido: usada por `tests/app/attachments/test_pipeline.py`
                               (tarea 7.1) para forzar `blocked` a traves del worker real
                               sin depender de contenido en memoria.
+- `fake_extract_pdf_scanned`  extraccion determinista de un PDF "escaneado" (texto nativo
+                              casi vacio por pagina, `PDF_SCANNED_FULL_TEXT`): usada por
+                              `test_extraction.py` (cobertura d14-attachments, ANEXO
+                              §2.2/§10) para el escenario "PDF escaneado ofrece OCR
+                              diferido" sin depender de un PDF real; `test_pipeline.py`
+                              (camino dedup, sin worker) siembra la fila de `extractions`
+                              con las MISMAS constantes en vez de invocar el fake.
 """
 
 from __future__ import annotations
 
 import time
 
-from resultarai.core.ports.extraction import ExtractionInput, ExtractionResult
+from resultarai.core.ports.extraction import (
+    AttachmentKind,
+    ExtractionInput,
+    ExtractionResult,
+    PdfStructure,
+)
 
 # Muy por encima del limite de memoria de cualquier test (2 GiB de espacio de direcciones).
 _HUGE_ALLOCATION_BYTES = 2 * 1024 * 1024 * 1024
@@ -89,4 +101,33 @@ def fake_extract_with_secret(source: ExtractionInput) -> ExtractionResult:
         kind=source.kind,
         full_text=SECRET_TEXT,
         extractor_version="fake-secret@1.0",
+    )
+
+
+# `full_text` de un PDF "escaneado": 2 paginas con texto nativo casi vacio (avg 2.0
+# chars/pagina, muy por debajo del umbral ~50 del ANEXO §2.2), con el formato de
+# marcadores de pagina de `PdfExtractor._build_full_text` (`--- página N ---`) que
+# `finalize_extracted_attachment` (`app/attachments/extraction.py::_detect_scanned_pdf`)
+# usa para RE-derivar la señal de escaneado. Fuente UNICA compartida entre el fake (camino
+# de extraccion real via worker, `test_extraction.py`) y el sembrado directo de la fila de
+# `extractions` en el test del camino dedup (`test_pipeline.py`, que NO corre worker): el
+# texto es ASCII limpio, asi que la sanitizacion es identidad y lo que la extraccion real
+# persiste es byte-identico a esta constante.
+PDF_SCANNED_FULL_TEXT = "--- página 1 ---\nab\n\n--- página 2 ---\ncd"
+PDF_SCANNED_EXTRACTOR_VERSION = "fake-pdf-scanned@1.0"
+
+
+def fake_extract_pdf_scanned(source: ExtractionInput) -> ExtractionResult:
+    """PDF "escaneado": texto nativo casi vacio por pagina (`PDF_SCANNED_FULL_TEXT`).
+
+    Ignora `source.content`/`source.source_path` (mismo criterio que
+    `fake_extract_with_secret`): lo unico que importa es el formato del `full_text`
+    (ver el comentario de la constante) — `extractions` de b04 no persiste
+    `PdfStructure.is_scanned`, la señal se re-deriva siempre del texto.
+    """
+    return ExtractionResult(
+        kind=AttachmentKind.PDF,
+        full_text=PDF_SCANNED_FULL_TEXT,
+        extractor_version=PDF_SCANNED_EXTRACTOR_VERSION,
+        pdf=PdfStructure(page_count=2, avg_chars_per_page=2.0, is_scanned=True),
     )

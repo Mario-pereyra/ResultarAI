@@ -66,7 +66,13 @@ from resultarai.app.identity import (
     hash_password,
 )
 from resultarai.core.ports.extraction import AttachmentKind
-from tests.app.attachments.fakes import SECRET_TEXT, fake_extract_ok, fake_extract_with_secret
+from tests.app.attachments.fakes import (
+    PDF_SCANNED_EXTRACTOR_VERSION,
+    PDF_SCANNED_FULL_TEXT,
+    SECRET_TEXT,
+    fake_extract_ok,
+    fake_extract_with_secret,
+)
 from tests.app.identity.conftest import make_user
 
 _CONFIG = SessionConfig(
@@ -314,6 +320,75 @@ def test_process_attachment_dedup_path_rescans_and_blocks_on_secret(tmp_path: Pa
         scan_result = result2.attachment.scan_result
         assert scan_result is not None
         assert scan_result["n3_findings"][0]["secret_type"] == "openai_api_key"
+
+
+def test_process_attachment_dedup_path_preserves_pdf_scanned_signal(tmp_path: Path) -> None:
+    """Escenario "PDF escaneado ofrece OCR diferido" (ANEXO §2.2, §10) + resubida.
+
+    `PdfStructure.is_scanned` no se persiste en `extractions` (b04 sin migraciones para
+    este change): la resubida del MISMO PDF escaneado (dedup, sin re-parsear -- mismo
+    `resolve` prohibido que los demas tests de este archivo) debe seguir mostrando la
+    causa "PDF escaneado" porque `finalize_extracted_attachment` la RE-deriva del
+    `full_text` ya persistido (decision documentada en el docstring del modulo).
+
+    La fila de `extractions` se SIEMBRA directo (mismo criterio que
+    `test_persist_extraction_handles_concurrent_insert_race`) con `PDF_SCANNED_FULL_TEXT`
+    -- fuente unica compartida con `fake_extract_pdf_scanned`, byte-identica a lo que la
+    extraccion real persiste (texto limpio: sanitizacion identidad; el camino fresco
+    worker->deteccion ya lo cubre `test_extraction.py::
+    test_extract_attachment_scanned_pdf_marks_ready_with_offer_no_ocr`). Sembrar en vez
+    de extraer evita a proposito el worker aislado real: el camino dedup por definicion
+    NO corre worker, y el proceso hijo del worker es susceptible a la presion de memoria
+    de la maquina bajo la suite completa (fragilidad preexistente documentada en
+    `openspec/BACKLOG-DESCUBRIMIENTOS.md`) -- asi este test es 100% determinista. Ademas,
+    sin `scan_result` previo de ningun otro adjunto, la UNICA fuente posible de la señal
+    es la re-derivacion del texto persistido (no hay nada que copiar).
+    """
+    config = _config(tmp_path)
+    content = b"binario de PDF escaneado (el fake ignora el contenido real)"
+    sha256 = hashlib.sha256(content).hexdigest()
+
+    with get_db_session() as db:
+        seeded = Extraction(
+            tenant=config.tenant,
+            sha256=sha256,
+            full_text=PDF_SCANNED_FULL_TEXT,
+            extractor_version=PDF_SCANNED_EXTRACTOR_VERSION,
+        )
+        db.add(seeded)
+        db.flush()
+        extraction_id = seeded.id
+
+    with get_db_session() as db:
+        storage_uuid = _write_binary(config, content)
+        attachment = _make_uploaded_attachment(
+            db,
+            tenant=config.tenant,
+            sha256=sha256,
+            storage_path=storage_uuid,
+            name="escaneado2.pdf",
+            detected_type="pdf",
+        )
+
+        result = process_attachment(db, attachment, config, resolve=_resolver_forbidden())
+
+        assert result.reused is True  # NO se re-parseo el binario
+        assert result.error is None
+        assert result.extraction is not None
+        assert result.extraction.id == extraction_id  # MISMA fila de extractions
+        assert result.attachment.status == "ready"  # advierte, no bloquea
+        scan_result = result.attachment.scan_result
+        assert scan_result is not None
+        # La señal sobrevive al dedup: re-derivada del full_text persistido, no copiada.
+        assert scan_result["pdf_scanned"] == {"page_count": 2, "avg_chars_per_page": 2.0}
+        attachment_id = attachment.id
+
+    with get_db_session() as db:
+        stored = db.get(Attachment, attachment_id)
+        assert stored is not None
+        assert stored.status == "ready"
+        assert stored.scan_result is not None
+        assert stored.scan_result["pdf_scanned"] == {"page_count": 2, "avg_chars_per_page": 2.0}
 
 
 # --------------------------------------------------------------------------------------

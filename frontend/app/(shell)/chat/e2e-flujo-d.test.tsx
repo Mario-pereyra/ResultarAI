@@ -200,6 +200,8 @@ const LABELS: ChatContentLabels = {
         'Los archivos con macros ({extension}) no están permitidos. Guardalo desde Excel como "Libro de Excel (.xlsx)" y volvé a subirlo.',
       tooLarge: "El archivo supera el límite de {limitMb} MB para {fileType}. Si solo necesitás algunas hojas, copialas a un archivo nuevo.",
       pdfProtected: "Este PDF está protegido con contraseña y no se puede leer. Quitale la protección y volvé a subirlo.",
+      pdfScanned:
+        "Este PDF parece escaneado: no tiene texto seleccionable. ¿Querés que intentemos leerlo con reconocimiento óptico (OCR)? El resultado puede tener errores — vas a poder revisarlo antes de enviar.",
       imageNotSupported:
         "Este agente todavía no puede ver imágenes. Si es una captura de un error, pegá el texto del mensaje directamente en el chat; si es un reporte, exportalo a PDF o Excel.",
       wordLegacy: "El formato .doc (Word 97-2003) no está soportado. Abrilo en Word y guardalo como .docx.",

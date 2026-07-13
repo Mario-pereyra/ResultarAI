@@ -24,6 +24,19 @@ confirmacion N2 del dueno, que no es transferible entre adjuntos/duenos distinto
 mismo binario). El estado final (`ready`/`blocked`) sale directo del re-escaneo, sin pasar
 por `extracting` (no hay extraccion en curso).
 
+**Decision documentada — la señal de "PDF escaneado" sobrevive al dedup sin tocar el
+schema de `b04`:** `PdfStructure.is_scanned` (el booleano que calcula `PdfExtractor` sobre
+las paginas ya parseadas) NUNCA se persiste — `extractions` solo tiene `full_text`/
+`extractor_version` (columnas de `b04`, sin migraciones para este change). En el camino
+dedup no hay `ExtractionResult` disponible (no se re-parsea el binario), asi que
+`finalize_extracted_attachment` (`extraction.py::_detect_scanned_pdf`) RE-deriva el
+promedio de caracteres por pagina a partir de los marcadores `--- página N ---` que YA
+estan en el `full_text` persistido — mismo criterio que el re-escaneo de N2/N3/instruccion
+embebida de arriba: solo el PARSEO del binario se salta, el analisis sobre texto se
+re-corre siempre. Por eso `process_attachment` calcula `kind` UNA sola vez (antes del
+branch dedup/extraccion real, en vez de solo en el branch de extraccion real como antes) y
+lo pasa a `finalize_extracted_attachment` en ambos caminos.
+
 **Decision documentada — disparo con `BackgroundTasks` de FastAPI:** la extraccion real se
 dispara DESPUES del 201 de la subida, como background task del mismo proceso
 (`run_attachment_extraction_by_id`, encolada por el endpoint via el proveedor inyectable
@@ -153,11 +166,15 @@ def process_attachment(
     resto de los casos de uso). `resolve` permite inyectar el mapa de extractores en tests.
     """
     resolve_fn = resolve or resolve_extractor
+    # Calculado UNA sola vez: lo necesitan tanto el branch dedup (para que
+    # `finalize_extracted_attachment` sepa si corresponde re-derivar "PDF escaneado", ver
+    # docstring del modulo) como el branch de extraccion real (`ExtractionInput`/`resolve_fn`).
+    kind = attachment_kind_of(attachment.detected_type)
 
     existing = find_extraction(db, tenant=attachment.tenant, sha256=attachment.sha256)
     if existing is not None:
         attachment.extraction_id = existing.id
-        finalize_extracted_attachment(db, attachment, existing.full_text, config)
+        finalize_extracted_attachment(db, attachment, existing.full_text, config, kind=kind)
         return PipelineResult(attachment=attachment, extraction=existing, reused=True, error=None)
 
     if attachment.storage_path is None:
@@ -167,7 +184,6 @@ def process_attachment(
         mark_extraction_error(db, attachment, error)
         return PipelineResult(attachment=attachment, extraction=None, reused=False, error=error)
 
-    kind = attachment_kind_of(attachment.detected_type)
     source = ExtractionInput(
         kind=kind,
         filename=attachment.original_name,

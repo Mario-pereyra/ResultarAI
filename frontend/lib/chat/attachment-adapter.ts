@@ -58,11 +58,15 @@ import { csrfHeaders } from "@/lib/csrf";
  * los estados terminales `blocked` (N3, ANEXO §4.4) y `error` (fallo de
  * extracción, todos los `error_code` de esa familia colapsan al texto
  * "Error genérico de extracción" -- documentado así en `errors.py`) a texto
- * resuelto. Lo que este módulo NO resuelve a texto (queda para 8.2/8.3, fuera
- * de esta tarea): la redacción de los estados NO terminales que dependen de
- * datos en vivo/rol (`Subiendo… {percent}%`, `Listo · {tokens} tokens` vs.
- * `Listo · usa {percent}%…`) -- el chip (8.2, `components/chat/attachment-chip.tsx`)
- * es quien decide esa presentación con `tokenCount`/`includedPercent`/
+ * resuelto, incluida la advertencia `ready` + `scan_summary.pdf_scanned`
+ * (cobertura d14-attachments, ANEXO §2.2/§10 "PDF escaneado (oferta OCR)":
+ * `resultarai/app/attachments/extraction.py::_detect_scanned_pdf` re-deriva la
+ * señal del `full_text` -- nunca bloquea, el OCR sigue diferido a V1.1). Lo
+ * que este módulo NO resuelve a texto (queda para 8.2/8.3, fuera de esta
+ * tarea): la redacción de los estados NO terminales que dependen de datos en
+ * vivo/rol (`Subiendo… {percent}%`, `Listo · {tokens} tokens` vs. `Listo · usa
+ * {percent}%…`) -- el chip (8.2, `components/chat/attachment-chip.tsx`) es
+ * quien decide esa presentación con `tokenCount`/`includedPercent`/
  * `truncated`/rol, que este hook expone tal cual vienen de
  * `GET /api/attachments/{id}`.
  *
@@ -194,18 +198,22 @@ export interface AttachmentItem {
 /** Textos §10 que este módulo necesita para mapear errores tipados --
  * subconjunto de `Chat.attachments.errors`/`Chat.attachments.fileTypes` de
  * `messages/es.json` (ver `app/(shell)/chat/labels.ts::buildChatLabels`).
- * Deliberadamente NO incluye `pdfScanned`/`emptyFile`/`truncatedPreview`/
- * `pdfTableWarning`/`quotaExceeded` -- ninguno es un `error_code` que
+ * Deliberadamente NO incluye `emptyFile`/`truncatedPreview`/
+ * `pdfTableWarning`/`quotaExceeded` -- ninguno es un `error_code`/causa que
  * `POST /api/attachments` o el escaneo de estado terminal puedan producir
- * hoy (OCR es V1.1 diferido; la vista previa truncada es 8.3; el rechazo de
- * cuota-en-mensaje es `message_token_budget_exceeded`, un error del ENVÍO del
- * turno -- no de este adapter, ver el docstring del módulo). */
+ * hoy (la vista previa truncada es 8.3; el rechazo de cuota-en-mensaje es
+ * `message_token_budget_exceeded`, un error del ENVÍO del turno -- no de
+ * este adapter, ver el docstring del módulo). `pdfScanned` SÍ se incluye
+ * (cobertura d14-attachments): aunque el OCR sigue diferido a V1.1, la
+ * causa `scan_summary.pdf_scanned` (`ready` + advertencia, nunca bloquea)
+ * SÍ la produce el escaneo de estado terminal -- ver `resolveReadyWarningMessage`. */
 export interface AttachmentAdapterErrorLabels {
   unsupportedType: string; // {extension}
   falsifiedType: string; // {extension}
   withMacros: string; // {extension}
   tooLarge: string; // {limitMb} {fileType}
   pdfProtected: string;
+  pdfScanned: string;
   imageNotSupported: string;
   wordLegacy: string;
   tooManyAttachments: string; // {limit}
@@ -415,9 +423,12 @@ function resolveBlockedMessage(
   return interpolate(labels.errors.credentialsDetected, { detail: summarizeN3(findings) });
 }
 
-/** `null` si el adjunto `ready` está limpio (sin PII sin confirmar ni
- * heurística de inyección) -- ver `deriveChipStatus`, que decide `warning`
- * vs. `ready` con la MISMA condición. */
+/** `null` si el adjunto `ready` está limpio (sin PII sin confirmar, sin
+ * heurística de inyección y sin la advertencia de PDF escaneado) -- ver
+ * `deriveChipStatus`, que decide `warning` vs. `ready` con la MISMA condición.
+ * Orden de prioridad (mismo criterio que `deriveChipStatus`): N2 (gatea el
+ * envío) primero, luego instrucción embebida, luego PDF escaneado -- las tres
+ * son independientes entre sí, pero solo se muestra UN mensaje a la vez. */
 function resolveReadyWarningMessage(
   scanSummary: Record<string, unknown> | null,
   requiresConfirmation: boolean,
@@ -436,6 +447,14 @@ function resolveReadyWarningMessage(
       detail: `"${first.evidence}" en la línea ${first.line}`,
     });
   }
+  // PDF escaneado (ANEXO §2.2/§10, "PDF escaneado (oferta OCR)", cobertura
+  // d14-attachments): `scan_result["pdf_scanned"]` (`extraction.py`, SOLO
+  // `kind` PDF) NUNCA bloquea el envío -- es una advertencia de calidad de
+  // contenido, no un hallazgo de seguridad; el texto no interpola detalle
+  // (page_count/avg_chars_per_page son telemetría de Admin, no de usuario).
+  if (scanSummary?.pdf_scanned) {
+    return labels.errors.pdfScanned;
+  }
   return null;
 }
 
@@ -452,10 +471,15 @@ function deriveChipStatus(payload: AttachmentStatusPayload): AttachmentChipStatu
   if (payload.status === "extracting") return "processing";
   if (payload.status === "blocked") return "blocked";
   if (payload.status === "error") return "error";
-  // "ready": advertencia (N2 sin confirmar o heurística de inyección) vs. limpio.
+  // "ready": advertencia (N2 sin confirmar, heurística de inyección o PDF
+  // escaneado -- ANEXO §2.2/§10) vs. limpio.
   const injectionFlags =
     (payload.scan_summary?.injection_flags as InjectionFlagPayload[] | undefined) ?? [];
-  return payload.requires_test_data_confirmation || injectionFlags.length > 0 ? "warning" : "ready";
+  return payload.requires_test_data_confirmation ||
+    injectionFlags.length > 0 ||
+    Boolean(payload.scan_summary?.pdf_scanned)
+    ? "warning"
+    : "ready";
 }
 
 function resolveStatusMessage(
