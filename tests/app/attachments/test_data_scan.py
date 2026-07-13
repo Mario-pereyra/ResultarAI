@@ -16,12 +16,14 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 
+import pytest
 from sqlalchemy.orm import Session as DbSession
 
 from resultarai.adapters.persistence_postgres.connection import get_db_session
 from resultarai.adapters.persistence_postgres.models import Attachment
-from resultarai.app.attachments import AttachmentsConfig, extract_attachment
+from resultarai.app.attachments import AttachmentsConfig, data_scan, extract_attachment
 from resultarai.app.attachments.data_scan import (
+    _split_into_line_chunks,
     is_sendable,
     scan_for_pii,
     scan_for_secrets,
@@ -158,6 +160,78 @@ def test_n2_plain_number_without_context_is_not_flagged() -> None:
 def test_n2_clean_text_has_no_findings() -> None:
     """Texto de negocio sin PII no produce hallazgos N2."""
     assert scan_for_pii("minuta de la reunión\npunto 1: presupuesto\n") == []
+
+
+def test_n2_scan_does_not_raise_on_text_over_spacy_max_length() -> None:
+    """Bug real (ANEXO §4.4): spaCy fija `nlp.max_length = 1_000_000` y lanzaba `ValueError`
+    (E088) si `analyzer.analyze` recibia un texto mas largo (un `.log`/CSV legitimo de un
+    par de MB lo supera). `scan_for_pii` trocea internamente en vez de pasar el texto
+    entero: esta llamada NO debe lanzar.
+    """
+    findings = scan_for_pii("x" * 1_000_001)
+    assert findings == []
+
+
+def test_n2_pii_in_later_chunk_gets_global_line_number(monkeypatch: pytest.MonkeyPatch) -> None:
+    """PII plantada despues del primer trozo se reporta con el numero de linea GLOBAL (del
+    texto completo), no el numero de linea local al trozo (ANEXO §4.4).
+    """
+    monkeypatch.setattr(data_scan, "_PII_CHUNK_CHARS", 60)
+    filler_lines = [f"linea filler {i:02d} x" for i in range(1, 6)]  # lineas 1-5, sin PII
+    email_line = "correo: juan.perez@example.com aqui"  # linea 6, cae en un trozo posterior
+    text = "\n".join([*filler_lines, email_line]) + "\n"
+
+    findings = {f.entity_type: f for f in scan_for_pii(text)}
+
+    assert findings["EMAIL_ADDRESS"].lines == (6,)
+
+
+def test_n2_pii_straddling_chunk_boundary_is_not_lost(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Un dato que caeria a mitad de trozo con un corte crudo por cantidad de caracteres NO
+    se pierde: el corte real cae en el salto de linea anterior al limite
+    (`_split_into_line_chunks`), asi que el dato queda entero dentro de un solo trozo
+    (ANEXO §4.4).
+    """
+    monkeypatch.setattr(data_scan, "_PII_CHUNK_CHARS", 60)
+    padding = "x" * 50  # linea 1: 50 chars + salto de linea = offset 51
+    email_line = "correo: juan.perez@example.com fin"  # el email cruza el offset crudo 60
+    text = f"{padding}\n{email_line}\n"
+    # El corte crudo (sin cortar en linea) caeria a mitad del email: confirma el escenario.
+    email_start = text.index("juan.perez@example.com")
+    assert email_start < 60 < email_start + len("juan.perez@example.com")
+
+    findings = {f.entity_type: f for f in scan_for_pii(text)}
+
+    assert findings["EMAIL_ADDRESS"].count == 1
+    assert findings["EMAIL_ADDRESS"].lines == (2,)
+
+
+def test_split_into_line_chunks_short_text_is_single_chunk_same_object() -> None:
+    """Texto por debajo del limite: un unico trozo, el mismo objeto (camino byte-identico
+    al de antes del fix, ver docstring de `scan_for_pii`).
+    """
+    text = "linea 1\nlinea 2\n"
+    chunks = _split_into_line_chunks(text, 1_000)
+    assert chunks == [text]
+    assert chunks[0] is text
+
+
+def test_split_into_line_chunks_cuts_on_previous_newline() -> None:
+    """El corte cae en el ultimo salto de linea anterior al limite, nunca a mitad de linea."""
+    text = "aaaaaaaaaa\nbbbbbbbbbb\nccccc"
+    chunks = _split_into_line_chunks(text, 15)
+    assert chunks == ["aaaaaaaaaa\n", "bbbbbbbbbb\n", "ccccc"]
+    assert "".join(chunks) == text
+
+
+def test_split_into_line_chunks_hard_cuts_a_single_oversized_line() -> None:
+    """Caso extremo documentado: una sola linea (sin saltos) que excede el limite se corta
+    en el limite duro porque no hay salto de linea disponible antes.
+    """
+    text = "a" * 130
+    chunks = _split_into_line_chunks(text, 50)
+    assert [len(c) for c in chunks] == [50, 50, 30]
+    assert "".join(chunks) == text
 
 
 # ---------------------------------------------------------------------------------------

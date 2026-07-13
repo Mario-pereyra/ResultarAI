@@ -273,6 +273,13 @@ _PII_ENTITIES = ("EMAIL_ADDRESS", "PHONE_NUMBER", "PERSON", "BO_CI", "BO_NIT", "
 # positivos, requisito explicito de la tarea 5.2).
 _PII_SCORE_THRESHOLD = 0.4
 
+# Limite de trozo para `analyzer.analyze` (ANEXO §4.4, fix de bug real). spaCy fija
+# `nlp.max_length = 1_000_000` y lanza `ValueError` (E088) si se le pasa un texto mas largo
+# — un `.log`/CSV legitimo de un par de MB lo supera facil. Se trocea el texto en pedazos
+# de a lo sumo `_PII_CHUNK_CHARS` caracteres (bien por debajo del limite de spaCy) y se
+# analiza cada uno por separado; ver `_split_into_line_chunks` y `scan_for_pii`.
+_PII_CHUNK_CHARS = 500_000
+
 _analyzer: AnalyzerEngine | None = None
 _analyzer_lock = threading.Lock()
 
@@ -301,27 +308,77 @@ def scan_for_pii(text: str) -> list[PiiFinding]:
     Devuelve hallazgos agregados por tipo de entidad (sin el dato en claro). Lista vacia =
     sin PII. Carga el analyzer perezosamente en la primera llamada (ver docstring del
     modulo). Nunca lanza ni bloquea: N2 solo exige confirmacion, jamas bloquea.
+
+    Trocea `text` en pedazos de a lo sumo `_PII_CHUNK_CHARS` (ANEXO §4.4, fix de bug real:
+    spaCy fija `nlp.max_length = 1_000_000` y `analyzer.analyze` sobre un texto mas largo
+    lanzaba `ValueError` E088, que subia sin capturar hasta dejar el adjunto en `error`
+    pese al contrato "nunca lanza" de esta funcion). El corte de cada trozo cae en el
+    salto de linea anterior al limite (`_split_into_line_chunks`) para no partir un dato a mitad
+    (un email cortado en dos trozos no se detectaria en ninguno). El dedupe de
+    solapamientos (`_dedupe_overlaps`) corre POR TROZO: los reconocedores no cruzan
+    limites de trozo (aceptable — los trozos no se solapan, asi que un mismo dato nunca
+    puede repartirse en dos hallazgos distintos salvo el caso de la linea unica
+    gigantesca de abajo). Si una sola linea excede `_PII_CHUNK_CHARS` (caso extremo:
+    una linea de cientos de miles de caracteres), se corta en el limite duro — un dato
+    que caiga justo a caballo de ese corte no se detectaria (documentado, no ocurre con
+    texto de negocio real). Para texto por debajo del limite el resultado es
+    BYTE-IDENTICO al camino sin trocear (un unico trozo == el texto completo).
     """
     if not text.strip():
         return []
 
     analyzer = _get_analyzer()
-    results = analyzer.analyze(
-        text=text,
-        language="es",
-        entities=list(_PII_ENTITIES),
-        score_threshold=_PII_SCORE_THRESHOLD,
-    )
-    kept = _dedupe_overlaps(results)
-
     lines_by_type: dict[str, list[int]] = {}
-    for result in kept:
-        lines_by_type.setdefault(result.entity_type, []).append(_line_of(text, result.start))
+    lines_before_chunk = 0  # cantidad de '\n' en el texto completo ANTES del trozo actual
+    for chunk in _split_into_line_chunks(text, _PII_CHUNK_CHARS):
+        results = analyzer.analyze(
+            text=chunk,
+            language="es",
+            entities=list(_PII_ENTITIES),
+            score_threshold=_PII_SCORE_THRESHOLD,
+        )
+        kept = _dedupe_overlaps(results)
+        for result in kept:
+            global_line = lines_before_chunk + _line_of(chunk, result.start)
+            lines_by_type.setdefault(result.entity_type, []).append(global_line)
+        lines_before_chunk += chunk.count("\n")
 
     return [
         PiiFinding(entity_type=entity_type, count=len(lines), lines=tuple(sorted(set(lines))))
         for entity_type, lines in sorted(lines_by_type.items())
     ]
+
+
+def _split_into_line_chunks(text: str, max_chars: int) -> list[str]:
+    """Trocea `text` en pedazos de a lo sumo `max_chars`, cortando en el salto de linea
+    anterior al limite (nunca a mitad de linea, ver docstring de `scan_for_pii`). Si `text`
+    ya entra en un solo trozo, devuelve `[text]` (mismo objeto) para que el camino sin
+    trocear sea byte-identico al anterior al fix. Si una sola linea excede `max_chars`, se
+    corta en el limite duro (caso extremo documentado: esa linea puede perder un dato a
+    caballo del corte).
+    """
+    if len(text) <= max_chars:
+        return [text]
+
+    chunks: list[str] = []
+    pos = 0
+    length = len(text)
+    while pos < length:
+        remaining = length - pos
+        if remaining <= max_chars:
+            chunks.append(text[pos:])
+            break
+        window_end = pos + max_chars
+        newline_index = text.rfind("\n", pos, window_end)
+        if newline_index == -1:
+            # Ninguna linea nueva dentro de la ventana: una sola linea supera `max_chars`.
+            # Corte duro documentado (ver docstring de `scan_for_pii`).
+            chunks.append(text[pos:window_end])
+            pos = window_end
+        else:
+            chunks.append(text[pos : newline_index + 1])
+            pos = newline_index + 1
+    return chunks
 
 
 def _dedupe_overlaps(results: list[RecognizerResult]) -> list[RecognizerResult]:

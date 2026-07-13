@@ -68,6 +68,7 @@ from resultarai.adapters.persistence_postgres.models import Session as SessionMo
 from resultarai.app.attachments.config import AttachmentsConfig
 from resultarai.app.attachments.data_scan import is_sendable
 from resultarai.app.attachments.errors import AttachmentExtractionMissingError
+from resultarai.app.attachments.filetypes import attachment_kind_of
 from resultarai.app.attachments.insertion import find_first_insertion, resolve_token_counter_model
 from resultarai.app.attachments.spotlight import wrap_extraction
 from resultarai.app.attachments.truncation import (
@@ -76,7 +77,6 @@ from resultarai.app.attachments.truncation import (
     truncate_fragment,
 )
 from resultarai.app.use_cases.chat._branching import find_active_leaf
-from resultarai.core.ports.extraction import AttachmentKind
 from resultarai.core.registries import Registries
 
 __all__ = [
@@ -174,21 +174,6 @@ class ComposedMessage:
     total_attachment_tokens: int
 
 
-def _kind_of(detected_type: str | None) -> AttachmentKind:
-    """Traduce `Attachment.detected_type` (string persistido, `FileCategory.value`) a
-    `AttachmentKind` (el tipo que espera `truncate_for_insertion`)."""
-    mapping = {
-        "excel": AttachmentKind.SPREADSHEET,
-        "csv": AttachmentKind.SPREADSHEET,
-        "pdf": AttachmentKind.PDF,
-        "docx": AttachmentKind.DOCX,
-        "text": AttachmentKind.TEXT,
-        "code": AttachmentKind.CODE,
-        "log": AttachmentKind.LOG,
-    }
-    return mapping.get(detected_type or "", AttachmentKind.TEXT)
-
-
 def _require_owned_attachment(
     db: DbSession, user: User, session: SessionModel, attachment_id: uuid.UUID
 ) -> Attachment:
@@ -263,7 +248,7 @@ def compose_message_with_attachments(
                 raise AttachmentExtractionMissingError(attachment_id=str(attachment_id))
             result = truncate_for_insertion(
                 attachment.extraction.full_text,
-                kind=_kind_of(attachment.detected_type),
+                kind=attachment_kind_of(attachment.detected_type),
                 budget_tokens=config.token_budget_per_file,
                 user_text=text,
                 model=model,
