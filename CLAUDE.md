@@ -6,7 +6,7 @@ Plataforma interna de IA de Resultar Soluciones (partner TOTVS Bolivia): chat go
 
 ## Estado actual
 
-**Greenfield en construcción.** Documentación y paquete de diseño UX (`design/`) completos; esqueleto, tooling, CI, schemas de manifiestos y registries en verde. **Pivote 2026-07-09:** producto completo genérico "de fábrica" primero (Etapas A–E), personalización Protheus después (Etapa P) — ver `docs/07-roadmap.md`. Etapa activa: **D — Producto de fábrica (UI + plataforma)** (`d13-chat-conversacion` archivado; siguiente: `d14-attachments`). *(Actualizar esta línea al avanzar de etapa.)*
+**Greenfield en construcción.** Documentación y paquete de diseño UX (`design/`) completos; esqueleto, tooling, CI, schemas de manifiestos y registries en verde. **Pivote 2026-07-09:** producto completo genérico "de fábrica" primero (Etapas A–E), personalización Protheus después (Etapa P) — ver `docs/07-roadmap.md`. Etapa activa: **D — Producto de fábrica (UI + plataforma)** (`d14-attachments` archivado; siguiente: `d15-catalogo-agentes`). *(Actualizar esta línea al avanzar de etapa.)*
 
 ## Arquitectura en 60 segundos
 
