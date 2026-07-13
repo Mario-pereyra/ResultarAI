@@ -54,4 +54,4 @@
 ## 9. Cierre
 
 - [x] 9.1 Suite de tests del pipeline (extractores por tipo + ciclo de vida) y de seguridad (xlsm rechazado, tipo falsificado, zip-bomb abortado, N3 bloqueado, N2 auditado, instrucción embebida advertida) en verde en CI. Verificación: `uv run pytest` cubre cada escenario de las 3 specs. `[modelo: sonnet]`
-- [ ] 9.2 Review final del change: coherencia con el schema de `b04` (sin redefinirlo), cache-first respetado (extracción al final, truncado una vez), OWASP/anti-injection/N2-N3 completos, fronteras verificadas. Verificación: checklist del reviewer en el PR. `[modelo: opus]`
+- [x] 9.2 Review final del change: coherencia con el schema de `b04` (sin redefinirlo), cache-first respetado (extracción al final, truncado una vez), OWASP/anti-injection/N2-N3 completos, fronteras verificadas. Verificación: checklist del reviewer en el PR. `[modelo: opus]`

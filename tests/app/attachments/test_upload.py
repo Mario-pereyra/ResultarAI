@@ -35,13 +35,15 @@ from resultarai.adapters.persistence_postgres.models import Attachment, get_utc_
 from resultarai.adapters.persistence_postgres.models import Session as SessionModel
 from resultarai.app.api import create_app
 from resultarai.app.api.attachments import get_attachments_config, get_extraction_runner
-from resultarai.app.attachments import AttachmentsConfig, FileCategory
+from resultarai.app.attachments import AttachmentsConfig, FileCategory, PdfUnreadableError
+from resultarai.app.attachments import validation as attachment_validation
 from resultarai.app.identity import (
     SessionConfig,
     get_db,
     get_session_config,
     hash_password,
 )
+from tests.app.attachments.fakes import fake_pdf_check_raises, fake_pdf_check_slow
 from tests.app.identity.conftest import make_user
 
 _CONFIG = SessionConfig(
@@ -355,6 +357,46 @@ def test_password_protected_pdf_rejected(client: TestClient) -> None:
     response = _post_upload(client, session_id, "protegido.pdf", _encrypted_pdf_bytes())
     assert response.status_code == 422
     assert response.json()["detail"]["error_code"] == "pdf_password"
+
+
+# --------------------------------------------------------------------------------------
+# Fix M2 (review final d14-attachments): chequeo de cifrado aislado en worker (timeout/
+# crash fail-closed). Unit tests directos de `validation.verify_content` -- el chequeador
+# picklable se inyecta siguiendo el mismo patron de los tests del worker
+# (`tests/app/attachments/test_worker.py`), no via HTTP (la subida real siempre usa el
+# chequeador de produccion).
+# --------------------------------------------------------------------------------------
+
+
+def test_pdf_encryption_check_timeout_rejected_fail_closed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Si el chequeo de cifrado (worker aislado) agota su timeout, se rechaza fail-closed
+    con `pdf_unreadable` -- nunca se deja pasar un PDF sin verificar contrasena."""
+    monkeypatch.setattr(attachment_validation, "_ENCRYPTION_CHECK_TIMEOUT_SECONDS", 0.4)
+
+    with pytest.raises(PdfUnreadableError) as exc_info:
+        attachment_validation.verify_content(
+            ".pdf",
+            FileCategory.PDF,
+            b"%PDF-1.4 contenido no cifrado",
+            encryption_checker=fake_pdf_check_slow,
+        )
+    assert exc_info.value.error_code == "pdf_unreadable"
+    assert exc_info.value.params["cause"] == "timeout"
+
+
+def test_pdf_encryption_check_crash_rejected_fail_closed() -> None:
+    """Idem, si el chequeo CRASHEA (excepcion del parser) en vez de colgarse."""
+    with pytest.raises(PdfUnreadableError) as exc_info:
+        attachment_validation.verify_content(
+            ".pdf",
+            FileCategory.PDF,
+            b"%PDF-1.4 contenido no cifrado",
+            encryption_checker=fake_pdf_check_raises,
+        )
+    assert exc_info.value.error_code == "pdf_unreadable"
+    assert exc_info.value.params["cause"] == "extractor_exception"
 
 
 def test_image_rejected_with_own_error_code(client: TestClient) -> None:

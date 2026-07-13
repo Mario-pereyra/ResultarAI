@@ -17,6 +17,11 @@ Mapa error_code -> texto §10 que reconstruye el frontend:
 - ``legacy_doc``           -> "Word antiguo"
 - ``image_not_supported``  -> "Imagen (V1)" (usa ``extension``)
 - ``pdf_password``         -> "PDF protegido"
+- ``pdf_unreadable``       -> generico "no se pudo procesar" (``genericError``): el chequeo
+                              de PDF cifrado (worker aislado, timeout propio corto, Fix M2
+                              del review final de d14-attachments) agoto su timeout o
+                              crasheo; fail-closed, ANEXO §4.1 punto 5 -- nunca se deja
+                              pasar un PDF sin verificar contrasena
 - ``too_many_attachments`` -> "Demasiados adjuntos" (usa ``limit``)
 
 Errores de EXTRACCION (familia aparte: no son un rechazo 422 de subida, sino la causa de
@@ -150,6 +155,25 @@ class PdfPasswordError(AttachmentRejectedError):
 
     def __init__(self) -> None:
         super().__init__("el PDF esta protegido con contrasena", {})
+
+
+class PdfUnreadableError(AttachmentRejectedError):
+    """El chequeo de PDF cifrado no pudo completarse: timeout o crash del worker aislado.
+
+    Fix M2 del review final de d14-attachments: `validation.py::_reject_encrypted_pdf`
+    corre `pypdf.PdfReader` DENTRO de un worker aislado con timeout propio y corto (en vez
+    de en el thread sincrono del request handler, sin timeout). Si ese chequeo agota su
+    timeout o el proceso hijo crashea, el rechazo es FAIL-CLOSED: nunca se deja pasar un
+    PDF sin verificar contrasena. Sin texto propio en el ANEXO §10 -- el frontend lo
+    colapsa al generico ``genericError`` ("no pudimos procesar este archivo"), igual que
+    la familia `AttachmentExtractionError` mas abajo, pero este SI es un rechazo 422 de
+    subida (no un fallo de extraccion): el adjunto nunca llega a persistirse.
+    """
+
+    error_code = "pdf_unreadable"
+
+    def __init__(self, *, cause: str) -> None:
+        super().__init__(f"no se pudo verificar si el PDF esta cifrado: {cause}", {"cause": cause})
 
 
 class TooManyAttachmentsError(AttachmentRejectedError):

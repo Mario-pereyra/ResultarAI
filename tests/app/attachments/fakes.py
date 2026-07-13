@@ -24,6 +24,13 @@ Cada fake implementa la forma de `ExtractionPort.extract` (`ExtractionInput -> E
                               diferido" sin depender de un PDF real; `test_pipeline.py`
                               (camino dedup, sin worker) siembra la fila de `extractions`
                               con las MISMAS constantes en vez de invocar el fake.
+- `fake_pdf_check_slow`       chequeador de cifrado (`Callable[[bytes], bool]`, no un
+                              extractor) que cuelga: duerme mucho mas que cualquier
+                              timeout de test -- fuerza el camino timeout/fail-closed de
+                              `validation.py::_reject_encrypted_pdf` (Fix M2 del review
+                              final de d14-attachments, `test_upload.py`).
+- `fake_pdf_check_raises`     idem, pero crashea (excepcion) en vez de colgarse: fuerza
+                              el camino crash/fail-closed del mismo chequeo.
 """
 
 from __future__ import annotations
@@ -115,6 +122,19 @@ def fake_extract_with_secret(source: ExtractionInput) -> ExtractionResult:
 # persiste es byte-identico a esta constante.
 PDF_SCANNED_FULL_TEXT = "--- página 1 ---\nab\n\n--- página 2 ---\ncd"
 PDF_SCANNED_EXTRACTOR_VERSION = "fake-pdf-scanned@1.0"
+
+
+def fake_pdf_check_slow(content: bytes) -> bool:
+    """Chequeador de cifrado que cuelga: fuerza `ExtractionTimeoutError` en el worker
+    aislado (Fix M2 del review final de d14-attachments, `validation.py`)."""
+    time.sleep(_SLEEP_SECONDS)
+    return False
+
+
+def fake_pdf_check_raises(content: bytes) -> bool:
+    """Chequeador de cifrado que crashea: fuerza `ExtractionFailedError` (cause
+    `extractor_exception`) en vez de colgarse."""
+    raise ValueError("chequeo de cifrado corrupto")
 
 
 def fake_extract_pdf_scanned(source: ExtractionInput) -> ExtractionResult:

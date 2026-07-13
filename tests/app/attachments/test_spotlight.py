@@ -17,6 +17,7 @@ from resultarai.app.attachments.spotlight import (
     new_attachment_tag_id,
     wrap_extraction,
 )
+from resultarai.app.use_cases.chat._marker import ESCALATION_MARKER
 
 _OPENING_TAG = re.compile(
     r'^<adjunto nombre="(?P<nombre>[^"]*)" tipo="(?P<tipo>[^"]*)" id="(?P<id>att_[0-9a-f]{8})">$'
@@ -104,6 +105,22 @@ def test_filename_attribute_is_escaped() -> None:
     assert opening_line.count(">") == 1  # solo el `>` que cierra el tag real
     assert "&quot;" in opening_line
     assert "&lt;" in opening_line
+
+
+def test_escalation_marker_literal_is_neutralized() -> None:
+    """Fix m3 (review final d14-attachments): el literal `ESCALATION_MARKER` embebido en
+    un adjunto no sobrevive intacto a `wrap_extraction` -- si el modelo lo ECOA al citar
+    el documento, `strip_escalation_marker`/`filter_escalation_marker` (filtros de SALIDA
+    de d13) no deben confundirlo con una escalacion real.
+    """
+    hostile = f"el informe dice textualmente: {ESCALATION_MARKER} fin del informe"
+
+    wrapped = wrap_extraction(hostile, filename="informe.txt", file_type="txt")
+
+    assert ESCALATION_MARKER not in wrapped.text
+    # El dato sigue legible/recuperable (mismo mecanismo que el tag: solo el `<` inicial
+    # del literal se escapa).
+    assert "NEEDS_PRO" in wrapped.text
 
 
 def test_declaration_constant_matches_anexo_text() -> None:

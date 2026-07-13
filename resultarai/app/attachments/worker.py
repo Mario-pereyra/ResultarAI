@@ -7,11 +7,21 @@ correrla en un **worker aislado** con **timeout** (default 30 s) y **memoria aco
 
 Diseno y por que NO se deadlockea:
 
-- **Proceso separado con `forkserver`** (no `fork`, no `spawn`): `fork` heredaria los hilos
-  y locks del proceso multihilo de FastAPI/SQLAlchemy (deadlock clasico del fork con
-  hilos); `spawn` re-ejecuta el modulo `__main__` (bajo pytest eso re-lanzaria pytest).
-  `forkserver` bifurca desde un servidor limpio y minimo: ni hereda locks ni re-corre
-  `__main__`. (Fallback a `spawn` si `forkserver` no estuviera disponible.)
+- **Proceso separado con `forkserver`** (no `fork`, no `spawn` directo): `fork` heredaria
+  los hilos y locks del proceso multihilo de FastAPI/SQLAlchemy (deadlock clasico del fork
+  con hilos). `forkserver` lanza, la PRIMERA vez que se usa, un proceso servidor persistente
+  que se bootstrapea con la MISMA preparacion que `spawn` -- que SI re-importa el modulo
+  `__main__` (`multiprocessing.spawn._fixup_main_from_path`); esto corrige una afirmacion
+  previa de este docstring que decia lo contrario (Fix n5 del review final de
+  d14-attachments: "no re-corre `__main__`" era empiricamente falso). La diferencia real
+  con `spawn` puro es CUANDO y CUANTAS veces pasa: cada extraccion nueva NO relanza ese
+  bootstrap, solo hace `fork()` desde el servidor ya inicializado (rapido, sin re-importar
+  nada) -- por eso sigue sin heredar los hilos/locks del proceso multihilo de la plataforma
+  (arranca desde el servidor limpio, no desde ese proceso) y por eso funciona bajo pytest:
+  el `__main__` que se re-importa, UNA sola vez al levantar el servidor, es el entrypoint de
+  pytest, que es seguro de importar (no relanza la coleccion de tests como efecto
+  secundario). (Fallback a `spawn` si `forkserver` no estuviera disponible; ese camino SI
+  re-ejecuta `__main__` en cada hijo, no solo una vez.)
 - **Memoria** acotada en el HIJO con `resource.setrlimit(RLIMIT_AS)` antes de parsear:
   una alloc que cruza el tope levanta `MemoryError` en el hijo (no un SIGKILL), que se
   reporta como fallo ordenado; si aun asi el interprete cae, el parent lo detecta por el
@@ -27,11 +37,17 @@ Diseno y por que NO se deadlockea:
   y levanta `ExtractionFailedError`. En ningun camino el parent queda colgado: la
   plataforma sigue operativa.
 
-El worker recibe QUE extractor correr de forma **inyectable** (`ExtractionPort.extract` o
-cualquier `Callable[[ExtractionInput], ExtractionResult]`); este modulo NO importa ningun
-adapter concreto de `resultarai/adapters/extraction_*` (los terminan otros agentes en
-paralelo; la composicion real llega en una tarea posterior). El callable inyectado debe
-ser **picklable** (funcion/metodo a nivel de modulo), porque cruza la frontera de proceso.
+El worker recibe QUE callable correr de forma **inyectable** y GENERICO:
+`run_in_isolated_worker` no esta atado a `ExtractionPort.extract` ni a
+`ExtractionInput`/`ExtractionResult` (tipos parametrizados via `TypeVar`) -- cualquier
+`Callable[[S], T]` picklable puede cruzar al worker con la misma proteccion de
+timeout/memoria. El uso principal sigue siendo la extraccion de adjuntos (este modulo NO
+importa ningun adapter concreto de `resultarai/adapters/extraction_*`; la composicion real
+vive en `pipeline.py::resolve_extractor`), pero `validation.py::_reject_encrypted_pdf` (Fix
+M2 del review final de d14-attachments) reutiliza el MISMO worker para aislar
+`pypdf.PdfReader` del chequeo de PDF cifrado, que antes corria sin timeout en el thread
+sincrono del request handler. El callable inyectado debe ser **picklable**
+(funcion/metodo a nivel de modulo), porque cruza la frontera de proceso.
 """
 
 from __future__ import annotations
@@ -41,7 +57,7 @@ import queue
 import resource
 import time
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from resultarai.app.attachments.errors import ExtractionFailedError, ExtractionTimeoutError
 from resultarai.core.ports.extraction import ExtractionInput, ExtractionResult
@@ -49,6 +65,11 @@ from resultarai.core.ports.extraction import ExtractionInput, ExtractionResult
 __all__ = ["run_in_isolated_worker"]
 
 Extractor = Callable[[ExtractionInput], ExtractionResult]
+
+# `run_in_isolated_worker`/`_worker_child` son genericos (parametros de tipo PEP 695
+# `[SourceT, ResultT]` en su propia firma): cualquier callable picklable -- no solo
+# `Extractor` -- puede cruzar al worker aislado. Ver la nota de reutilizacion en el
+# docstring del modulo (Fix M2 del review final de d14-attachments).
 
 # Cadencia con que el parent sondea la cola mientras espera (s).
 _POLL_INTERVAL_SECONDS = 0.05
@@ -59,18 +80,20 @@ _TERM_GRACE_SECONDS = 2.0
 _KILL_GRACE_SECONDS = 2.0
 
 
-def run_in_isolated_worker(
-    extract_fn: Extractor,
-    source: ExtractionInput,
+def run_in_isolated_worker[SourceT, ResultT](
+    extract_fn: Callable[[SourceT], ResultT],
+    source: SourceT,
     *,
     timeout_seconds: float,
     memory_limit_bytes: int | None,
-) -> ExtractionResult:
+) -> ResultT:
     """Corre `extract_fn(source)` en un proceso aislado con timeout y memoria acotada.
 
-    Devuelve el `ExtractionResult` en caso de exito. Levanta `ExtractionTimeoutError` si
-    supera `timeout_seconds`, o `ExtractionFailedError` si el worker muere (crash/OOM) o el
-    extractor lanza una excepcion. En cualquier caso el proceso hijo queda finalizado y el
+    Generico sobre `SourceT`/`ResultT` (ver docstring del modulo): `extract_fn` puede ser
+    cualquier callable picklable, no solo un `Extractor` de `ExtractionPort`. Devuelve lo
+    que `extract_fn` retorne en caso de exito. Levanta `ExtractionTimeoutError` si supera
+    `timeout_seconds`, o `ExtractionFailedError` si el worker muere (crash/OOM) o el
+    callable lanza una excepcion. En cualquier caso el proceso hijo queda finalizado y el
     parent nunca se bloquea indefinidamente.
     """
     ctx = _mp_context()
@@ -88,8 +111,7 @@ def run_in_isolated_worker(
         result_queue.close()
 
     if status == "ok":
-        assert isinstance(data, ExtractionResult), "el hijo debe devolver un ExtractionResult"
-        return data
+        return cast(ResultT, data)
     cause = data.get("cause", "unknown") if isinstance(data, dict) else "unknown"
     extra = {k: v for k, v in data.items() if k != "cause"} if isinstance(data, dict) else {}
     raise ExtractionFailedError(cause=cause, **extra)
@@ -145,7 +167,12 @@ def _mp_context() -> (
 
     Se seleccionan con literales (no una variable) para que el tipo concreto del contexto
     exponga `.Process`/`.Queue`; `forkserver` evita heredar los hilos/locks del proceso
-    multihilo (a diferencia de `fork`) y no re-ejecuta `__main__` (a diferencia de `spawn`).
+    multihilo (a diferencia de `fork`) lanzando un servidor persistente aparte. Ese
+    servidor SI se bootstrapea como `spawn` -- re-importa `__main__` una vez, al
+    arrancar (correccion del Fix n5 del review final: este docstring antes decia lo
+    contrario) -- pero cada extraccion nueva solo hace `fork()` desde el servidor ya
+    inicializado, sin repetir esa re-importacion (a diferencia de `spawn` puro, que la
+    repite en cada hijo).
     """
     available = multiprocessing.get_all_start_methods()
     if "forkserver" in available:
@@ -155,9 +182,9 @@ def _mp_context() -> (
     return multiprocessing.get_context()
 
 
-def _worker_child(
-    extract_fn: Extractor,
-    source: ExtractionInput,
+def _worker_child[SourceT, ResultT](
+    extract_fn: Callable[[SourceT], ResultT],
+    source: SourceT,
     memory_limit_bytes: int | None,
     result_queue: multiprocessing.Queue[tuple[str, Any]],
 ) -> None:

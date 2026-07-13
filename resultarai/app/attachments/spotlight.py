@@ -27,6 +27,17 @@ Defensa anti-escape en dos capas, en este orden de importancia:
    (destruye dato), insertar zero-width (la sanitizacion de la tarea 4.1 los elimina
    justamente por ser vector de smuggling), re-nombrar el tag (rompe el contrato del
    system prompt estatico).
+3. **Neutralizacion del marcador de escalacion embebido** (Fix m3 del review final de
+   d14-attachments): la escalacion DIRECTA desde un adjunto ya esta bloqueada por diseno
+   (`filter_escalation_marker`/`strip_escalation_marker` filtran la SALIDA del modelo,
+   nunca leen el adjunto — camino d13), pero si el modelo ECOA el literal
+   ``ESCALATION_MARKER`` al citar o comentar el documento (p. ej. "el informe dice
+   textualmente `<<<NEEDS_PRO>>>`"), esos MISMOS filtros de salida lo interpretarian como
+   una escalacion REAL espuria. Por eso `wrap_extraction` tambien neutraliza el literal
+   del marcador con el MISMO mecanismo que el punto 2 (escapar solo su ``<`` inicial):
+   rompe el match EXACTO por substring que usan ambos filtros sin destruir el dato ni su
+   legibilidad. El literal se importa de su fuente unica (`use_cases/chat/_marker.py`,
+   d13) en vez de hardcodearse aca — ver la nota de import mas abajo.
 
 La envoltura se consume en la composicion server-side del mensaje (tarea 6.3): texto
 del usuario + ``<adjunto id=…>inserted_text</adjunto>`` AL FINAL del contexto,
@@ -50,6 +61,14 @@ from __future__ import annotations
 import re
 import secrets
 from dataclasses import dataclass
+
+# Import DIRECTO del submodulo `use_cases/chat/_marker` (no del paquete
+# `use_cases/chat`, cuyo `__init__` es pesado -- importa `_attachments.py`, que a su vez
+# importa ESTE modulo por submodulo, no por atributo del paquete `attachments`): mismo
+# patron ya usado por `heuristics.py` (sibling de este modulo, ver su docstring) para leer
+# el MISMO literal sin crear un ciclo de imports. `_marker.py` no tiene dependencias
+# propias, asi que esta importable en cualquier punto de esa cadena circular.
+from resultarai.app.use_cases.chat._marker import ESCALATION_MARKER
 
 __all__ = [
     "DATA_NOT_INSTRUCTION_DECLARATION",
@@ -102,6 +121,18 @@ def neutralize_embedded_tags(content: str) -> str:
     return _EMBEDDED_TAG.sub(lambda match: "&lt;" + match.group(0)[1:], content)
 
 
+def _neutralize_escalation_marker(content: str) -> str:
+    """Neutraliza el literal ``ESCALATION_MARKER`` (d13) embebido en el contenido.
+
+    Fix m3 del review final de d14-attachments (ver punto 3 del docstring del modulo):
+    mismo mecanismo que `neutralize_embedded_tags` — escapa SOLO el ``<`` inicial del
+    literal como ``&lt;``, rompiendo el match EXACTO por substring que usan
+    `strip_escalation_marker`/`filter_escalation_marker` sin destruir el dato ni su
+    legibilidad. Reemplaza TODAS las ocurrencias (un documento hostil podria repetirlo).
+    """
+    return content.replace(ESCALATION_MARKER, "&lt;" + ESCALATION_MARKER[1:])
+
+
 def wrap_extraction(
     content: str,
     *,
@@ -115,9 +146,14 @@ def wrap_extraction(
     nombre original (solo display, ya validado en la subida) y `file_type` la
     extension/categoria sin punto (p. ej. ``xlsx``). Si no se pasa `tag_id`, se genera
     uno aleatorio nuevo — un id POR ADJUNTO, jamas reutilizado entre adjuntos.
+
+    Neutraliza dos literales embebidos en `content` (ver puntos 2 y 3 del docstring del
+    modulo): aperturas/cierres ``<adjunto``/``</adjunto`` y el marcador de escalacion de
+    d13 (`ESCALATION_MARKER`) — ninguno de los dos debe sobrevivir intacto a la envoltura.
     """
     resolved_tag_id = tag_id if tag_id is not None else new_attachment_tag_id()
     safe_content = neutralize_embedded_tags(content)
+    safe_content = _neutralize_escalation_marker(safe_content)
     name_attr = _escape_attribute(filename)
     type_attr = _escape_attribute(file_type)
     wrapped = (
