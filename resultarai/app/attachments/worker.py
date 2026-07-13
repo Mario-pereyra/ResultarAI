@@ -22,10 +22,15 @@ Diseno y por que NO se deadlockea:
   pytest, que es seguro de importar (no relanza la coleccion de tests como efecto
   secundario). (Fallback a `spawn` si `forkserver` no estuviera disponible; ese camino SI
   re-ejecuta `__main__` en cada hijo, no solo una vez.)
-- **Memoria** acotada en el HIJO con `resource.setrlimit(RLIMIT_AS)` antes de parsear:
-  una alloc que cruza el tope levanta `MemoryError` en el hijo (no un SIGKILL), que se
-  reporta como fallo ordenado; si aun asi el interprete cae, el parent lo detecta por el
-  `exitcode`. Estamos en Linux/WSL (RLIMIT_AS disponible); el limite es config.
+- **Memoria** acotada en el HIJO con `resource.setrlimit(RLIMIT_AS)` antes de parsear,
+  RELATIVO al VmSize que el hijo ya tiene mapeado en ese instante (no un techo absoluto
+  -- ver el diagnostico completo en el docstring de `_apply_address_space_limit`: un
+  techo absoluto revienta SIEMPRE bajo uvicorn, incluso para una extraccion trivial,
+  porque desempaquetar el extractor real ya deja el VmSize del hijo por encima de
+  cualquier techo razonable antes de aplicarlo). Una alloc que cruza el tope (baseline +
+  `limit_bytes`) levanta `MemoryError` en el hijo (no un SIGKILL), que se reporta como
+  fallo ordenado; si aun asi el interprete cae, el parent lo detecta por el `exitcode`.
+  Estamos en Linux/WSL (RLIMIT_AS y `/proc/self/status` disponibles); el limite es config.
 - **Resultado via `multiprocessing.Queue`**: el hijo hace `put()` (que retorna enseguida;
   un hilo alimentador vuelca al pipe) y el PARENT lee con `get()` **antes** de hacer
   `join()`. Ese orden es lo que evita el deadlock clasico "el hijo bloquea al salir
@@ -207,17 +212,60 @@ def _worker_child[SourceT, ResultT](
 
 
 def _apply_address_space_limit(limit_bytes: int) -> None:
-    """Acota el espacio de direcciones del hijo (best-effort) con `RLIMIT_AS`.
+    """Acota el espacio de direcciones del hijo (best-effort) con `RLIMIT_AS`, RELATIVO al
+    VmSize que el hijo YA tiene mapeado en este instante (no un techo absoluto).
 
-    Solo baja el limite blando (subir el duro requiere privilegios); si no se puede acotar,
-    el timeout sigue acotando el tiempo de corrida. Una alloc por encima del tope levantara
-    `MemoryError` dentro del hijo, que se reporta como fallo ordenado.
+    Diagnostico (bug "worker_died"/"can't start new thread" reproducible al 100% bajo
+    uvicorn, BACKLOG-DESCUBRIMIENTOS 2026-07-12 sobre fragilidad de RLIMIT_AS): un techo
+    ABSOLUTO de 512 MiB (el default) revienta SIEMPRE, incluso para un CSV de 879 bytes,
+    porque desempaquetar (unpickle) el extractor REAL en el hijo -- p.ej.
+    `SpreadsheetExtractor.extract`, que importa `openpyxl`/`python_calamine` -- ya deja el
+    VmSize del hijo en ~800 MB, MUY por encima del techo, ANTES de aplicar el limite
+    siquiera (medido con `/proc/self/status`; confirmado que bajo pytest el baseline es
+    mucho mas chico, por eso ahi "pasaba casi siempre"). Linux permite bajar el limite
+    blando aunque el uso actual ya lo supere (no hay enforcement retroactivo sobre mapeos
+    YA existentes), pero CUALQUIER mmap NUEVO se rechaza de inmediato con ENOMEM -- y el
+    primer mmap nuevo que el hijo pide tras el setrlimit es, casi siempre, el stack del
+    hilo alimentador de `multiprocessing.Queue` en el primer `put()` (`_worker_child`),
+    que Python reporta como `RuntimeError: can't start new thread` (exactamente el
+    traceback reportado). Confirmado tambien que cambiar a `RLIMIT_DATA` NO alcanza: el
+    kernel moderno (`is_data_mapping()` en `mm/mmap.c`) cuenta los mapeos anonimos
+    privados escribibles -- que es lo que es el stack de un thread -- tambien contra
+    `RLIMIT_DATA`, asi que el mismo problema reproduce igual.
+
+    La correccion real es que el techo sea RELATIVO al baseline, no absoluto: mantiene el
+    espiritu del ANEXO §4.1 (memoria acotada DE VERDAD) porque un extractor no puede
+    consumir mas de `limit_bytes` ADICIONALES sobre lo que ya costaba tenerlo importado --
+    en vez de que el costo fijo de la libreria del formato se coma el presupuesto entero
+    antes de arrancar. Si no se puede leer el baseline (entorno sin `/proc`), cae al
+    comportamiento absoluto anterior como fallback defensivo (peor, pero no rompe nada
+    nuevo). Solo baja el limite blando (subir el duro requiere privilegios); una alloc por
+    encima del tope levanta `MemoryError` dentro del hijo, que se reporta como fallo
+    ordenado; si el interprete cayera igual, el parent lo detecta por el `exitcode`.
     """
     try:
+        baseline = _current_address_space_bytes()
+        target = limit_bytes if baseline is None else baseline + limit_bytes
         _soft, hard = resource.getrlimit(resource.RLIMIT_AS)
-        target = limit_bytes
         if hard != resource.RLIM_INFINITY:
             target = min(target, hard)
         resource.setrlimit(resource.RLIMIT_AS, (target, hard))
     except (ValueError, OSError):
         return
+
+
+def _current_address_space_bytes() -> int | None:
+    """VmSize actual del proceso (bytes), leido de `/proc/self/status`; `None` si falla.
+
+    Estamos en Linux/WSL (mismo supuesto que el resto del modulo, ver docstring de
+    arriba): `/proc/self/status` siempre expone `VmSize` en este entorno. Solo devuelve
+    `None` de forma defensiva si el archivo no existe o el formato no es el esperado.
+    """
+    try:
+        with open("/proc/self/status", encoding="ascii") as f:
+            for line in f:
+                if line.startswith("VmSize:"):
+                    return int(line.split()[1]) * 1024
+    except (OSError, ValueError, IndexError):
+        return None
+    return None
